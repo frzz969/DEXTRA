@@ -5,5 +5,5 @@ export const DEFAULT_MANDATE_TTL_SECONDS = 3600;
 export const RETENTION_DAYS = {
   audit: 90,
   plans: 30,
-  contacts: 365,
+  precedent: 180,
 } as const;
