@@ -213,6 +213,8 @@ Jika muncul ide baru:
 
 Apa pun di bawah nomor 10 tidak boleh dikerjakan sebelum nomor 1–9 terbukti lulus test.
 
+**Daftar eksekusi yang mengikat ada di `docs/PRIORITY-PLAN.md`.** Jika daftar itu dan bagian ini berbeda, `PRIORITY-PLAN.md` yang dipakai, karena ia memuat status dan estimasi.
+
 ---
 
 # 12. Definisi "Selesai" untuk Sebuah Tugas
