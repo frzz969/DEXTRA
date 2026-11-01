@@ -10,6 +10,8 @@ export type ResultStatus = z.infer<typeof ResultStatusSchema>;
 export const ActionEvidenceSchema = z
   .object({
     mock_message_id: z.string().optional(),
+    mock_event_id: z.string().optional(),
+    mock_task_id: z.string().optional(),
     note: z.string().optional(),
   })
   .strict();

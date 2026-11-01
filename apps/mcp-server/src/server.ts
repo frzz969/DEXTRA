@@ -139,6 +139,10 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
 export function startServer() {
   ensureStoreFiles().catch(() => {});
   const server = createServer(async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
     if (req.url === '/health' && req.method === 'GET') {
       return sendJson(res, 200, { ok: true, service: 'dextra-mcp', port: PORT });
     }
