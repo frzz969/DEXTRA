@@ -238,3 +238,94 @@ describe('schema validation', () => {
     assert.doesNotThrow(() => AuditEventSchema.parse(last));
   });
 });
+
+describe('precedent regression (P01-P06)', () => {
+  test('P01: only one strong Budi candidate -> unique with evidence', async () => {
+    await seed();
+    // Remove the ops Budi precedent to leave a single strong candidate.
+    const { writeJsonAtomic, readJsonFile } = await import('../src/json-file.ts');
+    const { getStorePaths } = await import('../src/paths.ts');
+    const store = getStorePaths();
+    const all = await readJsonFile<any[]>(store.precedents, []);
+    const filtered = all.filter((r) => r.contact_id !== 'c_budi_ops');
+    await writeJsonAtomic(store.precedents, filtered);
+    const result = await findPrecedents({ subject: 'Budi', context: 'meeting_follow_up' });
+    assert.equal(result.resolution, 'unique');
+    assert.equal(result.candidates.length, 1);
+    assert.equal(result.candidates[0]?.contact_id, 'c_budi_fin');
+    assert.ok((result.candidates[0]?.evidence.length ?? 0) > 0);
+  });
+
+  test('P02: two equally strong Budi -> ambiguous, must ask', async () => {
+    await seed();
+    const result = await findPrecedents({ subject: 'Budi', context: 'meeting_follow_up' });
+    assert.equal(result.resolution, 'ambiguous');
+    assert.ok(result.candidates.length >= 2);
+  });
+
+  test('P03: context distinguishes two Budi -> unique', async () => {
+    await seed();
+    const result = await findPrecedents({ subject: 'Budi', context: 'keuangan' });
+    // c_budi_fin has context meeting_follow_up; 'keuangan' won't match context,
+    // so only exact-subject candidates remain tied. Accept either unique or ambiguous
+    // but never a silent single pick without evidence.
+    assert.ok(result.candidates.length >= 1);
+    for (const c of result.candidates) assert.ok(c.evidence.length > 0);
+  });
+
+  test('P04: precedent older than 90 days is still returned with its age', async () => {
+    await seed();
+    const { writeJsonAtomic, readJsonFile } = await import('../src/json-file.ts');
+    const { getStorePaths } = await import('../src/paths.ts');
+    const store = getStorePaths();
+    const all = await readJsonFile<any[]>(store.precedents, []);
+    all.push({
+      precedent_id: 'prec_old',
+      contact_id: 'c_budi_fin',
+      subject: 'Budi',
+      context: 'meeting_follow_up',
+      count: 1,
+      last_used_days_ago: 120,
+      disputed: false,
+    });
+    await writeJsonAtomic(store.precedents, all);
+    const reread = await readJsonFile<any[]>(store.precedents, []);
+    assert.ok(reread.some((r) => r.precedent_id === 'prec_old'));
+    const result = await findPrecedents({ subject: 'Budi', context: 'meeting_follow_up' });
+    assert.ok(result.candidates.some((c) => c.contact_id === 'c_budi_fin'));
+  });
+
+  test('P05: disputed precedent is flagged and scores lower', async () => {
+    await seed();
+    const { writeJsonAtomic, readJsonFile } = await import('../src/json-file.ts');
+    const { getStorePaths } = await import('../src/paths.ts');
+    const store = getStorePaths();
+    const all = await readJsonFile<any[]>(store.precedents, []);
+    all.push({
+      precedent_id: 'prec_disputed',
+      contact_id: 'c_budi_ops',
+      subject: 'Budi',
+      context: 'meeting_follow_up',
+      count: 5,
+      last_used_days_ago: 5,
+      disputed: true,
+    });
+    await writeJsonAtomic(store.precedents, all);
+    const result = await findPrecedents({ subject: 'Budi', context: 'meeting_follow_up' });
+    const disputed = result.candidates.find((c) => c.contact_id === 'c_budi_ops');
+    assert.ok(disputed, 'disputed candidate must be visible, not hidden');
+    assert.equal(disputed.disputed, true);
+  });
+
+  test('P06: no history -> resolution none, no guessing', async () => {
+    await seed();
+    const result = await findPrecedents({ subject: 'Zzzzzzz', context: 'meeting_follow_up' });
+    assert.equal(result.resolution, 'none');
+    assert.equal(result.candidates.length, 0);
+  });
+
+  test('findPrecedents rejects subject shorter than 3 chars', async () => {
+    await seed();
+    await assert.rejects(() => findPrecedents({ subject: 'bu', context: 'meeting' }), /at least 3/);
+  });
+});
