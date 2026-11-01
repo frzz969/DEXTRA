@@ -2,7 +2,7 @@
 
 # DEXTRA — The Governed AI Workforce
 
-**Versi:** 1.2.0
+**Versi:** 1.3.0
 **Tanggal:** 1 November 2026
 **Status:** Draft — Hackathon MVP
 **Platform:** WorkBuddy Desktop + Local MCP Server + Web-based Mock Dashboard
@@ -22,6 +22,7 @@
 | 1.0.0 | Draf awal (nama kerja: Wakil) |
 | 1.1.0 | Nama produk menjadi **DEXTRA**. Ditambahkan User Stories, Permission Matrix, Non-Functional Requirements, Data Lifecycle, Error & Exception Handling, Requirement Traceability |
 | 1.2.0 | Ditambahkan Threat Model (§33), API & MCP Contract (§34), Deployment & Operations (§35) |
+| 1.3.0 | Ditambahkan §34.2.1 (batas kepercayaan MCP: identitas caller tidak tersedia di protokol, penegakan lewat token + allowlist server), §34.6 (idempotensi, retry, replay, aturan nilai tolak-hash), error `EXECUTION_IN_PROGRESS` |
 
 ---
 
@@ -1544,8 +1545,8 @@ MVP siap dikumpulkan jika:
 | T-01 | Prompt injection | A1, A2 | Teks di dokumen/email | Karantina instruksi; pemisahan data/instruksi; tidak ada tool eksekusi di sisi LLM | TC-002 |
 | T-02 | Mandate forgery | A2, A3 | Agen menyusun objek mandat sendiri | Mandat hanya dibuat layanan setelah bukti persetujuan valid; HMAC | TC-003, TC-007 |
 | T-03 | Approval spoofing | A7 | Agen mengirim argumen `approved_by` palsu | `submit_approval` tidak dapat dipanggil model; token persetujuan berumur pendek, sekali pakai | TC-003 |
-| T-04 | Privilege escalation | A2 | Agen memanggil `issue_mandate` | Tool penerbitan mandat tidak diekspos ke LLM; allowlist tool per peran | TC-003 |
-| T-05 | Unauthorized tool invocation | A2 | Agen memanggil executor langsung | Executor tidak listen ke LLM; hanya menerima mandat tervalidasi; kredensial terpisah | TC-007 |
+| T-04 | Privilege escalation | A2 | Agen memanggil `issue_mandate` | Tool penerbitan mandat tidak diekspos ke LLM; token `ops:execute` terpisah dan tidak pernah ada di konfigurasi WorkBuddy; `tools/call` di luar allowlist ditolak server (§34.2.1) | TC-003 |
+| T-05 | Unauthorized tool invocation | A2 | Agen memanggil executor langsung | Executor tidak listen ke LLM; hanya menerima mandat tervalidasi; kredensial terpisah; penolakan di lapis server, bukan hanya penyembunyian tool | TC-007 |
 | T-06 | Replay attack | A2 | Mengirim ulang permintaan yang pernah disetujui | `expires_at`, `nonce`, hash rencana, idempotency key | TC-004 |
 | T-07 | Duplicate execution | A5 | Double click, retry jaringan | Idempotency key `(mandate_id, action_id)` | TC-008 |
 | T-08 | Sensitive data exposure | A5 | Konten lengkap di log, dashboard, preseden | Masking NIK/telepon; log tanpa isi penuh; preseden hanya field minimum | Manual |
@@ -1623,6 +1624,24 @@ Kolom **Caller** menentukan siapa yang boleh memanggil. Ini kontrol keamanan uta
 
 **Aturan mutlak:** `submit_approval`, `issue_mandate`, dan `execute_action` **tidak boleh** terdaftar pada tool list yang diekspos ke model. Jika model dapat melihat nama tool tersebut, kontrol dianggap gagal.
 
+### 34.2.1 Batas Kepercayaan MCP
+
+Spesifikasi MCP **tidak menyediakan identitas pemanggil yang terautentikasi**. Setiap request hanya membawa `name` dan `arguments`; `_meta` berisi `clientInfo` yang diklaim klien sendiri. Spesifikasi juga menyatakan bahwa `tools/list` **tidak boleh berbeda per koneksi**, tetapi **boleh berbeda menurut otorisasi yang disertakan pada request**.
+
+Konsekuensinya, tabel Caller di atas **bukan kontrol protokol**, melainkan kontrol yang harus ditegakkan server:
+
+| Lapis | Mekanisme | Enforced oleh |
+| --- | --- | --- |
+| L1 | Dua token berbeda: `agent:*` (baca + susun) dan `ops:execute` (eksekusi, persetujuan, penerbitan mandat) | MCP server |
+| L2 | `tools/list` difilter menurut token pada request | MCP server |
+| L3 | `tools/call` di luar allowlist token ditolak, tidak hanya disembunyikan | MCP server |
+| L4 | Token `ops:execute` tidak pernah berada di `workbuddy/mcp.json`; hanya dibaca proses executor | Proses executor |
+| L5 | Percobaan panggilan di luar allowlist dicatat ke audit | MCP server |
+
+`clientInfo` **tidak boleh** dipakai sebagai dasar pemberian izin karena bersifat self-asserted; ia hanya boleh muncul di log.
+
+Jika model menyebut nama tool yang tidak ada pada `tools/list`-nya, server tetap menolak pada L3. Menyembunyikan tool (L2) adalah pertahanan pertama; penolakan server (L3) adalah pertahanan yang menentukan, karena nama tool dapat ditebak atau dibocorkan lewat prompt injection.
+
 ## 34.3 Skema Ringkas
 
 ### `get_org_rules`
@@ -1695,6 +1714,9 @@ Input mengikuti Plan Object (§12.2). Output `validate_plan`:
 ```json
 // input —
 { "mandate_id": "mandate_001", "action_id": "action_001", "execution_key": "exe_key_001" }
+// execution_key = ID percobaan (attempt) untuk korelasi dan audit.
+// Kunci deduplikasi tetap (mandate_id, action_id), bukan execution_key.
+// Klien yang retry dengan execution_key baru TIDAK boleh menghasilkan eksekusi kedua.
 // output
 {
   "execution_id": "exec_001",
@@ -1718,7 +1740,8 @@ Input mengikuti Plan Object (§12.2). Output `validate_plan`:
 | `PLAN_HASH_MISMATCH` | Rencana berubah | Tidak |
 | `ACTION_NOT_ALLOWED` | Aksi di luar mandat | Tidak |
 | `RECIPIENT_NOT_ALLOWED` | Penerima di luar mandat | Tidak |
-| `DUPLICATE_EXECUTION` | Sudah dijalankan | Ya (kembalikan hasil pertama) |
+| `DUPLICATE_EXECUTION` | Sudah dijalankan dan selesai | Ya (kembalikan hasil terminal pertama) |
+| `EXECUTION_IN_PROGRESS` | Percobaan sebelumnya masih berjalan | Ya (setelah selesai; jangan laporkan sukses) |
 | `EXECUTOR_FAILURE` | Kegagalan internal | Tidak (eskalasi) |
 | `AUDIT_WRITE_FAILED` | Gagal mencatat | Tidak |
 | `MCP_UNAVAILABLE` | Layanan mati | Ya (setelah pulih) |
@@ -1735,7 +1758,17 @@ agent:      get_audit_log                                   ← hanya setelah ek
 
 Agent **tidak pernah** melompati `validate_plan` menuju `execute_action`.
 
-## 34.6 Versioning
+## 34.6 Idempotensi, Retry, dan Replay
+
+1. Kunci deduplikasi eksekusi adalah pasangan **`(mandate_id, action_id)`**, disimpan sebagai primary key. `execution_key` hanya ID percobaan untuk korelasi dan audit.
+2. Record `queued` ditulis **sebelum** efek samping dijalankan, secara atomik. Tidak ada efek samping tanpa record.
+3. Retry ketika percobaan pertama sudah selesai → kembalikan hasil terminal pertama (`sent`/`failed`/`blocked`), tanpa menjalankan ulang.
+4. Retry ketika percobaan pertama **masih berjalan** → `EXECUTION_IN_PROGRESS`, **bukan** `sent`. Tidak pernah melaporkan sukses untuk pekerjaan yang belum selesai.
+5. Replay dengan `expires_at` lampau, `nonce` yang sudah dipakai, atau `plan_hash` berbeda → ditolak, bukan dijalankan ulang (T-06).
+6. Retry otomatis hanya diizinkan untuk operasi baca. Operasi tulis tidak pernah di-retry otomatis oleh agent; keputusan retry ada pada manusia atau executor.
+7. `plan_hash` dihitung dari bentuk kanonik rencana dengan kunci terurut, mengecualikan field `plan_hash` itu sendiri. Nilai yang tidak dapat direpresentasikan secara kanonik (`NaN`, `Infinity`, `undefined`, `BigInt`, `Date`, lone surrogate) **ditolak**, bukan dinormalisasi diam-diam — karena normalisasi diam-diam dapat membuat dua rencana berbeda menghasilkan hash yang sama.
+
+## 34.7 Versioning
 
 - Semua tool memiliki `contract_version`.
 - Perubahan field wajib menaikkan versi minor; penghapusan field wajib major.
