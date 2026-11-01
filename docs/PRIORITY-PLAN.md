@@ -56,7 +56,7 @@ Gate **G3 â€” review desain** setelah P1-4.
 
 | # | Modul | Isi | Est. |
 | --- | --- | --- | --- |
-| P2-1 | Precedent engine | Saran penerima berbasis riwayat; tetap bertanya saat ambigu | 2 j |
+| P2-1 | Precedent engine | Saran penerima berbasis riwayat; tetap bertanya saat ambigu | 2 j | **selesai** (logika di store, test P01-P06 lulus) |
 | P2-2 | Decision Replay | Memutar ulang satu keputusan dari audit | 1,5 j |
 | P2-3 | Polish visual | Konsistensi warna, tipografi, empty state | 2 j |
 | P2-4 | Materi demo | Rekaman 7 menit, cover image, skrip 90 detik | 2 j |
