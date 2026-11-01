@@ -24,12 +24,12 @@
 | P0-1 | `packages/store` | Repository JSON tanpa SQL; masking di sumber; anti-enumerasi; batas 8 KB; seed data | contracts (beku) | TC-012, TC-013 | 2 j | **selesai** (13/13 test, typecheck hijau) |
 | P0-2 | `packages/policy-engine` | Jam kerja, zona waktu, salat Jumat, hari libur, konflik jadwal | P0-1 | TC-001 | 1,5 j | **selesai** (14/14 test, typecheck hijau) |
 | P0-3 | `packages/plan` | Susun rencana, findings, `plan_hash` kanonik | P0-1, P0-2 | TC-001, TC-006 | 2,5 j | **selesai** (13/13 test, typecheck hijau) |
-| P0-4 | `packages/mandate-engine` | Terbitkan, validasi, cabut; HMAC; expiry; ikatan `plan_hash` | P0-3 | TC-003â€“TC-007 | 2,5 j | belum |
+| P0-4 | `packages/mandate-engine` | Terbitkan, validasi, cabut; HMAC; expiry; ikatan `plan_hash` | P0-3 | TC-003â€“TC-007 | 2,5 j | **selesai** (17/17 test, typecheck hijau) |
 | P0-5 | `packages/executor` | Eksekusi idempoten; kunci `(mandate_id, action_id)`; status in-flight | P0-4 | TC-008 | 2 j | belum |
 | P0-6 | `packages/audit` | Append-only; 16 jenis event; detail ter-redaksi | P0-1 | TC-004â€“TC-008 | 1 j | belum |
 | P0-7 | `apps/mcp-server` (permukaan tool) | 12 tool; pemisahan token `agent` / `ops`; `tools/list` terfilter; penolakan allowlist | P0-1..P0-6 | TC-010 | 2 j | belum |
 | P0-8 | Bulk egress guard | > 5 penerima atau > 3 pola PII â†’ `BLOCKED` | P0-3 | TC-011 | 1 j | **selesai** (diimplementasikan dalam P0-2, test TC-011) |
-| P0-9 | Karantina injection | Heuristik deterministik Indonesia; ambang tinggi/sedang | P0-3 | TC-002, TC-009 | 1,5 j | belum |
+| P0-9 | Karantina injection | Heuristik deterministik Indonesia; ambang tinggi/sedang | P0-3 | TC-002, TC-009 | 1,5 j | **selesai** (diimplementasikan dalam P0-2, test TC-002/TC-009) |
 
 **Total P0: Â± 16 jam** â€” realistis 2 hari untuk dua orang.
 
