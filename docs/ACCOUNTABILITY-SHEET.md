@@ -64,3 +64,13 @@ Target setup: di bawah 5 menit dari clone sampai dashboard terbuka.
 - **Local-Only Service Exposure**, bukan anti-eksfiltrasi absolut: semua layanan listen di 127.0.0.1 (loopback). Ini membatasi eksposur langsung, tetapi tidak mencegah eksfiltrasi lewat kemampuan jaringan WorkBuddy, browser, proses lokal lain, atau celah aplikasi.
 - **Scoped Execution Authorization**: pemisahan token agent/ops ditegakkan di server, bukan di prompt. MCP server hanya menerima caller yang diotorisasi; dashboard tidak menyimpan token ops; endpoint approval/eksekusi dilindungi origin/CSRF; tidak ada CORS permisif; respons error tidak membocorkan data sensitif.
 
+
+## Visi Ekspansi (Roadmap, bukan MVP)
+
+DEXTRA memiliki visi jangka panjang sebagai Governed Enterprise AI Workforce & Customer Operations Platform. Dua lini layanan:
+
+1. DEXTRA Internal Workforce (MVP): Executive Assistant, Administrative Officer, Workforce Dispatcher, Adversarial Reviewer, Policy Validator.
+2. DEXTRA Customer Operations (pengembangan): Customer Support Officer, Complaint Resolution Officer, Sales Assistant, Order Management Officer, Customer Relationship Officer, Service Recovery Officer.
+
+Keduanya menggunakan satu fondasi AI dan governance yang sama. Untuk hackathon, fokus tetap Office Agent + governance. Lihat docs/ROADMAP-CUSTOMER-OPS.md.
+

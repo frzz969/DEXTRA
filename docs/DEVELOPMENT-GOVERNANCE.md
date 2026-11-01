@@ -7,6 +7,11 @@
 
 ---
 
+
+## 0. Visi Produk (konteks, bukan scope MVP)
+
+DEXTRA memiliki visi jangka panjang sebagai Governed Enterprise AI Workforce & Customer Operations Platform (dua lini: Internal Workforce + Customer Operations). Namun, scope pengembangan 1-7 Nov 2026 tetap fokus pada Governed Office Agent (5 komponen MVP). Customer Operations adalah roadmap, bukan MVP. Lihat docs/ROADMAP-CUSTOMER-OPS.md.
+
 # 1. Authority
 
 1. `docs/PRD.md` adalah sumber kebenaran tunggal. Jika kode dan PRD berbeda, kode yang salah.

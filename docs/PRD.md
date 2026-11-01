@@ -293,6 +293,24 @@ Batas: tidak menyetujui atas nama manusia, tidak mengubah aturan perusahaan, tid
 
 Pembatasan: HR tidak memutuskan rekrutmen/pemecatan otomatis; Finance tidak melakukan transfer atau menyetujui pembayaran; Procurement tidak menetapkan pemenang vendor tanpa kewenangan; Customer Relations tidak menjanjikan kompensasi tanpa persetujuan; IT Operations tidak mengubah sistem produksi tanpa mandat.
 
+## 7.4b Customer Operations - Roadmap (bukan MVP)
+
+DEXTRA memiliki visi jangka panjang sebagai Governed Enterprise AI Workforce & Customer Operations Platform. Dua lini layanan:
+
+1. DEXTRA Internal Workforce (MVP): Executive Assistant, Administrative Officer, Workforce Dispatcher, Adversarial Reviewer, Policy Validator.
+2. DEXTRA Customer Operations (pengembangan): Customer Support Officer, Complaint Resolution Officer, Sales Assistant, Order Management Officer, Customer Relationship Officer, Service Recovery Officer.
+
+Keduanya menggunakan satu fondasi AI dan governance yang sama. Untuk hackathon, fokus tetap Office Agent + governance. Spesialis customer ops adalah rancangan target (roadmap only), bukan agent aktif.
+
+### Governance untuk Customer Operations (roadmap)
+
+Prinsip: baca boleh otomatis, tulis harus lewat mandat. Bedakan:
+- Informasional (FAQ, status pesanan, info produk): tidak perlu approval (sesuai kewenangan kebijakan).
+- Komunikasi (mengirim pesan ke pelanggan): tergantung kebijakan.
+- Berkonsekuensi (refund, diskon khusus, perubahan pesanan, komitmen pengiriman): wajib mandat + approval.
+
+Lihat docs/ROADMAP-CUSTOMER-OPS.md dan docs/COMMUNICATION-STYLE-GUIDE.md.
+
 ## 7.5 Employee Skill Profile
 
 Contoh profil kompetensi yang dapat diperiksa:
