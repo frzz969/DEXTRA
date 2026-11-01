@@ -2,7 +2,7 @@
 
 **Nama produk:** DEXTRA
 **Tagline:** Specialized AI workers. Human-defined authority. Accountable execution.
-**Kategori:** AI Agent / Office Automation / Governance
+**Kategori:** AI Agent / Office Automation / Governance / Customer Operations
 
 ## Masalah
 

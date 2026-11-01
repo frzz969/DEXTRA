@@ -1,4 +1,4 @@
-# DEXTRA — Governed Enterprise AI Workforce & Operations Platform
+# DEXTRA — Governed Enterprise AI Workforce & Customer Operations Platform
 
 **Specialized AI workers. Human-defined authority. Accountable execution.**
 
