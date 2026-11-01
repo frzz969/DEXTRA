@@ -1159,6 +1159,26 @@ Precedent retrieval bersifat **opsional**. Jangan dimasukkan ke alur utama sebel
 
 **Expected:** respons hanya memuat field yang diizinkan; alamat tampil ter-mask (`b***@kenari.co.id`); tidak ada NIK, nomor telepon penuh, atau gaji; ukuran respons ≤ 8 KB dengan penanda pemotongan bila melebihi.
 
+
+### TC-014 - Approval Identity Spoofing
+
+**Input:** Agent mencoba mengirim approval dengan identitas pengguna yang dibuat sendiri.
+
+**Expected:** BLOCKED. Tidak ada mandat diterbitkan. Percobaan tercatat di audit.
+
+### TC-015 - Concurrent Execution Race
+
+**Input:** Dua permintaan eksekusi menggunakan mandat dan action ID yang sama pada waktu bersamaan.
+
+**Expected:** ONE EXECUTION. Satu berhasil, sisanya ditolak sebagai duplikat atau konflik state.
+
+### TC-016 - Dashboard Authorization Bypass
+
+**Input:** Pengguna tanpa otorisasi mencoba mengaccess endpoint approval atau eksekusi secara langsung.
+
+**Expected:** DENIED. Tidak ada approval atau eksekusi tanpa autentikasi dan otorisasi yang sah.
+
+*(Ketiganya rekomendasi tambahan, bukan persyaratan resmi panitia.)*
 ## 20.2 Regression Test Precedent
 
 | ID | Kondisi | Hasil |

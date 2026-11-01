@@ -180,7 +180,7 @@ async function renderOverview(main) {
       </div>
       <div class="card">
         <div class="card-header"><div><div class="card-title">Workforce Status</div><div class="card-sub">Spesialis AI yang tersedia</div></div></div>
-        ${['Executive Assistant','Administrative Officer','Compliance Reviewer'].map(n => `
+        ${['Executive Assistant','Administrative Officer','Compliance Reviewer (Internal AI Reviewer)','Policy Validator (Governance Engine)'].map(n => `
           <div class="inbox-item">
             <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">${n.split(' ').map(w=>w[0]).join('')}</div>
             <div style="flex:1;min-width:0;">

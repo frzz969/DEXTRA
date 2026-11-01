@@ -1,4 +1,4 @@
-# DEXTRA — The Governed AI Workforce
+# DEXTRA — Governed Enterprise AI Workforce & Operations Platform
 
 **Specialized AI workers. Human-defined authority. Accountable execution.**
 
@@ -37,3 +37,9 @@ Minggu 1 — Hackathon MVP. Lihat `docs/PRD.md` §27 untuk timeline dan §32 unt
 
 AI menyusun rencana. Manusia menyetujui. Executor memvalidasi mandat secara independen.
 Tidak ada jalur dari agen ke executor.
+
+## Keamanan & Eksposur (klaim yang jujur)
+
+- **Local-Only Service Exposure**: semua layanan listen di `127.0.0.1` (loopback), tidak terbuka ke jaringan.
+- **Scoped Execution Authorization**: pemisahan token `agent` (read/plan) vs `ops` (write/execute) ditegakkan di server, bukan di prompt.
+- Bukan "anti-eksfiltrasi absolut": MCP server hanya menerima caller yang diotorisasi; dashboard tidak menyimpan token `ops`; endpoint approval/eksekusi dilindungi origin/CSRF; tidak ada CORS permisif; respons error tidak membocorkan data sensitif.
