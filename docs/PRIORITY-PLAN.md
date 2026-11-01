@@ -1,8 +1,8 @@
-# DEXTRA — Priority Plan
+﻿# DEXTRA â€” Priority Plan
 
 **Versi:** 1.0.0
 **Fungsi:** satu tabel yang menentukan apa dikerjakan lebih dulu. Jika ragu, buka tabel ini, bukan PRD dari awal.
-**Sumber requirement:** `docs/PRD.md` (§20 test matrix, §27 prioritas, §33.6 privasi)
+**Sumber requirement:** `docs/PRD.md` (Â§20 test matrix, Â§27 prioritas, Â§33.6 privasi)
 **Aturan:** nomor besar tidak dikerjakan sebelum nomor kecil lulus test-nya.
 
 ---
@@ -17,42 +17,42 @@
 
 ---
 
-## 2. P0 — Wajib
+## 2. P0 â€” Wajib
 
 | # | Modul | Isi | Bergantung pada | Test | Est. | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | P0-1 | `packages/store` | Repository JSON tanpa SQL; masking di sumber; anti-enumerasi; batas 8 KB; seed data | contracts (beku) | TC-012, TC-013 | 2 j | **selesai** (13/13 test, typecheck hijau) |
-| P0-2 | `packages/policy-engine` | Jam kerja, zona waktu, salat Jumat, hari libur, konflik jadwal | P0-1 | TC-001 | 1,5 j | belum |
+| P0-2 | `packages/policy-engine` | Jam kerja, zona waktu, salat Jumat, hari libur, konflik jadwal | P0-1 | TC-001 | 1,5 j | **selesai** (14/14 test, typecheck hijau) |
 | P0-3 | `packages/plan` | Susun rencana, findings, `plan_hash` kanonik | P0-1, P0-2 | TC-001, TC-006 | 2,5 j | belum |
-| P0-4 | `packages/mandate-engine` | Terbitkan, validasi, cabut; HMAC; expiry; ikatan `plan_hash` | P0-3 | TC-003–TC-007 | 2,5 j | belum |
+| P0-4 | `packages/mandate-engine` | Terbitkan, validasi, cabut; HMAC; expiry; ikatan `plan_hash` | P0-3 | TC-003â€“TC-007 | 2,5 j | belum |
 | P0-5 | `packages/executor` | Eksekusi idempoten; kunci `(mandate_id, action_id)`; status in-flight | P0-4 | TC-008 | 2 j | belum |
-| P0-6 | `packages/audit` | Append-only; 16 jenis event; detail ter-redaksi | P0-1 | TC-004–TC-008 | 1 j | belum |
+| P0-6 | `packages/audit` | Append-only; 16 jenis event; detail ter-redaksi | P0-1 | TC-004â€“TC-008 | 1 j | belum |
 | P0-7 | `apps/mcp-server` (permukaan tool) | 12 tool; pemisahan token `agent` / `ops`; `tools/list` terfilter; penolakan allowlist | P0-1..P0-6 | TC-010 | 2 j | belum |
-| P0-8 | Bulk egress guard | > 5 penerima atau > 3 pola PII → `BLOCKED` | P0-3 | TC-011 | 1 j | belum |
+| P0-8 | Bulk egress guard | > 5 penerima atau > 3 pola PII â†’ `BLOCKED` | P0-3 | TC-011 | 1 j | belum |
 | P0-9 | Karantina injection | Heuristik deterministik Indonesia; ambang tinggi/sedang | P0-3 | TC-002, TC-009 | 1,5 j | belum |
 
-**Total P0: ± 16 jam** — realistis 2 hari untuk dua orang.
+**Total P0: Â± 16 jam** â€” realistis 2 hari untuk dua orang.
 
-Gate setelah P0-9: **G2 — review keamanan** (Oracle, sekali). Tidak ada penambahan fitur sebelum lulus.
+Gate setelah P0-9: **G2 â€” review keamanan** (Oracle, sekali). Tidak ada penambahan fitur sebelum lulus.
 
 ---
 
-## 3. P1 — Demo Meyakinkan
+## 3. P1 â€” Demo Meyakinkan
 
 | # | Modul | Isi | Bergantung pada | Test | Est. |
 | --- | --- | --- | --- | --- | --- |
-| P1-1 | `apps/dashboard` — Approval Center | Penerima, waktu, isi, hash, blast radius, tombol setujui/tolak | P0-7 | TC-003 | 3 j |
+| P1-1 | `apps/dashboard` â€” Approval Center | Penerima, waktu, isi, hash, blast radius, tombol setujui/tolak | P0-7 | TC-003 | 3 j |
 | P1-2 | Klarifikasi ambiguitas | Dua Budi ditampilkan dengan bukti; pengguna memilih | P0-3 | TC-001 | 1,5 j |
 | P1-3 | Revocation window | Jeda kirim + tombol batalkan; bukan menarik email terkirim | P0-5 | TC-005 | 1,5 j |
-| P1-4 | Audit Center | Urutan kejadian, alasan berhasil/gagal | P0-6 | TC-004–008 | 1,5 j |
+| P1-4 | Audit Center | Urutan kejadian, alasan berhasil/gagal | P0-6 | TC-004â€“008 | 1,5 j |
 
-**Total P1: ± 7,5 jam** — 1 hari.
+**Total P1: Â± 7,5 jam** â€” 1 hari.
 
-Gate **G3 — review desain** setelah P1-4.
+Gate **G3 â€” review desain** setelah P1-4.
 
 ---
 
-## 4. P2 — Nilai Tambah
+## 4. P2 â€” Nilai Tambah
 
 | # | Modul | Isi | Est. |
 | --- | --- | --- | --- |
@@ -67,7 +67,7 @@ Gate **G3 — review desain** setelah P1-4.
 
 **P0 lulus jika:**
 
-- [ ] `npm test` hijau, termasuk TC-001–TC-013.
+- [ ] `npm test` hijau, termasuk TC-001â€“TC-013.
 - [ ] Tidak ada jalur dari LLM ke executor.
 - [ ] Tool ops menolak token agent dan tercatat di audit.
 - [ ] Data sensitif tidak pernah keluar dari store dalam bentuk penuh.
