@@ -21,7 +21,7 @@
 
 | # | Modul | Isi | Bergantung pada | Test | Est. | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| P0-1 | `packages/store` | Repository JSON tanpa SQL; masking di sumber; anti-enumerasi; batas 8 KB; seed data | contracts (beku) | TC-012, TC-013 | 2 j | **jalan** |
+| P0-1 | `packages/store` | Repository JSON tanpa SQL; masking di sumber; anti-enumerasi; batas 8 KB; seed data | contracts (beku) | TC-012, TC-013 | 2 j | **selesai** (13/13 test, typecheck hijau) |
 | P0-2 | `packages/policy-engine` | Jam kerja, zona waktu, salat Jumat, hari libur, konflik jadwal | P0-1 | TC-001 | 1,5 j | belum |
 | P0-3 | `packages/plan` | Susun rencana, findings, `plan_hash` kanonik | P0-1, P0-2 | TC-001, TC-006 | 2,5 j | belum |
 | P0-4 | `packages/mandate-engine` | Terbitkan, validasi, cabut; HMAC; expiry; ikatan `plan_hash` | P0-3 | TC-003–TC-007 | 2,5 j | belum |
