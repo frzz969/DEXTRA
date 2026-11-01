@@ -353,6 +353,14 @@ export async function saveExecution(result: ActionResult): Promise<void> {
     (execution) => executionPair(execution.mandate_id, execution.action_id) === needle,
   );
   if (existing !== undefined) {
+    // Allow the queued -> terminal transition; reject any other duplicate.
+    if (existing.result === 'queued' && parsed.result !== 'queued') {
+      const idx = executions.indexOf(existing);
+      executions[idx] = parsed;
+      const store = paths();
+      await writeJsonAtomic(store.executions, executions);
+      return;
+    }
     const code = existing.result === 'queued' ? 'EXECUTION_IN_PROGRESS' : 'DUPLICATE_EXECUTION';
     throw new DuplicateExecutionError(existing, code);
   }
