@@ -99,6 +99,7 @@ function renderShell() {
     </aside>
     <div class="pl-[250px]">
       <header class="header">
+        <button id="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;background:none;border:none;padding:4px;margin-right:8px;cursor:pointer;">☰</button>
         <div>
           <div class="header-title" id="page-title">DEXTRA</div>
           <div class="header-sub" id="page-sub">Governed AI Workforce</div>
