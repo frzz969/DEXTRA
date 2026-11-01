@@ -1,0 +1,41 @@
+{
+  "plan_id": "plan_002",
+  "org_id": "org_kenari",
+  "request_id": "req_002",
+  "created_at": "2026-11-01T10:05:00+07:00",
+  "status": "NEEDS_REVIEW",
+  "intent": "Kirim undangan rapat kepada Budi; penerima belum diklarifikasi karena ada dua kandidat Budi.",
+  "actions": [
+    {
+      "action_id": "action_001",
+      "action_type": "send_email",
+      "target": {
+        "contact_id": "c_budi_unresolved",
+        "display_name": "Budi (belum dipilih)",
+        "channel": "email",
+        "masked_address": "b***@kenari.co.id"
+      },
+      "schedule": {
+        "start_at": "2026-11-03T09:00:00+07:00",
+        "timezone": "Asia/Jakarta",
+        "all_day": false
+      },
+      "content": {
+        "subject": "Undangan rapat koordinasi",
+        "body": "Halo Budi, mohon kesediaan waktu untuk rapat koordinasi. Terima kasih.",
+        "locale": "id-ID"
+      },
+      "risk": "medium"
+    }
+  ],
+  "findings": [
+    {
+      "code": "AMBIGUOUS_RECIPIENT",
+      "severity": "blocking",
+      "action_id": "action_001",
+      "message": "Dua kandidat Budi ditemukan (c_budi_fin dan c_budi_ops); penerima belum dipilih dan plan menunggu klarifikasi."
+    }
+  ],
+  "plan_hash": "sha256:6024458063e55ff7f03072f1988dec65a10a7dbb6d72a6d3a5bdc29913115786",
+  "contract_version": "1.0.0"
+}

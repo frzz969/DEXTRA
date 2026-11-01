@@ -1,0 +1,19 @@
+{
+  "mandate_id": "mandate_001",
+  "plan_id": "plan_001",
+  "plan_hash": "sha256:79ea8c8ebcfd0d1c62e71d25c3e3a2a779da6ec8656351fd667e265280ad3b04",
+  "approval_id": "appr_001",
+  "issued_at": "2026-11-01T10:10:00+07:00",
+  "expires_at": "2030-01-01T00:00:00+07:00",
+  "nonce": "nonce_0123456789abcdef",
+  "allowed_action_ids": [
+    "action_001"
+  ],
+  "allowed_action_types": [
+    "send_email"
+  ],
+  "max_risk": "medium",
+  "status": "active",
+  "issued_by": "service:mandate-issuer",
+  "signature": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}
