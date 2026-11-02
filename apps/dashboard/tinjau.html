@@ -1,0 +1,711 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="./assets/vendor/symbols.css" rel="stylesheet">
+<link href="./assets/vendor/symbols.css" rel="stylesheet">
+<link href="./assets/vendor/fonts.css" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="./assets/vendor/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"outline-variant":"#c9c4d7","inverse-on-surface":"#f2efff","secondary-fixed":"#e5deff","on-primary":"#ffffff","surface-container-lowest":"#ffffff","on-surface-variant":"#484554","outline":"#797586","tertiary-fixed-dim":"#c7c5d5","tertiary-container":"#706f7d","surface-container":"#efecff","on-primary-fixed-variant":"#4823bc","surface-dim":"#dad7f1","surface-container-highest":"#e2e0fa","error-container":"#ffdad6","error":"#ba1a1a","on-primary-container":"#f9f3ff","primary-fixed":"#e6deff","tertiary-fixed":"#e3e0f1","on-error-container":"#93000a","on-surface":"#1a1a2c","on-secondary-fixed":"#1b0063","on-tertiary-fixed-variant":"#464553","surface-container-high":"#e8e5ff","surface-bright":"#fcf8ff","on-tertiary":"#ffffff","inverse-surface":"#2f2f42","on-secondary":"#ffffff","primary-container":"#7357e8","primary-fixed-dim":"#cabeff","tertiary":"#575764","surface":"#fcf8ff","on-background":"#1a1a2c","secondary":"#5f49c5","primary":"#5a3bce","surface-tint":"#6142d5","surface-container-low":"#f5f2ff","background":"#fcf8ff","secondary-fixed-dim":"#c9bfff","on-tertiary-container":"#f7f4ff","secondary-container":"#9581ff","on-error":"#ffffff","inverse-primary":"#cabeff","surface-variant":"#e2e0fa","on-secondary-fixed-variant":"#462eac","on-tertiary-fixed":"#1a1a26","on-secondary-container":"#2b0090","on-primary-fixed":"#1c0062"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-xl":"2rem","space-md":"1rem","margin-mobile":"1rem",gutter:"1.5rem","space-lg":"1.5rem",margin:"2rem"},fontFamily:{"body-lg":["Inter"],"body-sm":["Inter"],"headline-xl":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Inter"]},fontSize:{"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-xl":["32px",{lineHeight:"40px",fontWeight:"700"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-lg":["24px",{lineHeight:"32px",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"headline-xl-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"14px",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[250px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center gap-space-sm bg-surface-container-lowest"><img alt="DEXTRA Brand Logo" class="h-8 w-auto object-contain" src="./assets/img/avatar.svg"><div class="flex flex-col min-w-0"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">DEXTRA</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate mt-0.5">Enterprise AI Operations</span></div></div><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Workspace</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="overview" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="buat-permintaan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">send</span><span class="font-body-md text-body-md">Buat Permintaan</span></div></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm transition-colors bg-surface-container text-primary font-label-md rounded-lg" data-path="kotak-persetujuan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">assignment_turned_in</span><span class="font-body-md text-body-md">Kotak Persetujuan</span></div><span class="bg-primary text-on-primary font-label-sm text-label-sm px-1.5 py-0.5 rounded-full">3</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="work-package" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">layers</span><span class="font-body-md text-body-md">Work Package</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="aktivitas-dan-audit" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="font-body-md text-body-md">Aktivitas &amp; Audit</span></div></a></nav><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Governance</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="kebijakan-mandat" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">policy</span><span class="font-body-md text-body-md">Kebijakan Mandat</span></div></a></nav><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Settings</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="pengaturan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-md text-body-md">Pengaturan</span></div></a></nav></div><div class="p-space-sm m-space-sm rounded-xl bg-surface-container-low"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="./assets/img/avatar.svg"><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate leading-snug">Farhan Pratama</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Operations Manager</span></div></div><a class="text-on-surface-variant hover:text-error transition-colors p-1 shrink-0" data-path="login" href="#"><span class="material-symbols-outlined text-[18px]">logout</span></a></div></div></aside><div class="pl-[250px]"><header class="fixed top-0 left-[250px] right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant"><span class="text-on-surface font-semibold">DEXTRA</span><span class="">/</span><span class="text-on-surface">Operasi</span></div><div class="h-4 w-px bg-outline-variant"></div><span class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm px-space-sm py-1 rounded-full">Nusantara Digital · Divisi Operasi</span><span class="bg-surface-container text-primary font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">verified</span>Sistem Terproteksi — Human Mandate Active</span></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-[18px] text-on-surface-variant">search</span><input class="w-64 h-9 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Cari mandat, workflow, log..." type="text"></div><div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">schedule</span><span class="">14:32 WIB · 24 Okt</span></div><button class="relative p-1.5 text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="./assets/img/avatar.svg"></div></header><main class="relative pt-16 w-full min-h-screen bg-surface"><div class="flex flex-col w-full">
+<!-- Top Global Context & Audit Banner -->
+<div class="w-full bg-surface-container-low px-space-lg py-space-md shadow-sm">
+<div class="max-w-7xl mx-auto flex flex-col gap-space-sm">
+<!-- Breadcrumb + Primary Title -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant mb-1">
+<span class="hover:text-primary cursor-pointer transition-colors">Work Packages</span>
+<span class="">/</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Kotak Persetujuan</span>
+<span class="">/</span>
+<span class="text-primary font-semibold">WP-2026-1106-0842</span>
+</div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+              Tinjau Work Package — Notulen Rapat &amp; Tindak Lanjut
+            </h1>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              Persetujuan Tahap Akhir
+            </span>
+</div>
+</div>
+<!-- Quick Top Action Anchors -->
+<div class="flex items-center gap-space-sm">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-sm font-label-md text-label-md" id="view-raw-diff-btn">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="">Lihat Raw Payload</span>
+</button>
+<a class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-sm font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="">Riwayat Sesi AI</span>
+</a>
+</div>
+</div>
+<!-- Immutable Metadata Grid Strip -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-space-sm pt-space-xs font-label-sm text-label-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col"><span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">PLAN ID &amp; INTEGRITY REF</span><div class="flex items-center gap-1 text-on-surface font-semibold truncate mt-0.5"><span class="material-symbols-outlined text-[14px] text-primary">tag</span><span class="">WP-2026-1106-0842</span></div><span class="text-tertiary text-[11px] truncate font-mono mt-0.5">v1.2 (Rencana Terkunci)</span></div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col">
+<span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">Versi Rencana</span>
+<div class="flex items-center gap-1 text-on-surface font-semibold mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-secondary">lock</span>
+<span class="">v1.2 (Terkunci)</span>
+</div>
+<span class="text-on-surface-variant text-[11px]">Siap Persetujuan Manusia</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col">
+<span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">Pemohon &amp; Agent</span>
+<div class="flex items-center gap-1 text-on-surface font-semibold truncate mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-tertiary">person</span>
+<span class="truncate">Farhan Pratama</span>
+</div>
+<span class="text-primary font-medium text-[11px] truncate">Executive Assistant #EA-09</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col">
+<span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">Waktu Penyusunan</span>
+<div class="flex items-center gap-1 text-on-surface font-semibold mt-0.5">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">schedule</span>
+<span class="">06 Nov 2026</span>
+</div>
+<span class="text-on-surface-variant text-[11px]">10:14:22 WIB</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">Tingkat Risiko</span>
+<div class="mt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-on-secondary-container font-semibold text-[11px]">
+<span class="material-symbols-outlined text-[14px] text-secondary">warning</span>
+              SEDANG (Tier-2)
+            </span>
+</div>
+<span class="text-on-surface-variant text-[10px] mt-0.5">Eksekusi Keluar Organisasi</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<span class="text-on-surface-variant font-label-sm text-[10px] uppercase tracking-wider">Status Validasi</span>
+<div class="mt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-semibold text-[11px]">
+<span class="material-symbols-outlined text-[14px] text-primary">verified</span>
+              PRA-MANDAT LULUS
+            </span>
+</div>
+<span class="text-tertiary text-[10px] mt-0.5">5/5 Audit Pass</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Layout (65% Scope Inspector / 35% Mandate Governance Panel) -->
+<div class="w-full max-w-7xl mx-auto px-space-lg py-space-lg">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: EXACT SCOPE INSPECTOR (approx 65% -> 8 cols on lg screen) -->
+<section class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Header & Enforcement Banner -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">policy</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+                  RUANG LINGKUP EKSEKUSI PERSIS (EXACT SCOPE INSPECTOR)
+                </h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1.5 leading-relaxed">
+                Berikut adalah daftar lengkap tindakan eksternal yang akan dieksekusi jika Anda menerbitkan mandat. Tidak ada tindakan di luar spesifikasi ini yang diizinkan oleh kernel pengaman.
+              </p>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-md bg-surface-container text-primary font-mono text-[11px] font-semibold">
+              STRICT BOUNDARY ACTIVE
+            </span>
+</div>
+<!-- Micro Visual Counter -->
+<div class="flex items-center gap-space-md pt-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<span class="">Total Aksi: <strong class="text-on-surface">3 Operasi</strong></span>
+</div>
+<span class="">•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-tertiary">lock_reset</span>
+<span class="">Izin: <strong>Sekali Eksekusi (One-off)</strong></span>
+</div>
+<span class="">•</span>
+<div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px] text-secondary">verified_user</span><span class="">Isolasi Eksekusi: <strong>Mode Simulasi Terisolasi</strong></span></div>
+</div>
+</div>
+<!-- ACTION 01 — KIRIM EMAIL -->
+<article class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md relative overflow-hidden group hover:shadow-md transition-shadow">
+<!-- Action Top Header -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-headline-sm">
+                01
+              </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                    KIRIM EMAIL RESMI
+                  </h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-medium">
+                    Siap untuk Persetujuan
+                  </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Konektor: SMTP Enterprise / Microsoft 365 Outlook</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">security</span>
+                Enkripsi TLS 1.3 Terverifikasi
+              </span>
+</div>
+</div>
+<!-- Metadata Spec Table -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm p-space-md rounded-lg bg-surface-container-low font-body-sm text-body-sm">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Penerima Sah:</span>
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-semibold text-xs">
+                  BS
+                </div>
+<div class="min-w-0">
+<div class="font-semibold text-on-surface truncate">Budi Santoso</div>
+<div class="text-tertiary text-xs truncate">budi.santoso@nusantara.example</div>
+</div>
+</div>
+<div class="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-primary bg-surface-container px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[13px]">badge</span>
+<span class="">Terverifikasi Direktori Internal ID #4491</span>
+</div>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Subjek Email:</span>
+<div class="font-semibold text-on-surface font-body-md text-body-md">
+                Notulen Rapat Operasi Mingguan — Tinjauan Proyek Q4
+              </div>
+<div class="mt-2 text-on-surface-variant text-[11px]">
+                SPF, DKIM &amp; DMARC: Selaras dengan domain perusahaan.
+              </div>
+</div>
+</div>
+<!-- Real Preview Box of Exact Email Content -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">mail</span>
+                Pratinjau Nyata Pesan Lengkap (Wysiwyg Outgoing Preview):
+              </label>
+<button class="text-primary hover:text-secondary font-label-sm text-label-sm flex items-center gap-1 transition-colors" onclick="navigator.clipboard.writeText(document.getElementById('email-preview-content').innerText)">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+                Salin Teks
+              </button>
+</div>
+<div class="p-space-md rounded-lg bg-surface font-body-md text-body-md text-on-surface shadow-inner leading-relaxed whitespace-pre-line" id="email-preview-content">
+Yth. Pak Budi Santoso,
+
+Terlampir notulen lengkap rapat tinjauan operasi proyek per tanggal 6 November 2026. Tiga poin krusial yang disepakati:
+1. Penyesuaian timeline peluncuran tahap 2 menjadi akhir November.
+2. Alokasi kapasitas server tambahan disetujui oleh tim infrastruktur.
+3. Jadwal evaluasi tindak lanjut telah disiapkan untuk Jumat, 6 Nov 2026 pukul 14:00 WIB.
+
+Silakan tinjau berkas terlampir. Terima kasih.
+
+Salam,
+Farhan Pratama
+(Disiapkan secara otomatis via DEXTRA Governed Workforce)
+            </div>
+</div>
+<!-- Attachment Box -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">picture_as_pdf</span>
+</div>
+<div class="min-w-0">
+<div class="font-label-md text-label-md font-semibold text-on-surface truncate">
+                  Notulen-Rapat-Operasi-Final.pdf
+                </div>
+<div class="text-on-surface-variant text-[11px] flex items-center gap-2">
+<span class="">1.2 MB</span>
+<span class="">•</span>
+<span class="text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+                    Hash SHA256 Cocok &amp; Bebas Malware
+                  </span>
+</div>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-container font-label-sm text-label-sm transition-colors shadow-sm">
+              Tinjau Lampiran
+            </button>
+</div>
+</article>
+<!-- ACTION 02 — BUAT ACARA KALENDER -->
+<article class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-headline-sm">
+                02
+              </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                    BUAT ACARA KALENDER
+                  </h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-medium">
+                    Siap untuk Persetujuan
+                  </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Layanan: Microsoft 365 Exchange Calendar / Google Calendar Integration</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[15px]">event_available</span>
+              Jadwal Tervalidasi
+            </span>
+</div>
+<!-- Schedule Grid Box -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Left Info -->
+<div class="flex flex-col gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-0.5">Judul Acara:</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                  Rapat Tindak Lanjut Evaluasi Proyek
+                </span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tanggal &amp; Waktu:</span>
+<div class="flex items-center gap-2 text-on-surface font-medium">
+<span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
+<span class="">Jumat, 6 November 2026, 14:00 – 14:30 WIB</span>
+</div>
+<div class="flex items-center gap-1.5 text-primary text-[11px] font-medium mt-1">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span class="">Sudah diperiksa: Tidak bentrok dengan ibadah Sholat Jumat (Selesai 12:45 WIB).</span>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Konferensi Video:</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Google Meet / MS Teams Link</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm">
+                  Auto-generate saat rilis
+                </span>
+</div>
+</div>
+<!-- Right Participants -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-2 font-semibold">
+                  Peserta Persis Terdaftar (3 Partisipan):
+                </span>
+<ul class="flex flex-col gap-2">
+<li class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold">FP</div>
+<div class="font-body-sm text-body-sm text-on-surface font-medium">Farhan Pratama</div>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary">Organizer</span>
+</li>
+<li class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">BS</div>
+<div class="font-body-sm text-body-sm text-on-surface font-medium">Budi Santoso</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Required</span>
+</li>
+<li class="flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center text-[10px] font-bold">SR</div>
+<div class="font-body-sm text-body-sm text-on-surface font-medium">Siti Rahma</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Optional</span>
+</li>
+</ul>
+</div>
+<div class="pt-2 text-[11px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">lock_clock</span>
+<span class="">Ketersediaan slot kalender ketiga peserta telah diverifikasi lowong.</span>
+</div>
+</div>
+</div>
+</article>
+<!-- ACTION 03 — BUAT TUGAS DI SISTEM MANAJEMEN KERJA -->
+<article class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary font-headline-sm text-headline-sm">
+                03
+              </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+                    BUAT TUGAS DI SISTEM MANAJEMEN KERJA
+                  </h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-medium">
+                    Siap untuk Persetujuan
+                  </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Webhook API: Asana Enterprise Connector v2.4</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[15px]">task_alt</span>
+              Proyek #OPS-Q4-TRACK
+            </span>
+</div>
+<!-- Task Details Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Sistem Sasaran</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Asana Operasi
+              </span>
+<span class="text-[11px] text-tertiary block mt-0.5">Workspace Nusantara</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Penanggung Jawab</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Budi Santoso</span>
+<span class="text-[11px] text-primary block mt-0.5">Direct Assignment</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Tenggat Waktu</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">10 Nov 2026</span>
+<span class="text-[11px] text-on-surface-variant block mt-0.5">Pukul 17:00 WIB</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Prioritas Tugas</span>
+<div class="flex items-center gap-1 mt-0.5">
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+                  HIGH PRIORITY
+                </span>
+</div>
+<span class="text-[11px] text-on-surface-variant block mt-0.5">Critical Milestone</span>
+</div>
+</div>
+<!-- Specific Task Name & Instruction Payload -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+                Judul Tugas &amp; Deskripsi Otomatis:
+              </span>
+<span class="font-mono text-[11px] text-tertiary">Field Type: Rich Markdown</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<h4 class="font-headline-sm text-headline-sm font-semibold text-on-surface">
+                Tinjau dan Sahkan Penyesuaian Timeline Tahap 2
+              </h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1.5 leading-relaxed">
+                Tugas ini dibuat secara otomatis dari Work Package WP-2026-1106-0842. Silakan mereviu file Notulen Rapat Operasi dan memperbarui lembar kerja peluncuran proyek Q4 sebelum batas waktu yang ditentukan.
+              </p>
+</div>
+</div>
+</article>
+<!-- Audit Signature Verification Block -->
+<div class="p-space-md rounded-xl bg-surface-container flex items-center justify-between gap-space-md shadow-sm"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[22px]">verified</span></div><div><div class="font-headline-sm text-headline-sm text-on-surface font-semibold">Validasi Integritas Rencana</div><p class="font-body-sm text-body-sm text-on-surface-variant">Cakupan tindakan dikunci secara deterministik. Tindakan tidak dapat diubah setelah persetujuan diterbitkan.</p></div></div><span class="font-mono text-xs text-primary font-bold px-3 py-1.5 rounded-lg bg-surface-container-lowest shrink-0 shadow-sm">STATUS: INTEGRITY_OK</span></div>
+</section>
+<!-- RIGHT COLUMN: MANDATE AUTHORIZATION & SECURITY FINDINGS (approx 35% -> 4 cols on lg screen) -->
+<aside class="lg:col-span-4 flex flex-col gap-space-lg lg:sticky lg:top-20">
+<!-- PANEL 1: TEMUAN VALIDASI & PEMERIKSAAN KESELAMATAN -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+                VALIDASI KESELAMATAN
+              </h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-primary font-label-sm text-label-sm font-semibold">
+              5/5 Lulus
+            </span>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-body-sm">
+<!-- Item 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5">
+<div class="w-5 h-5 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<span class="font-semibold text-on-surface block">Identitas Penerima</span>
+<span class="text-on-surface-variant text-xs leading-normal">
+                  Budi Santoso terverifikasi di HRIS Nusantara (NIP 2021-4491).
+                </span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5">
+<div class="w-5 h-5 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<span class="font-semibold text-on-surface block">Keselarasan Jadwal</span>
+<span class="text-on-surface-variant text-xs leading-normal">
+                  Pukul 14:00 WIB berada di luar jam istirahat atau jam ibadah resmi.
+                </span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5">
+<div class="w-5 h-5 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<span class="font-semibold text-on-surface block">Tinjauan Kebijakan</span>
+<span class="text-on-surface-variant text-xs leading-normal">
+                  Sesuai parameter kebijakan mandat Divisi Operasi (SLA &lt; 24 jam).
+                </span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5">
+<div class="w-5 h-5 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<span class="font-semibold text-on-surface block">Uji Prompt Injection</span>
+<span class="text-on-surface-variant text-xs leading-normal">
+                  Negatif terhadap manipulasi prompt, instruksi tersembunyi, atau bypass role.
+                </span>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5"><div class="w-5 h-5 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5"><span class="material-symbols-outlined text-[14px]">check</span></div><div><span class="font-semibold text-on-surface block">Validasi Integritas Rencana</span><span class="text-on-surface-variant text-xs leading-normal">Teks dan cakupan tindakan dikunci sesuai versi rencana untuk audit mandat.</span></div></div>
+</div>
+</div>
+<!-- PANEL 2: BATASAN MANDAT HUKUM (MANDATE BOUNDARIES) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">gavel</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+              BATASAN MANDAT HUKUM
+            </h3>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-body-sm">
+<!-- Boundary 1: Expiry -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Kedaluwarsa Mandat:</span>
+<span class="font-mono text-xs font-bold text-error">4 Jam Tersisa</span>
+</div>
+<p class="text-on-surface-variant text-xs leading-normal">
+                Mandat otomatis hangus jika tidak tereksekusi sebelum <strong>14:14 WIB</strong> (6 Nov 2026). Tidak ada auto-renew tanpa izin baru.
+              </p>
+</div>
+<!-- Boundary 2: Reversibility Matrix -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Tingkat Reversibilitas:</span>
+<div class="flex flex-col gap-1 font-body-sm text-[12px]">
+<div class="flex items-center justify-between">
+<span class="text-on-surface">Kirim Email:</span>
+<span class="font-semibold text-error flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                    Permanen (Tidak Bisa Batal)
+                  </span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">Jadwal Kalender:</span>
+<span class="font-semibold text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    Rollback Ready
+                  </span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">Tugas Asana:</span>
+<span class="font-semibold text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    Rollback Ready
+                  </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PANEL 3: PANEL PERSETUJUAN MANUSIA (AUTHORIZATION ACTION) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">fingerprint</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+                PENGAMBILAN KEPUTUSAN
+              </h3>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+</div>
+<!-- Legal Warning Notice Box -->
+<div class="p-space-md rounded-lg bg-surface-container text-on-surface flex flex-col gap-1.5">
+<div class="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-primary">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span class="">Pernyataan Tanggung Jawab Operasional</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              Anda memberi wewenang atas tindakan persis di samping. Jika spesifikasi rencana ini diubah setelah persetujuan, mandat ini seketika gugur dan membutuhkan persetujuan ulang.
+            </p>
+</div>
+<!-- Main Interactive Actions -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<!-- Large Primary Approval Trigger -->
+<button class="w-full py-3.5 px-space-md rounded-lg bg-primary hover:bg-secondary text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200" id="approve-mandate-btn">
+<span class="material-symbols-outlined text-[22px]">approval_delegation</span>
+<span class="">SETUJUI &amp; TERBITKAN MANDAT</span>
+</button><div class="p-2 rounded bg-surface-container-low text-center font-body-sm text-[11px] text-on-surface-variant"><span class="font-medium text-primary">Catatan:</span> Mandat akan disimulasikan dalam lingkungan eksekusi uji (Mock Dispatcher).</div>
+<!-- Secondary Actions Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<button class="py-2.5 px-3 rounded-lg bg-surface-container text-primary hover:bg-surface-container-high font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors" id="request-revision-btn">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span class="">Minta Revisi Rencana</span>
+</button>
+<button class="py-2.5 px-3 rounded-lg bg-error-container text-on-error-container hover:bg-error hover:text-on-error font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 transition-colors" id="reject-mandate-btn">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+<span class="">Tolak &amp; Batalkan</span>
+</button>
+</div>
+</div>
+<!-- Human-in-the-Loop Operator Identity Card -->
+<div class="pt-space-xs flex items-center justify-between text-[11px] text-on-surface-variant">
+<span class="">Otoritas: Farhan Pratama (ID #7721)</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-primary">lock</span>
+              Token Session Aktif
+            </span>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<!-- Raw Payload Inspector Modal (Lightweight Micro-Interaction) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden items-center justify-center p-4" id="raw-diff-modal">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-xl p-space-lg flex flex-col gap-space-md animate-in fade-in zoom-in-95">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">code</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Raw Cryptographic Execution Payload (JSON)
+          </h4>
+</div>
+<button class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" id="close-raw-diff-btn">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="p-space-md bg-surface-container-low rounded-lg font-mono text-xs text-on-surface overflow-x-auto max-h-96">
+<pre>{
+  "plan_id": "WP-2026-1106-0842",
+  "hash": "7f3a9e91d84b2c01994e7710b2ae4c9e8312d4",
+  "version": "1.2",
+  "strict_mode": true,
+  "actions": [
+    {
+      "step": 1,
+      "protocol": "SMTP_OUTLOOK",
+      "recipient": "budi.santoso@nusantara.example",
+      "subject": "Notulen Rapat Operasi Mingguan — Tinjauan Proyek Q4",
+      "attachment_sha256": "8a32b04f7c81a29f8c61e47"
+    },
+    {
+      "step": 2,
+      "protocol": "CALENDAR_EVENT",
+      "time_start": "2026-11-06T14:00:00+07:00",
+      "time_end": "2026-11-06T14:30:00+07:00",
+      "attendees": ["farhan.p", "budi.santoso", "siti.rahma"]
+    },
+    {
+      "step": 3,
+      "protocol": "ASANA_REST_API",
+      "workspace": "OPS_NUSANTARA",
+      "assignee": "budi.santoso",
+      "due": "2026-11-10T17:00:00+07:00",
+      "priority": "HIGH"
+    }
+  ],
+  "governance": {
+    "human_approver": "farhan.pratama@nusantara.example",
+    "policy_bundle": "OPS_CORE_POLICY_v4",
+    "expires_at": "2026-11-06T14:14:22+07:00"
+  }
+}</pre>
+</div>
+<div class="flex items-center justify-between text-xs text-on-surface-variant">
+<span class="">Kunci Signature: SHA-256 HMAC RSA-4096</span>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-primary font-label-sm text-label-sm font-semibold hover:bg-surface-container-high transition-colors" id="copy-json-btn">
+          Salin Payload JSON
+        </button>
+</div>
+</div>
+</div>
+<!-- Interactive JavaScript Behavior -->
+<script>
+    (function initScopeInspector() {
+      // Raw payload modal triggers
+      const rawBtn = document.getElementById('view-raw-diff-btn');
+      const modal = document.getElementById('raw-diff-modal');
+      const closeBtn = document.getElementById('close-raw-diff-btn');
+      const copyJsonBtn = document.getElementById('copy-json-btn');
+
+      if (rawBtn && modal && closeBtn) {
+        rawBtn.addEventListener('click', () => {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        });
+
+        closeBtn.addEventListener('click', () => {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        });
+
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+        });
+      }
+
+      if (copyJsonBtn) {
+        copyJsonBtn.addEventListener('click', () => {
+          const pre = modal.querySelector('pre');
+          if (pre) {
+            navigator.clipboard.writeText(pre.innerText).then(() => {
+              copyJsonBtn.innerText = 'Tersalin!';
+              setTimeout(() => { copyJsonBtn.innerText = 'Salin Payload JSON'; }, 2000);
+            });
+          }
+        });
+      }
+
+      // Mandate Decision Actions
+      const approveBtn = document.getElementById('approve-mandate-btn');
+      const revisionBtn = document.getElementById('request-revision-btn');
+      const rejectBtn = document.getElementById('reject-mandate-btn');
+
+      if (approveBtn) {
+        approveBtn.addEventListener('click', () => {
+          approveBtn.disabled = true;
+          approveBtn.innerHTML = `
+            <span class="material-symbols-outlined text-[20px] animate-spin">refresh</span>
+            <span>Menerbitkan Mandat & Mengunci Kriptografi...</span>
+          `;
+          setTimeout(() => {
+            approveBtn.innerHTML = `
+              <span class="material-symbols-outlined text-[20px]">check_circle</span>
+              <span>Mandat Diterbitkan — Eksekusi Dimulai</span>
+            `;
+            approveBtn.classList.remove('bg-primary', 'hover:bg-secondary');
+            approveBtn.classList.add('bg-surface-container', 'text-primary');
+          }, 1200);
+        });
+      }
+
+      if (revisionBtn) {
+        revisionBtn.addEventListener('click', () => {
+          const reason = prompt('Masukkan catatan revisi untuk Executive Assistant:');
+          if (reason) {
+            alert('Catatan revisi telah dikirim ke sesi AI. Work Package dikembalikan ke draf.');
+          }
+        });
+      }
+
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', () => {
+          if (confirm('Konfirmasi: Tolak dan batalkan Work Package ini secara permanen?')) {
+            alert('Work Package dibatalkan. Catatan audit ditandai: ABORTED_BY_HUMAN.');
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></div>
+
+</body></html>

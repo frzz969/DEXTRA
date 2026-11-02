@@ -1,0 +1,337 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="./assets/vendor/symbols.css" rel="stylesheet">
+<link href="./assets/vendor/symbols.css" rel="stylesheet">
+<link href="./assets/vendor/fonts.css" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="./assets/vendor/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"outline-variant":"#c9c4d7","inverse-on-surface":"#f2efff","secondary-fixed":"#e5deff","on-primary":"#ffffff","surface-container-lowest":"#ffffff","on-surface-variant":"#484554","outline":"#797586","tertiary-fixed-dim":"#c7c5d5","tertiary-container":"#706f7d","surface-container":"#efecff","on-primary-fixed-variant":"#4823bc","surface-dim":"#dad7f1","surface-container-highest":"#e2e0fa","error-container":"#ffdad6","error":"#ba1a1a","on-primary-container":"#f9f3ff","primary-fixed":"#e6deff","tertiary-fixed":"#e3e0f1","on-error-container":"#93000a","on-surface":"#1a1a2c","on-secondary-fixed":"#1b0063","on-tertiary-fixed-variant":"#464553","surface-container-high":"#e8e5ff","surface-bright":"#fcf8ff","on-tertiary":"#ffffff","inverse-surface":"#2f2f42","on-secondary":"#ffffff","primary-container":"#7357e8","primary-fixed-dim":"#cabeff","tertiary":"#575764","surface":"#fcf8ff","on-background":"#1a1a2c","secondary":"#5f49c5","primary":"#5a3bce","surface-tint":"#6142d5","surface-container-low":"#f5f2ff","background":"#fcf8ff","secondary-fixed-dim":"#c9bfff","on-tertiary-container":"#f7f4ff","secondary-container":"#9581ff","on-error":"#ffffff","inverse-primary":"#cabeff","surface-variant":"#e2e0fa","on-secondary-fixed-variant":"#462eac","on-tertiary-fixed":"#1a1a26","on-secondary-container":"#2b0090","on-primary-fixed":"#1c0062"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-xl":"2rem","space-md":"1rem","margin-mobile":"1rem",gutter:"1.5rem","space-lg":"1.5rem",margin:"2rem"},fontFamily:{"body-lg":["Inter"],"body-sm":["Inter"],"headline-xl":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Inter"]},fontSize:{"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-xl":["32px",{lineHeight:"40px",fontWeight:"700"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-lg":["24px",{lineHeight:"32px",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"headline-xl-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"14px",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[250px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center gap-space-sm bg-surface-container-lowest"><img alt="DEXTRA Brand Logo" class="h-8 w-auto object-contain" src="./assets/img/avatar.svg"><div class="flex flex-col min-w-0"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">DEXTRA</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate mt-0.5">Enterprise AI Operations</span></div></div><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Workspace</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="overview" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></div></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm transition-colors bg-surface-container text-primary font-label-md rounded-lg" data-path="buat-permintaan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">send</span><span class="font-body-md text-body-md">Buat Permintaan</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="kotak-persetujuan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">assignment_turned_in</span><span class="font-body-md text-body-md">Kotak Persetujuan</span></div><span class="bg-primary text-on-primary font-label-sm text-label-sm px-1.5 py-0.5 rounded-full">3</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="work-package" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">layers</span><span class="font-body-md text-body-md">Work Package</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="aktivitas-dan-audit" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="font-body-md text-body-md">Aktivitas &amp; Audit</span></div></a></nav><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Governance</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="kebijakan-mandat" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">policy</span><span class="font-body-md text-body-md">Kebijakan Mandat</span></div></a></nav><div class="px-space-md pt-space-md pb-space-xs"><span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant">Settings</span></div><nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md rounded-lg"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="pengaturan" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-md text-body-md">Pengaturan</span></div></a></nav></div><div class="p-space-sm m-space-sm rounded-xl bg-surface-container-low"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shrink-0" src="./assets/img/avatar.svg"><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface font-semibold truncate leading-snug">Farhan Pratama</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Operations Manager</span></div></div><a class="text-on-surface-variant hover:text-error transition-colors p-1 shrink-0" data-path="login" href="#"><span class="material-symbols-outlined text-[18px]">logout</span></a></div></div></aside><div class="pl-[250px]"><header class="fixed top-0 left-[250px] right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant"><span class="text-on-surface font-semibold">DEXTRA</span><span class="">/</span><span class="text-on-surface">Operasi</span></div><div class="h-4 w-px bg-outline-variant"></div><span class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm px-space-sm py-1 rounded-full">Nusantara Digital · Divisi Operasi</span><span class="bg-surface-container text-primary font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">verified</span>Sistem Terproteksi — Human Mandate Active</span></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-[18px] text-on-surface-variant">search</span><input class="w-64 h-9 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Cari mandat, workflow, log..." type="text"></div><div class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">schedule</span><span class="">14:32 WIB · 24 Okt</span></div><button class="relative p-1.5 text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="./assets/img/avatar.svg"></div></header><main class="relative pt-16 w-full min-h-screen bg-surface"><div class="flex flex-col w-full">
+<div class="w-full max-w-[1440px] mx-auto px-space-lg py-space-xl flex flex-col gap-space-lg">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            Fase Inisiasi Work Package
+          </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">•</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">Isolasi Eksekusi Terkelola</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Buat Permintaan Work Package Baru</h1>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+          Tugaskan pekerjaan kepada spesialis AI DEXTRA. AI akan menganalisis, membaca referensi, dan menyusun draf rencana kerja untuk ditinjau dan dimandatkan oleh Anda.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+          Toleransi Risiko Mandat: Zero Autonomous Bypass
+        </span>
+</div>
+</div>
+<!-- Critical Governance Notice -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-high p-space-md shadow-sm">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">gavel</span>
+</div>
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Prinsip DEXTRA: Human-in-the-Loop Enforced</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-semibold uppercase tracking-wider">Mandat Mutlak</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-normal">
+            DEXTRA hanya akan menyusun rencana kerja. Tidak ada email, undangan kalender, perubahan basis data, atau tindakan eksternal apapun yang dieksekusi tanpa persetujuan eksplisit dan penerbitan mandat dari Anda.
+          </p>
+</div>
+</div>
+</div>
+<!-- Two Column Main Workspace Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: Composer Form (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg">
+<!-- Workspace and Specialist Selectors -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Workspace / Department -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">domain</span>
+                Workspace / Departemen
+              </label>
+<div class="relative">
+<select class="w-full h-11 px-3 pr-10 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+<option selected="">Divisi Operasi — Nusantara Digital</option>
+<option>Divisi Kepatuhan &amp; Regulasi — Nusantara Digital</option>
+<option>Divisi Pengadaan &amp; Vendor — Nusantara Digital</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Kontekstual data dibatasi pada lingkup departemen ini.</span>
+</div>
+<!-- Specialist Selector -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">smart_toy</span>
+                Spesialis Sasaran DEXTRA
+              </label>
+<div class="relative">
+<select class="w-full h-11 px-3 pr-10 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer" id="specialistSelect">
+<option selected="" value="auto">Auto-Assign Cerdas (Rekomendasi Orchestrator)</option>
+<option value="ea">Executive Assistant (Kalender, Sintesis, Korespondensi)</option>
+<option value="ao">Administrative Officer (Dokumentasi, Tiket, Logistik)</option>
+<option value="cr">Compliance Reviewer (Audit Regulasi, SOP, Risiko)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">expand_more</span>
+</div>
+<div class="flex items-center gap-1.5 text-primary font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+<span class="">Analisis semantik akan mengarahkan ke Executive Assistant</span>
+</div>
+</div>
+</div>
+<!-- Prompt / Intent Textarea -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">edit_note</span>
+                Apa yang ingin Anda minta DEXTRA tangani?
+              </label>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">214 karakter</span>
+<button class="text-primary hover:text-secondary font-label-sm text-label-sm flex items-center gap-0.5" type="button">
+<span class="material-symbols-outlined text-[14px]">history</span>
+                  Gunakan Template
+                </button>
+</div>
+</div>
+<div class="relative rounded-lg bg-surface-container-low p-2 focus-within:ring-2 focus-within:ring-primary transition-all">
+<textarea class="w-full bg-transparent p-2 text-on-surface placeholder:text-on-surface-variant font-body-md text-body-md focus:outline-none resize-none leading-relaxed" placeholder="Deskripsikan instruksi tugas secara rinci, cantumkan pihak yang terlibat, dan hasil akhir yang diinginkan..." rows="5">Siapkan notulen rapat tinjauan proyek hari ini dari berkas audio/catatan terlampir, kirimkan draf final ke Pak Budi Santoso, dan jadwalkan sesi tindak lanjut evaluasi untuk hari Jumat depan jam 14.00 WIB.</textarea>
+<div class="flex items-center justify-between pt-2 px-2">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">person_pin</span>
+                    Target: Pak Budi Santoso
+                  </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">event</span>
+                    Slot: Jumat Depan 14:00 WIB
+                  </span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant italic">Pemrosesan semantik lokal</span>
+</div>
+</div>
+</div>
+<!-- Attachments & Sandbox Scan -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">attach_file</span>
+                Lampiran Berkas &amp; Referensi Konteks
+              </label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lingkungan Simulasi Aman</span>
+</div>
+<!-- Drag & Drop Zone -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col items-center justify-center text-center gap-space-sm cursor-pointer hover:bg-surface-container transition-colors">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface font-medium">Tarik &amp; lepas dokumen ke area ini, atau <span class="text-primary font-semibold underline underline-offset-2">telusuri berkas</span></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Mendukung PDF, DOCX, XLSX, TXT, M4A, MP3 (Hingga 50 MB per berkas)</span>
+</div>
+</div>
+<!-- Uploaded Files Badges & Security Scanner Pill -->
+<div class="flex flex-col gap-space-xs mt-space-xs">
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Badge 1 -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-high text-on-surface shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">description</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold truncate max-w-[200px]">Catatan_Rapat_Operasi_Nov2026.docx</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1.4 MB • Read-Only Enclave</span>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 ml-1" title="Hapus berkas" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Badge 2 -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-high text-on-surface shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">table_view</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold truncate max-w-[200px]">Daftar_Peserta_Proyek.xlsx</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">420 KB • Structured Reference</span>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 ml-1" title="Hapus berkas" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Scanner Security Pill -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container text-on-surface mt-1"><span class="material-symbols-outlined text-[18px] text-primary animate-spin">sync</span><span class="font-label-md text-label-md font-semibold text-primary">Memindai integritas berkas...</span><span class="font-body-sm text-body-sm text-on-surface-variant">Analisis Guardrail Bersih dari Injeksi Instruksi &amp; anomali data.</span></div>
+</div>
+</div>
+<!-- Mandate Parameter Configuration -->
+<div class="pt-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Konfigurasi Parameter Mandat</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ditentukan berdasarkan Matriks Kepatuhan v4.2</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Risk Level -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Tingkat Risiko Diharapkan</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">warning_amber</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">Sedang</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-snug">Melibatkan komunikasi eksternal &amp; perubahan kalender kerja.</span>
+</div>
+</div>
+<!-- Deadline -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Batas Waktu Draf Selesai</span>
+<span class="material-symbols-outlined text-[18px] text-primary">timer</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Hari ini, sebelum 17:00 WIB</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-snug">Estimasi sintesis rencana: ~2 menit 40 detik.</span>
+</div>
+</div>
+<!-- Execution Mode -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Mode Eksekusi</span>
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md font-semibold text-primary">Wajib Mandat Bertingkat</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-snug">Human-in-the-Loop Enforced. Mandat ganda untuk pengiriman.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Realistic Interactive Notice State Box -->
+<div class="rounded-xl bg-surface-container p-space-md flex items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Validasi Pra-Penerbitan Mandat</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Setelah dikirim, Executive Assistant akan memvalidasi jadwal dan identitas penerima sebelum meminta tanda tangan mandat Anda.
+              </p>
+</div>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded bg-surface-container-lowest text-primary font-label-sm text-label-sm font-semibold tracking-wide">
+            STATUS: STANDBY
+          </span>
+</div>
+<!-- Bottom Action Bar (Card Surface) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">lock_clock</span>
+<span class="">Draf tersimpan otomatis lokal di peramban Anda.</span>
+</div>
+<div class="flex items-center gap-space-sm w-full sm:w-auto">
+<button class="w-full sm:w-auto px-space-lg h-11 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+              Simpan Draf
+            </button>
+<button class="w-full sm:w-auto px-space-lg h-11 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold shadow-md transition-all flex items-center justify-center gap-2" type="button">
+<span class="">Kirim Permintaan &amp; Mulai Penyusunan Rencana (DRAFT)</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar / Guiding Principles (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Responsible Delegation Guide Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Panduan Delegasi Bertanggung Jawab</h3>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary">v2.4</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Prinsip utama DEXTRA adalah transparansi kedaulatan manusia atas AI pekerja. Pastikan setiap penugasan terukur dan memiliki batas konteks yang tegas.
+          </p>
+<div class="space-y-space-md">
+<!-- Principle 1: Prompting Excellence -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                Contoh Instruksi yang Baik &amp; Spesifik
+              </div>
+<div class="p-2 rounded bg-surface-container-lowest text-on-surface-variant font-body-sm text-body-sm leading-relaxed">
+<span class="text-primary font-semibold">Baik:</span> "Ekstrak 3 poin keputusan utama dari notulen, buat draf email ke Direktur Operasi, minta persetujuan sebelum mengirim."
+              </div>
+<div class="p-2 rounded bg-surface-container-lowest text-on-surface-variant font-body-sm text-body-sm leading-relaxed opacity-75">
+<span class="text-error font-semibold">Hindari:</span> "Kirim email rangkuman ke semua orang di kalender dan tangani tindak lanjutnya sendiri."
+              </div>
+</div>
+<!-- Principle 2: Separation of Read vs Write -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-secondary">alt_route</span>
+                Pemisahan Fase Baca vs Eksekusi Tulis
+              </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                DEXTRA beroperasi dalam isolasi mutlak:
+              </p>
+<div class="flex flex-col gap-1.5 pt-1">
+<div class="flex items-start gap-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-semibold">Fase 1</span>
+<span class="font-body-sm text-body-sm text-on-surface">Membaca dokumen, menganalisis entitas, &amp; menata draf rencana tindakan.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-sm text-label-sm font-semibold">Fase 2</span>
+<span class="font-body-sm text-body-sm text-on-surface">HANYA berjalan jika tombol Mandat ditandatangani oleh pemegang wewenang.</span>
+</div>
+</div>
+</div>
+<!-- Principle 3: Cryptographic Auditability -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs"><div class="flex items-center gap-1.5 font-label-md text-label-md font-semibold text-on-surface"><span class="material-symbols-outlined text-[16px] text-primary">fingerprint</span>Mandate Audit Trail Terkelola</div><p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">Setiap interaksi dan dokumen dicatat dalam log integritas rencana. Rekam jejak siap ditinjau oleh Divisi Audit Kepatuhan sebelum mandat diterbitkan.</p></div>
+</div>
+<!-- Agent Roster Spotlight -->
+<div class="pt-space-xs flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">3 Spesialis MVP Terpadu</span><span class="font-label-sm text-label-sm text-primary font-semibold">Siap Mandat</span></div><div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">EA</div><div class="flex flex-col"><span class="font-label-md text-label-md font-semibold text-on-surface">Executive Assistant</span><span class="font-label-sm text-label-sm text-on-surface-variant">Sintesis &amp; Rekomendasi Jadwal</span></div></div><span class="w-2 h-2 rounded-full bg-secondary-container" title="Siaga Operasional"></span></div><div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-xs">AO</div><div class="flex flex-col"><span class="font-label-md text-label-md font-semibold text-on-surface">Administrative Officer</span><span class="font-label-sm text-label-sm text-on-surface-variant">Tiket &amp; Pengarsipan Dokumen</span></div></div><span class="w-2 h-2 rounded-full bg-secondary-container" title="Siaga Operasional"></span></div><div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-tertiary-container text-on-primary flex items-center justify-center font-bold text-xs">CR</div><div class="flex flex-col"><span class="font-label-md text-label-md font-semibold text-on-surface">Compliance Reviewer</span><span class="font-label-sm text-label-sm text-on-surface-variant">Validasi SOP &amp; Kebijakan Audit</span></div></div><span class="w-2 h-2 rounded-full bg-secondary-container" title="Siaga Operasional"></span></div><div class="p-2 rounded-lg bg-surface-container flex items-center gap-2 mt-1"><span class="material-symbols-outlined text-[16px] text-tertiary">sync_alt</span><span class="font-body-sm text-body-sm text-on-surface-variant"><strong class="text-on-surface font-semibold">Target Integrasi:</strong> Sistem ERP &amp; HRIS terhubung hanya via persetujuan mandat.</span></div></div>
+</div>
+<!-- Quick Governance Telemetry Snapshot -->
+<div class="rounded-xl bg-surface-container-lowest p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Ketersediaan Kuota Mandat</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">84 / 100 Jam Ini</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 84%;"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Batas orkestrasi aman terjaga untuk Divisi Operasi.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interaction for specialist selector change
+  const specialistSelect = document.getElementById('specialistSelect');
+  if (specialistSelect) {
+    specialistSelect.addEventListener('change', (e) => {
+      // Feedback tone indicator
+      console.log('Selected specialist:', e.target.value);
+    });
+  }
+</script></main></div>
+
+</body></html>
