@@ -1,14 +1,1 @@
-[
-  {
-    "execution_id": "exec_4936fe71",
-    "mandate_id": "mandate_test_8e80971d",
-    "action_id": "action_001",
-    "execution_key": "kb",
-    "result": "sent",
-    "reason_code": null,
-    "executed_at": "2026-11-01T10:06:00+07:00",
-    "evidence": {
-      "mock_message_id": "msg_89d85ef6"
-    }
-  }
-]
+[]

@@ -16,6 +16,8 @@
     "test": "npm run test --workspaces --if-present",
     "test:inproc": "node --test --experimental-strip-types --experimental-test-isolation=none \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
     "test:http": "node --test --experimental-strip-types --experimental-test-isolation=none \"apps/mcp-server/tests/http-verification.verify.ts\"",
-    "test:contracts": "npm run test --workspace @dextra/contracts"
+    "test:contracts": "npm run test --workspace @dextra/contracts",
+    "demo:seed": "node --experimental-strip-types packages/store/src/seed.ts",
+    "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset"
   }
 }
