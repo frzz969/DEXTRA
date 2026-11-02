@@ -4,6 +4,7 @@ import { resolveScope, isAllowed, agentToken, opsToken, AGENT_TOOLS, OPS_TOOLS }
 import { handleTool } from './handlers.ts';
 import { ensureStoreFiles } from '../../../packages/store/src/json-file.ts';
 import { appendAudit } from '../../../packages/store/src/repository.ts';
+import { evaluateRequest, parseAllowedOrigins, type OriginPolicy } from './origin-policy.ts';
 
 const PORT = Number(process.env.DEXTRA_MCP_PORT ?? 8765);
 
@@ -136,12 +137,36 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
   get_audit_log: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
-export function startServer() {
+export interface ServerOptions {
+  port?: number;
+  allowedOrigins?: Iterable<string>;
+}
+
+export function startServer(options: ServerOptions = {}) {
   ensureStoreFiles().catch(() => {});
+  const policy: OriginPolicy = {
+    port: options.port ?? PORT,
+    allowedOrigins: new Set(
+      options.allowedOrigins ?? parseAllowedOrigins(process.env.DEXTRA_ALLOWED_ORIGINS, options.port ?? PORT),
+    ),
+  };
   const server = createServer(async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // D-01: no wildcard CORS. Host and Origin are checked before any routing,
+    // so a hostile page or a DNS-rebinding hostname never reaches a tool.
+    res.setHeader('Vary', 'Origin');
+    const decision = evaluateRequest(
+      { method: req.method ?? 'GET', origin: req.headers.origin, host: req.headers.host },
+      policy,
+    );
+    if (decision.action === 'reject') {
+      return sendJson(res, decision.status, { error: decision.code });
+    }
+    if (decision.cors && decision.origin !== null) {
+      res.setHeader('Access-Control-Allow-Origin', decision.origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.setHeader('Access-Control-Max-Age', '600');
+    }
     if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
     if (req.url === '/health' && req.method === 'GET') {
       return sendJson(res, 200, { ok: true, service: 'dextra-mcp', port: PORT });
@@ -158,8 +183,14 @@ export function startServer() {
     }
     await handleRpc(req, res, body);
   });
-  server.listen(PORT, '127.0.0.1', () => {
-    console.log(`DEXTRA MCP server listening on 127.0.0.1:${PORT}`);
+  server.listen(policy.port, '127.0.0.1', () => {
+    const address = server.address();
+    if (address !== null && typeof address === 'object') {
+      // An ephemeral port (0) is resolved here; the host check must compare
+      // against the port that was actually bound.
+      policy.port = address.port;
+    }
+    console.log(`DEXTRA MCP server listening on 127.0.0.1:${policy.port}`);
     console.log(`agent token: ${agentToken()}`);
   });
   return server;

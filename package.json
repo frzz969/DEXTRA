@@ -14,6 +14,7 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:inproc": "node --test --experimental-strip-types --experimental-test-isolation=none \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
     "test:contracts": "npm run test --workspace @dextra/contracts"
   }
 }
