@@ -17,7 +17,14 @@
  * blocked, because `Origin` is the only signal a browser can be relied on to
  * send and requiring it would break non-browser tooling. A hostile page in a
  * browser cannot omit `Origin` on a cross-origin `fetch`, so this does not
- * open a browser path.
+ * open a browser path - but it is also not an authentication bypass: token and
+ * scope checks still run for every `tools/call`.
+ *
+ * Fail-closed rules added by the D-01 review:
+ * - a missing or blank `Host` is refused (400), not assumed to be loopback;
+ * - a `Host` without a port is refused, because the bound port cannot be verified;
+ * - origins are matched only after `parseStrictOrigin`, never after `normalizeOrigin`;
+ * - `DEXTRA_ALLOWED_ORIGINS` can only narrow the built-in defaults.
  */
 
 /** Dashboard dev origin documented in PRD section 35.2. */
@@ -34,8 +41,16 @@ export type RequestDecision =
   | {
       action: 'reject';
       status: 400 | 403;
-      code: 'MISSING_ORIGIN' | 'FORBIDDEN_ORIGIN' | 'FORBIDDEN_HOST';
+      code: 'MISSING_HOST' | 'MISSING_ORIGIN' | 'FORBIDDEN_ORIGIN' | 'FORBIDDEN_HOST';
     };
+
+/** Raised when DEXTRA_ALLOWED_ORIGINS is malformed or would widen the default allowlist. */
+export class InvalidOriginConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidOriginConfigurationError';
+  }
+}
 
 export interface OriginPolicy {
   /** Port the server is actually bound to. */
@@ -45,10 +60,35 @@ export interface OriginPolicy {
 
 const LOOPBACK_HOSTNAMES = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
 
+/**
+ * Normalises a value for display/comparison only. It is deliberately permissive,
+ * so it MUST NOT be used to decide whether an Origin is trusted: `.../`,
+ * `...///` and other malformed values would collapse onto a trusted string.
+ * Trust decisions use `parseStrictOrigin`.
+ */
 export function normalizeOrigin(value: string): string {
   let normalized = value.trim().toLowerCase();
   while (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
   return normalized;
+}
+
+const STRICT_ORIGIN_PATTERN = /^http:\/\/(127\.0\.0\.1|localhost|\[::1\]):([1-9][0-9]{0,4})$/;
+
+/**
+ * Parses an exact `http://<loopback>:<port>` origin. Returns `null` for
+ * anything else: other schemes, external hostnames, missing/leading-zero/
+ * out-of-range ports, trailing slashes, paths, credentials, whitespace, and the
+ * opaque `null` origin. There is no fallback parsing: an ambiguous value is
+ * rejected rather than repaired.
+ */
+export function parseStrictOrigin(value: string): string | null {
+  if (value === '' || value !== value.trim()) return null;
+  const lowered = value.toLowerCase();
+  const match = STRICT_ORIGIN_PATTERN.exec(lowered);
+  if (match === null) return null;
+  const port = Number(match[2]);
+  if (port > 65535) return null;
+  return lowered;
 }
 
 export function defaultAllowedOrigins(port: number): string[] {
@@ -61,18 +101,43 @@ export function defaultAllowedOrigins(port: number): string[] {
 }
 
 /**
- * Builds the allowed-origin set. `DEXTRA_ALLOWED_ORIGINS` (comma separated)
- * replaces the defaults entirely, so an operator can narrow it further.
+ * Builds the allowed-origin set.
+ *
+ * `DEXTRA_ALLOWED_ORIGINS` (comma separated) can only NARROW the built-in
+ * loopback defaults. Every entry must parse strictly and must already be part
+ * of the default set; the result is the intersection, never a union. A
+ * malformed entry, an external origin, a wildcard, or a list that narrows the
+ * allowlist to nothing is a configuration error and fails closed at startup
+ * instead of silently degrading to a wider policy.
  */
 export function parseAllowedOrigins(raw: string | undefined, port: number): Set<string> {
-  const source =
-    raw !== undefined && raw.trim() !== '' ? raw.split(',') : defaultAllowedOrigins(port);
+  const defaults = new Set(defaultAllowedOrigins(port));
+  if (raw === undefined || raw.trim() === '') {
+    return defaults;
+  }
+
   const result = new Set<string>();
-  for (const entry of source) {
-    const normalized = normalizeOrigin(entry);
-    // `null` is the opaque origin of file:// pages and sandboxed frames; it is
-    // never trusted, so it cannot enter the allowlist.
-    if (normalized !== '' && normalized !== 'null') result.add(normalized);
+  for (const entry of raw.split(',')) {
+    const trimmed = entry.trim();
+    // Whitespace-only segments (a trailing comma, a stray space) are formatting,
+    // not policy. They are skipped; a list with no usable entry still fails below.
+    if (trimmed === '') continue;
+    const origin = parseStrictOrigin(trimmed);
+    if (origin === null) {
+      throw new InvalidOriginConfigurationError(
+        `DEXTRA_ALLOWED_ORIGINS entry ${JSON.stringify(trimmed)} is not a strict http loopback origin.`,
+      );
+    }
+    if (!defaults.has(origin)) {
+      throw new InvalidOriginConfigurationError(
+        `DEXTRA_ALLOWED_ORIGINS entry ${JSON.stringify(trimmed)} would widen the default allowlist; only narrowing is allowed.`,
+      );
+    }
+    result.add(origin);
+  }
+
+  if (result.size === 0) {
+    throw new InvalidOriginConfigurationError('DEXTRA_ALLOWED_ORIGINS narrowed the allowlist to nothing.');
   }
   return result;
 }
@@ -83,6 +148,7 @@ interface ParsedHost {
 }
 
 export function parseHostHeader(host: string): ParsedHost | null {
+  if (/\s/.test(host)) return null;
   const value = host.trim().toLowerCase();
   if (value === '') return null;
 
@@ -93,48 +159,61 @@ export function parseHostHeader(host: string): ParsedHost | null {
     const rest = value.slice(closing + 1);
     if (rest === '') return { hostname, port: null };
     if (!rest.startsWith(':')) return null;
-    const port = Number(rest.slice(1));
-    return Number.isInteger(port) && port > 0 ? { hostname, port } : null;
+    const port = parsePort(rest.slice(1));
+    return port === null ? null : { hostname, port };
   }
 
   const colon = value.lastIndexOf(':');
   if (colon === -1) return { hostname: value, port: null };
   const hostname = value.slice(0, colon);
-  const port = Number(value.slice(colon + 1));
-  if (hostname === '' || !Number.isInteger(port) || port <= 0) return null;
-  return { hostname, port };
+  if (hostname === '') return null;
+  const port = parsePort(value.slice(colon + 1));
+  return port === null ? null : { hostname, port };
+}
+
+/** Ports must be plain decimal digits: `8765.`, `08765`, and `+8765` are rejected. */
+function parsePort(text: string): number | null {
+  if (!/^[1-9][0-9]{0,4}$/.test(text)) return null;
+  const port = Number(text);
+  return port <= 65535 ? port : null;
 }
 
 function isLoopbackHost(parsed: ParsedHost, expectedPort: number): boolean {
   if (!LOOPBACK_HOSTNAMES.has(parsed.hostname)) return false;
-  // A `Host` without a port is only produced by HTTP/1.0-style clients; treat
-  // it as the bound port rather than guessing from the URL.
-  if (parsed.port === null) return true;
+  // The port is mandatory: without it the bound port cannot be verified, so the
+  // value is treated as ambiguous and refused rather than assumed.
+  if (parsed.port === null) return false;
   return parsed.port === expectedPort;
 }
 
 export function evaluateRequest(request: RequestLike, policy: OriginPolicy): RequestDecision {
   const host = request.host;
-  if (typeof host === 'string' && host.trim() !== '') {
-    const parsed = parseHostHeader(host);
-    if (parsed === null || !isLoopbackHost(parsed, policy.port)) {
-      return { action: 'reject', status: 403, code: 'FORBIDDEN_HOST' };
-    }
+  if (host === undefined || host === null || host.trim() === '') {
+    // Fail closed: Host is the DNS-rebinding control, so a request that does not
+    // carry one is not served. Forwarding headers are never consulted.
+    return { action: 'reject', status: 400, code: 'MISSING_HOST' };
+  }
+  const parsedHost = parseHostHeader(host);
+  if (parsedHost === null || !isLoopbackHost(parsedHost, policy.port)) {
+    return { action: 'reject', status: 403, code: 'FORBIDDEN_HOST' };
   }
 
   const rawOrigin = request.origin;
-  if (rawOrigin === undefined || rawOrigin.trim() === '') {
-    // Non-browser caller: no CORS. A preflight cannot exist without Origin.
+  if (rawOrigin === undefined) {
+    // Non-browser caller: no CORS grant. A preflight cannot exist without Origin.
+    // This is not an authentication bypass: token and scope checks still run.
     if (request.method.toUpperCase() === 'OPTIONS') {
       return { action: 'reject', status: 400, code: 'MISSING_ORIGIN' };
     }
     return { action: 'allow', origin: null, cors: false };
   }
+  // A present but empty/whitespace Origin is a malformed header, not an absent one.
 
-  const origin = normalizeOrigin(rawOrigin);
-  if (origin === 'null' || !policy.allowedOrigins.has(origin)) {
+  // Trust decisions use the strict parser, never `normalizeOrigin`.
+  const parsedOrigin = parseStrictOrigin(rawOrigin);
+  if (parsedOrigin === null || !policy.allowedOrigins.has(parsedOrigin)) {
     return { action: 'reject', status: 403, code: 'FORBIDDEN_ORIGIN' };
   }
 
-  return { action: 'allow', origin, cors: true };
+  return { action: 'allow', origin: parsedOrigin, cors: true };
 }

@@ -91,16 +91,17 @@ describe('origin policy (unit)', () => {
     }
   });
 
+  // Updated by the D-01 review: the previous version of this test asserted that
+  // a wildcard could enter the allowlist (and was then matched literally). That
+  // encoded the D01-F01 defect, so the expectation is now fail-closed.
   test('DEXTRA_ALLOWED_ORIGINS narrows the allowlist instead of widening it', () => {
     const narrowed = parseAllowedOrigins(' http://127.0.0.1:3000 , ', POLICY_PORT);
     assert.deepEqual([...narrowed], ['http://127.0.0.1:3000']);
-    const wildcard = parseAllowedOrigins('*', POLICY_PORT);
-    assert.equal(wildcard.has('*'), true, 'the parser is literal; a wildcard is matched exactly');
-    const decision = evaluateRequest(
-      { method: 'POST', origin: 'http://127.0.0.1:3001', host: `127.0.0.1:${POLICY_PORT}` },
-      { port: POLICY_PORT, allowedOrigins: wildcard },
+    assert.throws(() => parseAllowedOrigins('*', POLICY_PORT), /not a strict http loopback origin/);
+    assert.throws(
+      () => parseAllowedOrigins('https://evil.example', POLICY_PORT),
+      /not a strict http loopback origin/,
     );
-    assert.equal(decision.action, 'reject');
   });
 
   test('normalizeOrigin strips trailing slashes and lowercases', () => {
