@@ -114,93 +114,104 @@ tailwind.config = {
   }
 };
 </script>
+<link href="./shared/dextra-ui.css" rel="stylesheet">
 </head>
 <body class="bg-surface font-body-md text-on-surface antialiased">
-<aside class="fixed left-0 top-0 h-full w-[260px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] overflow-y-auto">
+<aside class="fixed left-0 top-0 h-full w-[240px] bg-white border-r border-[#EAE9F1] z-50 flex flex-col justify-between shadow-[0_1px_6px_rgba(0,0,0,0.03)]">
 <div class="flex flex-col">
-<div class="h-16 px-space-md flex items-center gap-space-sm bg-surface-container-lowest border-b border-surface-container shrink-0">
-<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
-<span class="material-symbols-outlined text-[22px]">shield</span>
-</div>
+<!-- App Brand -->
+<div class="h-16 px-4 flex items-center gap-3 border-b border-[#EAE9F1]">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5741BD] to-[#7357E8] flex items-center justify-center text-white shadow-sm font-display font-extrabold text-lg">
+          D
+        </div>
 <div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1.5">
-<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">DEXTRA</span>
-</div>
-<span class="font-label-sm text-label-sm text-on-surface-variant truncate mt-0.5">Enterprise AI Operations</span>
+<span class="font-display font-bold text-base text-[#1A1A2C] tracking-tight leading-tight">DEXTRA</span>
+<span class="text-[11px] text-[#797586] font-medium truncate">Enterprise AI Operations</span>
 </div>
 </div>
-<div class="px-space-md pt-space-md pb-space-xs">
-<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">Workspace</span>
+<!-- Navigation Section -->
+<div class="px-4 pt-4 pb-2">
+<span class="text-[10px] tracking-wider uppercase font-semibold text-[#797586]">Menu Utama</span>
 </div>
-<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="overview" href="#">
-        Overview
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="create-request" href="#">
-        Buat Permintaan
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="my-requests" href="#">
-        Permintaan Saya
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="work-packages" href="#">
-        Work Packages
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="approval-inbox" href="#">
+<nav class="px-3 flex flex-col gap-1">
+<!-- Overview (Active) -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="overview" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">grid_view</span>
+<span class="">Overview</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-[#7357E8]"></span>
+</a>
+<!-- Buat Permintaan -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="buat-permintaan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">send</span>
+<span class="">Buat Permintaan</span>
+</div>
+</a>
+<!-- Kotak Persetujuan -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="kotak-persetujuan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">assignment_turned_in</span>
 <span class="">Kotak Persetujuan</span>
-<span class="bg-primary text-on-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full leading-none">3</span>
+</div>
+<span class="bg-[#7357E8] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</a>
+<!-- Work Packages -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="work-package" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">layers</span>
+<span class="">Work Packages</span>
+</div>
+</a>
+<!-- Aktivitas & Audit -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="aktivitas-dan-audit" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">verified_user</span>
+<span class="">Aktivitas &amp; Audit</span>
+</div>
 </a>
 </nav>
-<div class="px-space-md pt-space-md pb-space-xs">
-<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">AI Workforce</span>
+<div class="px-4 pt-4 pb-2">
+<span class="text-[10px] tracking-wider uppercase font-semibold text-[#797586]">AI Workforce</span>
 </div>
-<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="workforce" href="#">
-        Direktori Workforce
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="knowledge-base" href="#">
-        Basis Pengetahuan
-      </a>
-</nav>
-<div class="px-space-md pt-space-md pb-space-xs">
-<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">Governance</span>
+<nav class="px-3 flex flex-col gap-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="direktori-workforce" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">groups</span>
+<span class="">Direktori Workforce</span>
 </div>
-<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="policies" href="#">
-        Kebijakan &amp; Izin
-      </a>
-<a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm transition-colors bg-surface-container text-primary font-semibold rounded-lg" data-path="mandates" href="#">
-        Direktori Mandat
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="audit" href="#">
-        Aktivitas &amp; Audit
-      </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="approval-history" href="#">
-        Riwayat Persetujuan
-      </a>
-</nav>
-<div class="px-space-md pt-space-md pb-space-xs">
-<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">System</span>
-</div>
-<nav class="px-space-sm flex flex-col gap-space-xs mb-space-md" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="notifications" href="#">
-<span class="">Notifikasi</span>
-<span class="bg-error text-on-error font-label-sm text-label-sm px-2 py-0.5 rounded-full leading-none">3</span>
 </a>
-<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="settings" href="#">
-        Pengaturan
-      </a>
+</nav>
+<div class="px-4 pt-5 pb-2">
+<span class="text-[10px] tracking-wider uppercase font-semibold text-[#797586]">Tata Kelola</span>
+</div>
+<nav class="px-3 flex flex-col gap-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="kebijakan-mandat" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">policy</span>
+<span class="">Kebijakan Mandat</span>
+</div>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="pengaturan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">settings</span>
+<span class="">Pengaturan</span>
+</div>
+</a>
 </nav>
 </div>
-<div class="p-space-sm m-space-sm rounded-xl bg-surface-container-low border border-surface-container shrink-0">
+<!-- User Profile Footer -->
+<div class="p-3 m-3 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1]">
 <div class="flex items-center justify-between">
-<div class="flex items-center gap-space-sm min-w-0">
-<img alt="Farhan Pratama" class="w-9 h-9 rounded-full object-cover shrink-0" src="./assets/img/avatar.svg">
+<div class="flex items-center gap-2.5 min-w-0">
+<img alt="Farhan Pratama" class="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-[#7357E8]/20" src="./assets/img/avatar.svg">
 <div class="flex flex-col min-w-0">
-<span class="font-label-md text-label-md text-on-surface font-semibold truncate leading-tight">Farhan Pratama</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Operations Manager</span>
+<span class="text-xs font-semibold text-[#1A1A2C] truncate">Farhan Pratama</span>
+<span class="text-[10px] text-[#797586] truncate">Operations Manager</span>
 </div>
 </div>
-<a class="text-on-surface-variant hover:text-error transition-colors p-1.5 rounded-md hover:bg-surface shrink-0 flex items-center justify-center" data-path="login" href="#" title="Keluar">
+<a class="text-[#797586] hover:text-[#D95362] transition-colors p-1" href="#" title="Keluar">
 <span class="material-symbols-outlined text-[18px]">logout</span>
 </a>
 </div>

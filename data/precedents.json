@@ -1,0 +1,38 @@
+[
+  {
+    "precedent_id": "prec_001",
+    "contact_id": "c_budi_fin",
+    "subject": "Budi",
+    "context": "meeting_follow_up",
+    "count": 1,
+    "last_used_days_ago": 12,
+    "disputed": false
+  },
+  {
+    "precedent_id": "prec_002",
+    "contact_id": "c_budi_fin",
+    "subject": "Budi",
+    "context": "meeting_follow_up",
+    "count": 1,
+    "last_used_days_ago": 20,
+    "disputed": false
+  },
+  {
+    "precedent_id": "prec_003",
+    "contact_id": "c_budi_fin",
+    "subject": "Budi Santoso",
+    "context": "meeting_follow_up",
+    "count": 1,
+    "last_used_days_ago": 34,
+    "disputed": false
+  },
+  {
+    "precedent_id": "prec_004",
+    "contact_id": "c_budi_ops",
+    "subject": "Budi",
+    "context": "meeting_follow_up",
+    "count": 1,
+    "last_used_days_ago": 18,
+    "disputed": false
+  }
+]

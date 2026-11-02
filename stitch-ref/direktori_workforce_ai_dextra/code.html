@@ -1,0 +1,729 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="web_dashboard" name="shell-type">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+@layer base {
+  html, body { margin: 0; padding: 0; }
+  body { overscroll-behavior: none; }
+  main > :first-child { margin-top: 0 !important; }
+  main > :last-child { margin-bottom: 0 !important; }
+}
+::-webkit-scrollbar { display: none; }
+</style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "primary-fixed-dim": "#cabeff",
+        "secondary": "#5f49c5",
+        "on-background": "#1a1a2c",
+        "surface-tint": "#6142d5",
+        "on-tertiary-fixed-variant": "#464553",
+        "surface-container": "#efecff",
+        "inverse-surface": "#2f2f42",
+        "secondary-fixed": "#e5deff",
+        "error": "#ba1a1a",
+        "primary-container": "#7357e8",
+        "tertiary-fixed-dim": "#c7c5d5",
+        "inverse-primary": "#cabeff",
+        "surface-container-high": "#e8e5ff",
+        "on-error": "#ffffff",
+        "on-surface": "#1a1a2c",
+        "tertiary": "#575764",
+        "inverse-on-surface": "#f2efff",
+        "on-error-container": "#93000a",
+        "surface-bright": "#fcf8ff",
+        "surface": "#fcf8ff",
+        "on-secondary-container": "#2b0090",
+        "primary": "#5a3bce",
+        "on-tertiary-fixed": "#1a1a26",
+        "background": "#fcf8ff",
+        "surface-container-lowest": "#ffffff",
+        "surface-variant": "#e2e0fa",
+        "on-primary-fixed-variant": "#4823bc",
+        "error-container": "#ffdad6",
+        "secondary-container": "#9581ff",
+        "on-secondary-fixed": "#1b0063",
+        "secondary-fixed-dim": "#c9bfff",
+        "surface-container-highest": "#e2e0fa",
+        "tertiary-container": "#706f7d",
+        "surface-container-low": "#f5f2ff",
+        "tertiary-fixed": "#e3e0f1",
+        "on-primary-container": "#f9f3ff",
+        "outline-variant": "#c9c4d7",
+        "surface-dim": "#dad7f1",
+        "on-tertiary": "#ffffff",
+        "on-secondary": "#ffffff",
+        "on-primary-fixed": "#1c0062",
+        "on-surface-variant": "#484554",
+        "outline": "#797586",
+        "on-tertiary-container": "#f7f4ff",
+        "primary-fixed": "#e6deff",
+        "on-secondary-fixed-variant": "#462eac",
+        "on-primary": "#ffffff"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "margin-mobile": "1rem",
+        "space-xl": "2rem",
+        "gutter": "1.5rem",
+        "margin": "2rem",
+        "space-lg": "1.5rem",
+        "space-sm": "0.5rem",
+        "space-md": "1rem",
+        "space-xs": "0.25rem",
+        "gutter-mobile": "1rem"
+      },
+      "fontFamily": {
+        "label-md": ["Inter"],
+        "body-lg": ["Inter"],
+        "body-md": ["Inter"],
+        "headline-xl-mobile": ["Plus Jakarta Sans"],
+        "label-sm": ["Inter"],
+        "headline-md": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"],
+        "headline-lg": ["Plus Jakarta Sans"],
+        "headline-xl": ["Plus Jakarta Sans"],
+        "body-sm": ["Inter"]
+      },
+      "fontSize": {
+        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+        "headline-xl-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+        "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+        "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+        "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+      }
+    }
+  }
+};
+</script>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased">
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] overflow-y-auto">
+<div class="flex flex-col">
+<div class="h-16 px-space-md flex items-center gap-space-sm bg-surface-container-lowest border-b border-surface-container shrink-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">shield</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">DEXTRA</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate mt-0.5">Enterprise AI Operations</span>
+</div>
+</div>
+<div class="px-space-md pt-space-md pb-space-xs">
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">Workspace</span>
+</div>
+<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="overview" href="#">
+        Overview
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="create-request" href="#">
+        Buat Permintaan
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="my-requests" href="#">
+        Permintaan Saya
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="work-packages" href="#">
+        Work Packages
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="approval-inbox" href="#">
+<span class="">Kotak Persetujuan</span>
+<span class="bg-primary text-on-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full leading-none">3</span>
+</a>
+</nav>
+<div class="px-space-md pt-space-md pb-space-xs">
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">AI Workforce</span>
+</div>
+<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
+<a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm transition-colors bg-surface-container text-primary font-semibold rounded-lg" data-path="workforce" href="#">
+        Direktori Workforce
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="knowledge-base" href="#">
+        Basis Pengetahuan
+      </a>
+</nav>
+<div class="px-space-md pt-space-md pb-space-xs">
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">Governance</span>
+</div>
+<nav class="px-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="policies" href="#">
+        Kebijakan &amp; Izin
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="mandates" href="#">
+        Direktori Mandat
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="audit" href="#">
+        Aktivitas &amp; Audit
+      </a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="approval-history" href="#">
+        Riwayat Persetujuan
+      </a>
+</nav>
+<div class="px-space-md pt-space-md pb-space-xs">
+<span class="font-label-sm text-label-sm tracking-wider uppercase text-on-surface-variant font-semibold">System</span>
+</div>
+<nav class="px-space-sm flex flex-col gap-space-xs mb-space-md" data-active-classes="bg-surface-container text-primary font-semibold rounded-lg">
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="notifications" href="#">
+<span class="">Notifikasi</span>
+<span class="bg-error text-on-error font-label-sm text-label-sm px-2 py-0.5 rounded-full leading-none">3</span>
+</a>
+<a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors font-label-md text-label-md" data-path="settings" href="#">
+        Pengaturan
+      </a>
+</nav>
+</div>
+<div class="p-space-sm m-space-sm rounded-xl bg-surface-container-low border border-surface-container shrink-0">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<img alt="Farhan Pratama" class="w-9 h-9 rounded-full object-cover shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCND1BVZoR5AAkXHYy9iL6BE325I1YmwiVGl3v5YV-KNvBwgeJElMkfQGGxGkbiVsIsnwJ3l6gl36dbixVZNlJL66-gqnvBSL9ES4ub_7ySU7xXqK3c3q0C9jE3stoPJvsgc208d1lOZnDN4iHFUafDqmJvTD-aCiChJaqqcmEQfYG1XD2PfOEAo9jWbHoHyf927DqumR5Ip_iefGnybBBkoEB2dFcQ1zEskh8ofcg">
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-semibold truncate leading-tight">Farhan Pratama</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Operations Manager</span>
+</div>
+</div>
+<a class="text-on-surface-variant hover:text-error transition-colors p-1.5 rounded-md hover:bg-surface shrink-0 flex items-center justify-center" data-path="login" href="#" title="Keluar">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+</a>
+</div>
+</div>
+</aside>
+<div class="pl-[260px]">
+<header class="fixed top-0 left-[260px] right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-xl border-b border-surface-container z-40 flex items-center justify-between px-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
+<span class="text-on-surface font-semibold">DEXTRA</span>
+<span class="">/</span>
+<span class="text-on-surface">Divisi Operasi</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<span class="bg-surface-container text-primary font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1.5 font-medium">
+<span class="material-symbols-outlined text-[15px]">verified_user</span>
+        Sistem Terproteksi — Human Mandate Active
+      </span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[18px] text-on-surface-variant">search</span>
+<input class="w-72 h-9 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary border border-transparent focus:border-primary" placeholder="Cari mandat, work package, kebijakan..." type="text">
+</div>
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-2.5 py-1.5 rounded-md border border-surface-container">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span class="">Selasa, 24 Okt 2024 · 14:32 WIB</span>
+</div>
+<div class="relative group">
+<button aria-label="Notifikasi" class="relative p-2 text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error text-[10px] font-bold text-on-error flex items-center justify-center leading-none">3</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-80 bg-surface-container-lowest border border-surface-container rounded-xl shadow-lg p-space-sm opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-50">
+<div class="flex items-center justify-between pb-2 border-b border-surface-container px-1">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md font-semibold text-on-surface">Notifikasi</span>
+<span class="bg-error/10 text-error text-[11px] font-bold px-1.5 py-0.2 rounded-full">3 Baru</span>
+</div>
+<button class="text-[11px] text-primary hover:underline font-medium">Tandai Dibaca</button>
+</div>
+<div class="space-y-1.5 pt-2 max-h-72 overflow-y-auto">
+<div class="p-2 rounded-lg bg-surface-container-low/60 border-l-2 border-primary text-left">
+<p class="text-label-sm font-semibold text-on-surface"><span class="text-primary font-bold">WP-001</span> (Notulen Rapat)</p>
+<p class="text-body-sm text-on-surface-variant text-[11px] leading-tight mt-0.5">Siap untuk persetujuan eksekusi email draft.</p>
+<span class="text-[10px] text-on-surface-variant mt-1 block">10m lalu · <span class="text-primary font-medium">Belum Dibaca</span></span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container-low/60 border-l-2 border-amber-600 text-left">
+<p class="text-label-sm font-semibold text-on-surface"><span class="text-amber-700 font-bold">WP-003</span> (Penjadwalan Rapat)</p>
+<p class="text-body-sm text-on-surface-variant text-[11px] leading-tight mt-0.5">Konflik jadwal terdeteksi (Waktu Sholat Jumat).</p>
+<span class="text-[10px] text-on-surface-variant mt-1 block">25m lalu · <span class="text-amber-800 font-medium">Belum Dibaca</span></span>
+</div>
+<div class="p-2 rounded-lg bg-error-container/30 border-l-2 border-error text-left">
+<p class="text-label-sm font-semibold text-error"><span class="font-bold">WP-005</span> (Ekstraksi RFP)</p>
+<p class="text-body-sm text-on-surface-variant text-[11px] leading-tight mt-0.5">Tindakan diblokir oleh kebijakan keamanan (Prompt injection diisolasi).</p>
+<span class="text-[10px] text-on-surface-variant mt-1 block">2j lalu · <span class="text-error font-medium">Belum Dibaca</span></span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative group">
+<button class="flex items-center gap-2 p-1.5 pl-2.5 rounded-lg border border-surface-container hover:bg-surface-container-low transition-colors">
+<div class="text-right hidden sm:block">
+<span class="font-label-sm font-semibold text-on-surface block leading-tight">Farhan Pratama</span>
+<span class="text-[10px] text-on-surface-variant block leading-none">Operations Manager</span>
+</div>
+<img alt="Farhan Pratama" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCND1BVZoR5AAkXHYy9iL6BE325I1YmwiVGl3v5YV-KNvBwgeJElMkfQGGxGkbiVsIsnwJ3l6gl36dbixVZNlJL66-gqnvBSL9ES4ub_7ySU7xXqK3c3q0C9jE3stoPJvsgc208d1lOZnDN4iHFUafDqmJvTD-aCiChJaqqcmEQfYG1XD2PfOEAo9jWbHoHyf927DqumR5Ip_iefGnybBBkoEB2dFcQ1zEskh8ofcg">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-52 bg-surface-container-lowest border border-surface-container rounded-xl shadow-lg p-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all z-50 text-label-md">
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low text-on-surface text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">person</span> Profil Saya
+          </a>
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low text-on-surface text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span> Pengaturan Akun
+          </a>
+<div class="h-px bg-surface-container my-1"></div>
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-error text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span> Keluar
+          </a>
+</div>
+</div>
+</div>
+</header>
+<main class="relative pt-16 w-full min-h-screen bg-surface"><div class="flex flex-col w-full">
+<div class="p-space-lg max-w-[1540px] mx-auto w-full space-y-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-primary uppercase tracking-widest font-semibold mb-1">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Autonomous Agent Registry
+        </div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Direktori Workforce AI</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl mt-1">
+          Pantau beban kerja, izin operasi baca/tulis, kompetensi terdaftar, dan kepatuhan guardrail setiap spesialis AI terdaftar dalam divisi operasional.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="px-space-md py-space-sm bg-surface-container-lowest rounded-xl shadow-sm flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<div>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Status Registry</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">3 Spesialis Berlisensi</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-xl bg-surface-container-high p-space-md shadow-sm">
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-start gap-space-md relative z-10">
+<div class="w-10 h-10 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">gavel</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Prinsip Otonomi DEXTRA</h2>
+<span class="bg-primary/15 text-primary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full font-semibold">Strict Guardrail</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Semua spesialis aktif memiliki batas operasi <span class="text-on-surface font-semibold">“Baca &amp; Sintesis Terpandu”</span>, di mana <span class="text-error font-semibold">“Wewenang Tulis &amp; Transmit Eksternal”</span> mutlak mewajibkan verifikasi mandat manusia. <span class="text-on-surface-variant">Catatan: Integrasi ERP, HRIS, email, dan kalender merupakan target enterprise yang disimulasikan (mock) dalam demonstrasi lingkungan ini.</span></p>
+</div>
+<div class="hidden lg:flex items-center gap-2 self-center px-space-md py-space-xs bg-surface-container-lowest/80 backdrop-blur rounded-lg">
+<span class="material-symbols-outlined text-primary text-[18px]">lock_clock</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Zero-Execution Without Signature</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="group relative rounded-xl p-space-md bg-surface-container-lowest shadow-md hover:shadow-xl transition-all cursor-pointer ring-2 ring-primary">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary font-headline-md text-headline-md">
+<span class="material-symbols-outlined text-[28px]">support_agent</span>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Executive Assistant</h3>
+<span class="font-label-sm text-label-sm font-bold text-primary">#EA-04</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Divisi Operasi Eksekutif</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+            Aktif (65%)
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-md line-clamp-2">
+          Otomatisasi komunikasi eksekutif, koordinasi kalender multizona, dan penyusunan notulen rapat dewan direksi.
+        </p>
+<div class="mt-space-md pt-space-sm bg-surface-container-low rounded-lg p-space-sm space-y-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Beban Kerja</span>
+<span class="font-semibold text-on-surface">2 Work Package</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all" style="width: 65%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm pt-1">
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">visibility</span> Baca Otomatis
+            </span>
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> Eksekusi Terkunci
+            </span>
+</div>
+</div>
+</div>
+<div class="group relative rounded-xl p-space-md bg-surface-container-lowest shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary font-headline-md text-headline-md">
+<span class="material-symbols-outlined text-[28px]">inventory_2</span>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-secondary rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Administrative Officer</h3>
+<span class="font-label-sm text-label-sm font-bold text-secondary">#AO-02</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Manajemen Berkas Operasi</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Aktif (40%)
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-md line-clamp-2">
+          Klasifikasi berkas operasional, ekstraksi formulir vendor berulang, dan verifikasi kepatuhan onboarding karyawan.
+        </p>
+<div class="mt-space-md pt-space-sm bg-surface-container-low rounded-lg p-space-sm space-y-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Beban Kerja</span>
+<span class="font-semibold text-on-surface">1 Work Package</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full transition-all" style="width: 40%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm pt-1">
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">visibility</span> Dokumen &amp; HR
+            </span>
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> Tulis Tiket/DB
+            </span>
+</div>
+</div>
+</div>
+<div class="group relative rounded-xl p-space-md bg-surface-container-lowest shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-12 h-12 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface font-headline-md text-headline-md">
+<span class="material-symbols-outlined text-[28px]">policy</span>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Compliance Reviewer</h3>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">#CR-01</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Audit Sistem &amp; Keamanan</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            Siaga (30%)
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-md line-clamp-2">
+          Verifikasi batas kebijakan korporat, tinjauan adversarial real-time, dan deteksi prompt injection pada payload eksternal.
+        </p>
+<div class="mt-space-md pt-space-sm bg-surface-container-low rounded-lg p-space-sm space-y-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Beban Kerja</span>
+<span class="font-semibold text-on-surface">1 Work Package (WP-005)</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all" style="width: 30%;"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm pt-1">
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">security</span> Sandbox Audit
+            </span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield</span> Karantina Aktif
+            </span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low p-1.5 rounded-xl">
+<div class="flex items-center gap-1">
+<button class="px-space-md py-space-sm rounded-lg bg-surface-container-lowest text-primary font-headline-sm text-headline-sm shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">badge</span>
+          Detail Spesialis: Executive Assistant
+        </button>
+<button class="px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">shield</span>
+          Kebijakan Pembatasan Alat (Tools &amp; API)
+        </button>
+<button class="px-space-md py-space-sm rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">history</span>
+          Log Interaksi Terakhir
+        </button>
+</div>
+<div class="flex items-center gap-space-xs pr-2 font-label-sm text-label-sm text-on-surface-variant">
+<span class="">Arsitektur Model:</span>
+<span class="font-mono text-primary font-semibold bg-surface-container px-2 py-0.5 rounded">DEXTRA-v4.2-Orchestrator</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<div class="lg:col-span-5 space-y-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Spesialis Terpilih</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Executive Assistant #EA-04</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">DEXTRA Foundation Orchestrator v4.2</p>
+</div>
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">verified</span>
+</div>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-start gap-space-sm"><span class="material-symbols-outlined text-primary text-[20px] mt-0.5">shield_locked</span><div class="text-body-sm"><span class="font-semibold text-on-surface">Isolasi Memori Sesi (Execution Isolation):</span><span class="text-on-surface-variant"> Konteks tugas diisolasi per siklus eksekusi dan di-flush saat mandat selesai. Guardrail Scanner &amp; Deterministic Policy Validator berjalan sebagai komponen mesin inti internal, bukan agen mandiri.</span></div></div>
+<div class="space-y-space-sm pt-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center justify-between">
+<span class="">Matriks Kompetensi Teruji</span>
+<span class="font-label-sm text-label-sm text-primary font-normal">Diuji per 200 Siklus</span>
+</h3>
+<div class="space-y-space-xs">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Penyusunan Notulen Rapat (Minutes of Meeting)</span>
+<span class="font-bold text-primary font-mono">99.4%</span>
+</div>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 99.4%;"></div>
+</div>
+</div>
+<div class="space-y-space-xs">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Pemetaan Jadwal &amp; Resolusi Bentrok Kalender</span>
+<span class="font-bold text-primary font-mono">98.8%</span>
+</div>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 98.8%;"></div>
+</div>
+</div>
+<div class="space-y-space-xs">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Ekstraksi Intisari &amp; Sintesis Dokumen</span>
+<span class="font-bold text-primary font-mono">96.5%</span>
+</div>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 96.5%;"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-sm pt-2">
+<div class="bg-surface-container-low p-space-sm rounded-lg text-center">
+<span class="font-headline-md text-headline-md font-bold text-primary block leading-none">84</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Paket Selesai</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg text-center">
+<span class="font-headline-md text-headline-md font-bold text-secondary block leading-none">0</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Pelanggaran</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg text-center">
+<span class="font-headline-md text-headline-md font-bold text-on-surface block leading-none">100%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Guardrail Score</span>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Work Package Aktif</h3>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary px-2 py-0.5 rounded font-semibold">2 Berjalan</span>
+</div>
+<div class="space-y-space-sm pt-1">
+<div class="p-space-sm bg-surface-container-low rounded-xl flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center font-bold text-label-sm shrink-0">
+                  01
+                </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md font-bold text-on-surface">WP-001</span>
+<span class="font-label-sm text-label-sm bg-error-container text-on-error-container px-1.5 py-0.2 rounded font-semibold">Menunggu Mandat</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight mt-0.5">Notulen Rapat Dewan Direksi Q3</p>
+</div>
+</div>
+<a class="p-2 text-primary hover:bg-surface-container-lowest rounded-lg transition-colors" href="#" title="Buka Work Package">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</a>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-xl flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center font-bold text-label-sm shrink-0">
+                  03
+                </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md font-bold text-on-surface">WP-003</span>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary px-1.5 py-0.2 rounded font-semibold">Perlu Klarifikasi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight mt-0.5">Penjadwalan Rapat Koordinasi Vendor</p>
+</div>
+</div>
+<a class="p-2 text-primary hover:bg-surface-container-lowest rounded-lg transition-colors" href="#" title="Buka Work Package">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-7 space-y-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Matriks Hak Akses &amp; Batasan Alat</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Konfigurasi runtime token authorization untuk model #EA-04</p>
+</div>
+<span class="material-symbols-outlined text-primary text-[24px]">tune</span>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-space-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Alat Diizinkan (Read &amp; Staging Only)</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm">
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-on-surface">Exchange Calendar</span>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary px-1.5 py-0.5 rounded font-mono">READ-ONLY</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Membaca slot kosong, waktu rapat yang ada, dan status kehadiran peserta.
+                </p>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-on-surface">Outlook Composer</span>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary px-1.5 py-0.5 rounded font-mono">DRAFT-ONLY</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Menyimpan draf email di folder Drafts tanpa akses tombol transmit / send.
+                </p>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-on-surface">Asana Task Staging</span>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary px-1.5 py-0.5 rounded font-mono">STAGING</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Menyiapkan draf kartu tugas ke status review internal tim manajemen.
+                </p>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<div class="flex items-center gap-2 mb-space-sm">
+<span class="material-symbols-outlined text-error text-[18px]">block</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Alat Dilarang / Dibatasi Ketat (Restricted Tools)</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm">
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-error">SMTP Direct Send</span>
+<span class="font-label-sm text-label-sm bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-mono">HARD BLOCK</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Pengiriman email nyata mutlak terisolasi tanpa tanda tangan mandat Farhan Pratama.
+                </p>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-error">Database Write</span>
+<span class="font-label-sm text-label-sm bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-mono">NO ACCESS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Tidak memiliki kredensial koneksi ke PostgreSQL, MySQL, ataupun mutasi data ERP.
+                </p>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md font-bold text-error">API Token Minting</span>
+<span class="font-label-sm text-label-sm bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-mono">IMPOSSIBLE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] leading-snug">
+                  Dilarang memicu sub-agen atau membuat token OAuth baru secara terprogram.
+                </p>
+</div>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low space-y-space-xs">
+<div class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface">
+<span class="material-symbols-outlined text-secondary text-[20px]">alt_route</span>
+              Prosedur Eskalasi &amp; Penanganan Konflik
+            </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Jika model mendeteksi ambiguitas nama penerima, jadwal bertabrakan (misal: waktu ibadah atau tanggal libur), atau ketidaksesuaian arahan, agen <span class="font-semibold text-on-surface">wajib menahan eksekusi</span> dan menaikkan status <span class="font-semibold text-primary">“Perlu Klarifikasi”</span> ke pengawas manusia.
+            </p>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-md text-headline-md text-on-surface">Status Eksekusi Paket Kerja Saat Ini</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sinkronisasi Real-time</span>
+</div>
+<div class="space-y-space-sm">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="space-y-1">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">WP-001: Kirim Draft Notulen Rapat Q3</span>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">Tahan: Butuh Tanda Tangan Mandat</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Draf pesan siap di Outlook. Menunggu peninjauan oleh Farhan Pratama sebelum otorisasi SMTP rilis.
+                </p>
+<div class="flex items-center gap-space-md text-label-sm font-label-sm text-on-surface-variant pt-1">
+<span class="">Confidence: <strong class="text-on-surface">99.4%</strong></span>
+<span class="">Target: <strong>direksi@perusahaan.co.id</strong></span>
+<span class="">Payload: <strong>3 Lampiran PDF</strong></span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<button class="px-space-md py-space-sm bg-primary text-on-primary rounded-lg font-headline-sm text-headline-sm shadow-sm hover:opacity-95 transition-opacity flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+                  Tinjau Mandat
+                </button>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="space-y-1">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">WP-003: Jadwal Rapat Vendor Cloud</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-primary font-label-sm text-label-sm font-semibold">Resolusi Ambiguitas Kalender</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Terdeteksi bentrok dengan slot waktu Sholat Jumat. Alternatif jam diajukan ke pukul 14:30 WIB.
+                </p>
+<div class="flex items-center gap-space-md text-label-sm font-label-sm text-on-surface-variant pt-1">
+<span class="">Confidence: <strong class="text-on-surface">98.8%</strong></span>
+<span class="">Status: <strong>Menunggu Verifikasi Jam Alternatif</strong></span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<button class="px-space-md py-space-sm bg-surface-container-lowest text-on-surface rounded-lg font-headline-sm text-headline-sm shadow-sm hover:bg-surface transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+                  Pilih Jadwal
+                </button>
+</div>
+</div>
+</div>
+</div><div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-md border border-surface-container"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-surface-container"><div><div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[22px]">rocket_launch</span><h3 class="font-headline-md text-headline-md text-on-surface">Spesialis Mendatang &amp; Integrasi Terencana (Roadmap)</h3></div><p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Ekspansi peran AI terspesialisasi dengan batasan mandat dan integrasi enterprise bertahap.</p></div><span class="px-2.5 py-1 rounded-full bg-surface-container text-primary font-label-sm text-label-sm font-semibold self-start sm:self-auto">Tahap Pengembangan</span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-sm pt-1"><div class="p-space-sm rounded-xl bg-surface-container-low border border-surface-container flex flex-col justify-between space-y-2"><div class="space-y-1"><div class="flex items-center justify-between"><span class="font-label-md font-bold text-on-surface">HR Coordinator</span><span class="font-label-sm text-[11px] bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded font-medium">Direncanakan</span></div><p class="font-body-sm text-[12px] text-on-surface-variant leading-snug">Penyelarasan cuti, pra-skrining pelamar, dan verifikasi berkas karyawan.</p></div><div class="pt-1 border-t border-surface-container/60 flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm"><span class="">Target: <strong class="text-primary">Integrasi HRIS</strong></span><span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span></div></div><div class="p-space-sm rounded-xl bg-surface-container-low border border-surface-container flex flex-col justify-between space-y-2"><div class="space-y-1"><div class="flex items-center justify-between"><span class="font-label-md font-bold text-on-surface">Finance Operations</span><span class="font-label-sm text-[11px] bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded font-medium">Direncanakan</span></div><p class="font-body-sm text-[12px] text-on-surface-variant leading-snug">Rekonsiliasi invoice, draf permohonan pembayaran, dan audit beban biaya.</p></div><div class="pt-1 border-t border-surface-container/60 flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm"><span class="">Target: <strong class="text-primary">ERP &amp; Billing</strong></span><span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span></div></div><div class="p-space-sm rounded-xl bg-surface-container-low border border-surface-container flex flex-col justify-between space-y-2"><div class="space-y-1"><div class="flex items-center justify-between"><span class="font-label-md font-bold text-on-surface">Procurement Officer</span><span class="font-label-sm text-[11px] bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded font-medium">Segera Hadir</span></div><p class="font-body-sm text-[12px] text-on-surface-variant leading-snug">Komparasi penawaran vendor, verifikasi RFP, dan pemantauan SLA kontrak.</p></div><div class="pt-1 border-t border-surface-container/60 flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm"><span class="">Target: <strong class="text-primary">Vendor Mgmt</strong></span><span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span></div></div><div class="p-space-sm rounded-xl bg-surface-container-low border border-surface-container flex flex-col justify-between space-y-2"><div class="space-y-1"><div class="flex items-center justify-between"><span class="font-label-md font-bold text-on-surface">Project Coordinator</span><span class="font-label-sm text-[11px] bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded font-medium">Segera Hadir</span></div><p class="font-body-sm text-[12px] text-on-surface-variant leading-snug">Pelacakan milestone sprint, sinkronisasi blockers, dan rekapitulasi status.</p></div><div class="pt-1 border-t border-surface-container/60 flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm"><span class="">Target: <strong class="text-primary">Tiket &amp; Proyek</strong></span><span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span></div></div><div class="p-space-sm rounded-xl bg-surface-container-low border border-surface-container flex flex-col justify-between space-y-2 md:col-span-2 lg:col-span-2"><div class="space-y-1"><div class="flex items-center justify-between"><span class="font-label-md font-bold text-on-surface">IT Operations Officer</span><span class="font-label-sm text-[11px] bg-surface-container text-on-surface-variant px-1.5 py-0.5 rounded font-medium">Direncanakan</span></div><p class="font-body-sm text-[12px] text-on-surface-variant leading-snug">Triase tiket bantuan teknis, verifikasi izin akses, dan dokumentasi insiden layanan.</p></div><div class="pt-1 border-t border-surface-container/60 flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm"><span class="">Target: <strong class="text-primary">Akses &amp; IT Service Desk</strong></span><span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span></div></div></div><div class="p-2.5 rounded-lg bg-surface-container-low flex items-center gap-2 text-[12px] text-on-surface-variant"><span class="material-symbols-outlined text-primary text-[16px]">info</span><span class="">Seluruh koneksi sistem eksternal (ERP, HRIS, Database, Penyedia Email) pada demonstrasi ini beroperasi dalam mode mock terisolasi.</span></div></div>
+</div>
+</div>
+</div>
+</div></main>
+</div>
+
+
+</body></html>

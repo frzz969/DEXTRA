@@ -1,0 +1,24 @@
+[
+  {
+    "approval_id": "appr_1793579187050",
+    "plan_id": "plan_demo_1",
+    "plan_hash": "sha256:662814ecfce0ceecfb1b668e61a6833806a9ed365986fe7148996020c005054c",
+    "decision": "approve",
+    "approver_id": "user_001",
+    "approval_token": "apt_demo",
+    "issued_at": "2026-11-02T00:26:27.050Z",
+    "expires_at": "2026-11-02T00:41:27.050Z",
+    "status": "granted"
+  },
+  {
+    "approval_id": "appr_1793579223082",
+    "plan_id": "plan_demo_2",
+    "plan_hash": "sha256:cedf4c67d61a059569f05cf8c6187625230d12d841ccd2c2d92019de8abbf143",
+    "decision": "approve",
+    "approver_id": "user_001",
+    "approval_token": "apt_demo",
+    "issued_at": "2026-11-02T00:27:03.082Z",
+    "expires_at": "2026-11-02T00:42:03.082Z",
+    "status": "granted"
+  }
+]

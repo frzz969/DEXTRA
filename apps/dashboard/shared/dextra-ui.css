@@ -1,0 +1,104 @@
+/* DEXTRA shared design tokens (from Stitch DESIGN.md) */
+:root {
+  --surface: #fcf8ff;
+  --surface-dim: #dad7f1;
+  --surface-bright: #fcf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f5f2ff;
+  --surface-container: #efecff;
+  --surface-container-high: #e8e5ff;
+  --surface-container-highest: #e2e0fa;
+  --on-surface: #1a1a2c;
+  --on-surface-variant: #484554;
+  --outline: #797586;
+  --outline-variant: #c9c4d7;
+  --surface-tint: #6142d5;
+  --primary: #5a3bce;
+  --primary-container: #7357e8;
+  --secondary: #5f49c5;
+  --tertiary: #575764;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --primary-fixed: #e6deff;
+  --primary-fixed-dim: #cabeff;
+
+  /* semantic status */
+  --success: #269B72;
+  --success-tint: #E8F7F1;
+  --warning: #E6A23C;
+  --warning-tint: #FEF7ED;
+  --danger: #D95362;
+  --danger-tint: #FDF2F3;
+  --info: #4688D8;
+  --info-tint: #EDF4FC;
+
+  /* neutrals */
+  --bg: #F7F7FC;
+  --card: #FFFFFF;
+  --border: #EAE9F1;
+  --muted: #F3F2F9;
+  --text: #202033;
+  --text-muted: #77778C;
+
+  /* spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --gutter: 1.5rem;
+  --margin: 2rem;
+
+  /* radius */
+  --r-sm: 0.25rem;
+  --r-md: 0.5rem;
+  --r-lg: 1rem;
+  --r-xl: 1.25rem;
+  --r-full: 9999px;
+
+  /* elevation */
+  --shadow-1: 0 2px 8px -2px rgba(32,32,51,.04), 0 1px 4px -1px rgba(32,32,51,.02);
+  --shadow-2: 0 8px 24px -4px rgba(115,87,232,.08), 0 2px 6px -1px rgba(32,32,51,.04);
+  --shadow-3: 0 16px 40px -8px rgba(32,32,51,.12), 0 0 0 1px rgba(234,233,241,.8);
+
+  /* typography */
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+}
+
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+h1,h2,h3,h4 { font-family: var(--font-display); }
+
+/* soft badge base */
+.d-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 600; line-height: 14px; }
+.d-badge--success { background: var(--success-tint); color: var(--success); }
+.d-badge--warning { background: var(--warning-tint); color: #B87A14; }
+.d-badge--danger  { background: var(--danger-tint);  color: var(--danger); }
+.d-badge--info    { background: var(--info-tint);    color: var(--info); }
+.d-badge--primary { background: var(--primary-fixed); color: var(--primary-container); }
+
+/* card base */
+.d-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-1); padding: var(--space-lg); }
+.d-card--hover:hover { border-color: rgba(115,87,232,.4); box-shadow: var(--shadow-2); }
+
+/* button base */
+.d-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: var(--r-md); font-size: 12px; font-weight: 600; transition: all .15s; cursor: pointer; border: 1px solid transparent; }
+.d-btn--primary { background: var(--primary-container); color: #fff; }
+.d-btn--primary:hover { background: var(--primary); }
+.d-btn--secondary { background: var(--primary-fixed); color: var(--primary-container); }
+.d-btn--secondary:hover { background: #E4DEFE; }
+.d-btn--danger { background: var(--danger-tint); color: var(--danger); border-color: #F8D7DA; }
+.d-btn--danger:hover { background: var(--danger); color: #fff; }
+.d-btn--ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.d-btn--ghost:hover { background: var(--card); border-color: var(--primary-container); }
+
+/* empty state */
+.d-empty { text-align: center; padding: var(--space-xl); color: var(--text-muted); font-size: 13px; }
+
+/* page header */
+.d-page-header { display: flex; flex-col; gap: var(--space-xs); margin-bottom: var(--space-lg); }
+.d-page-header h1 { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text); line-height: 28px; }
+.d-page-header p { font-size: 12px; color: var(--text-muted); line-height: 16px; }
+
+/* focus ring */
+.d-input:focus { border-color: var(--primary-container); box-shadow: 0 0 0 3px rgba(115,87,232,.12); outline: none; }

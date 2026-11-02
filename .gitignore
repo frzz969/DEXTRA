@@ -1,34 +1,6 @@
-# dependencies
-node_modules/
-
-# build output
-dist/
-build/
-*.tsbuildinfo
-
-# runtime state (mock data hasil seed / uji)
-data/
-.state/
-*.sqlite
-*.db
-
-# secrets — tidak boleh masuk repo
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-
-# logs
+﻿node_modules/
 *.log
-npm-debug.log*
-
-# OS / editor
+.env
+.env.local
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-
-# media besar
-*.mp4
-*.mov

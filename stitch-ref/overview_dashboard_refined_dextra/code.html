@@ -1,0 +1,879 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="web_dashboard" name="shell-type">
+<title>DEXTRA — Overview Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: "#7357E8",
+              deep: "#5741BD",
+              lavender: "#F1EEFF",
+              accent: "#5a3bce",
+            },
+            status: {
+              success: "#269B72",
+              warning: "#E6A23C",
+              danger: "#D95362",
+              info: "#4688D8",
+            },
+            surface: {
+              bg: "#F7F7FC",
+              card: "#FFFFFF",
+              border: "#EAE9F1",
+              muted: "#F3F2F9",
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body { overscroll-behavior: none; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-[#F7F7FC] text-[#1A1A2C] font-sans antialiased selection:bg-brand-lavender selection:text-brand-deep">
+<!-- Persistent Sidebar (240px) -->
+<aside class="fixed left-0 top-0 h-full w-[240px] bg-white border-r border-[#EAE9F1] z-50 flex flex-col justify-between shadow-[0_1px_6px_rgba(0,0,0,0.03)]">
+<div class="flex flex-col">
+<!-- App Brand -->
+<div class="h-16 px-4 flex items-center gap-3 border-b border-[#EAE9F1]">
+<div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5741BD] to-[#7357E8] flex items-center justify-center text-white shadow-sm font-display font-extrabold text-lg">
+          D
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="font-display font-bold text-base text-[#1A1A2C] tracking-tight leading-tight">DEXTRA</span>
+<span class="text-[11px] text-[#797586] font-medium truncate">Enterprise AI Operations</span>
+</div>
+</div>
+<!-- Navigation Section -->
+<div class="px-4 pt-4 pb-2">
+<span class="text-[10px] tracking-wider uppercase font-semibold text-[#797586]">Menu Utama</span>
+</div>
+<nav class="px-3 flex flex-col gap-1">
+<!-- Overview (Active) -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg bg-[#F1EEFF] text-[#5741BD] font-semibold text-sm transition-all shadow-xs" data-path="overview" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">grid_view</span>
+<span class="">Overview</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-[#7357E8]"></span>
+</a>
+<!-- Buat Permintaan -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="buat-permintaan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">send</span>
+<span class="">Buat Permintaan</span>
+</div>
+</a>
+<!-- Kotak Persetujuan -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="kotak-persetujuan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">assignment_turned_in</span>
+<span class="">Kotak Persetujuan</span>
+</div>
+<span class="bg-[#7357E8] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</a>
+<!-- Work Packages -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="work-package" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">layers</span>
+<span class="">Work Packages</span>
+</div>
+</a>
+<!-- Aktivitas & Audit -->
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="aktivitas-dan-audit" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">verified_user</span>
+<span class="">Aktivitas &amp; Audit</span>
+</div>
+</a>
+</nav>
+<div class="px-4 pt-5 pb-2">
+<span class="text-[10px] tracking-wider uppercase font-semibold text-[#797586]">Tata Kelola</span>
+</div>
+<nav class="px-3 flex flex-col gap-1">
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="kebijakan-mandat" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">policy</span>
+<span class="">Kebijakan Mandat</span>
+</div>
+</a>
+<a class="flex items-center justify-between px-3 py-2 rounded-lg text-[#484554] hover:bg-[#F3F2F9] hover:text-[#1A1A2C] text-sm font-medium transition-colors" data-path="pengaturan" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[19px]">settings</span>
+<span class="">Pengaturan</span>
+</div>
+</a>
+</nav>
+</div>
+<!-- User Profile Footer -->
+<div class="p-3 m-3 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<img alt="Farhan Pratama" class="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-[#7357E8]/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCND1BVZoR5AAkXHYy9iL6BE325I1YmwiVGl3v5YV-KNvBwgeJElMkfQGGxGkbiVsIsnwJ3l6gl36dbixVZNlJL66-gqnvBSL9ES4ub_7ySU7xXqK3c3q0C9jE3stoPJvsgc208d1lOZnDN4iHFUafDqmJvTD-aCiChJaqqcmEQfYG1XD2PfOEAo9jWbHoHyf927DqumR5Ip_iefGnybBBkoEB2dFcQ1zEskh8ofcg">
+<div class="flex flex-col min-w-0">
+<span class="text-xs font-semibold text-[#1A1A2C] truncate">Farhan Pratama</span>
+<span class="text-[10px] text-[#797586] truncate">Operations Manager</span>
+</div>
+</div>
+<a class="text-[#797586] hover:text-[#D95362] transition-colors p-1" href="#" title="Keluar">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="pl-[240px]">
+<!-- Top Horizontal Header -->
+<header class="fixed top-0 left-[240px] right-0 h-16 bg-white/95 backdrop-blur-md border-b border-[#EAE9F1] z-40 flex items-center justify-between px-6">
+<div class="flex items-center gap-4">
+<!-- Breadcrumb -->
+<div class="flex items-center gap-2 text-xs text-[#797586] font-medium">
+<span class="text-[#1A1A2C] font-semibold">DEXTRA</span>
+<span class="">/</span>
+<span class="">Operasi</span>
+<span class="">/</span>
+<span class="text-[#1A1A2C]">Nusantara Digital</span>
+</div>
+<div class="h-4 w-px bg-[#EAE9F1]"></div>
+<!-- Mandate Shield Status Badge -->
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#F1EEFF] text-[#5741BD] border border-[#7357E8]/20">
+<span class="material-symbols-outlined text-[14px] text-[#269B72]">verified_user</span>
+<span class="">Sistem Terproteksi — Human Mandate Active</span>
+</span>
+</div>
+<div class="flex items-center gap-3.5">
+<!-- Search Input -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[17px] text-[#797586]">search</span>
+<input class="w-64 h-9 pl-9 pr-3 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] text-xs text-[#1A1A2C] placeholder:text-[#797586] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#7357E8] transition-all" placeholder="Cari mandat, work package, kebijakan..." type="text">
+</div>
+<!-- Date Indicator -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] text-xs text-[#484554] font-medium">
+<span class="material-symbols-outlined text-[15px] text-[#797586]">calendar_today</span>
+<span class="">Selasa, 24 Okt 2024 · 14:32 WIB</span>
+</div>
+<!-- Notification Bell -->
+<div class="relative group">
+<button aria-label="Notifikasi" class="relative p-2 text-[#484554] hover:text-[#1A1A2C] rounded-lg hover:bg-[#F3F2F9] transition-colors border border-[#EAE9F1]">
+<span class="material-symbols-outlined text-[19px]">notifications</span>
+<span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#D95362] text-[10px] font-bold text-white flex items-center justify-center leading-none">3</span>
+</button>
+</div>
+<!-- Avatar Quick Pill -->
+<div class="flex items-center gap-2 pl-2 border-l border-[#EAE9F1]">
+<img alt="Farhan" class="w-8 h-8 rounded-full object-cover ring-1 ring-[#EAE9F1]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCND1BVZoR5AAkXHYy9iL6BE325I1YmwiVGl3v5YV-KNvBwgeJElMkfQGGxGkbiVsIsnwJ3l6gl36dbixVZNlJL66-gqnvBSL9ES4ub_7ySU7xXqK3c3q0C9jE3stoPJvsgc208d1lOZnDN4iHFUafDqmJvTD-aCiChJaqqcmEQfYG1XD2PfOEAo9jWbHoHyf927DqumR5Ip_iefGnybBBkoEB2dFcQ1zEskh8ofcg">
+<span class="text-xs font-semibold text-[#1A1A2C] hidden xl:inline">Farhan</span>
+</div>
+</div>
+</header>
+<!-- Main Page Content -->
+<main class="relative pt-20 pb-12 px-6 max-w-[1540px] mx-auto space-y-6"><div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+  <!-- LEFT COLUMN: Operational Overview (Approx 68% / 8 of 12 cols on XL) -->
+  <div class="xl:col-span-8 space-y-6 min-w-0">
+    <!-- Welcome Banner & Actions -->
+    <div class="bg-white rounded-2xl p-5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-[#269B72] border border-[#269B72]/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#269B72] animate-pulse"></span>
+            Workforce AI Operasional (Parameter Aman)
+          </span>
+          <span class="text-[11px] text-[#797586]">Divisi Operasi &amp; Audit #ORG-NX-9921</span>
+        </div>
+        <h1 class="font-display font-bold text-2xl text-[#1A1A2C] tracking-tight">Selamat pagi, Farhan Pratama!</h1>
+        <p class="text-xs text-[#797586] max-w-2xl leading-relaxed">
+          Pantau aktivitas workforce AI dan pekerjaan yang membutuhkan perhatian Anda. Prinsip operasional: <span class="text-[#5741BD] font-semibold">Baca otomatis, tulis harus lewat mandat terverifikasi.</span>
+        </p>
+      </div>
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#F7F7FC] hover:bg-[#F1EEFF] text-[#1A1A2C] hover:text-[#5741BD] font-semibold text-xs border border-[#EAE9F1] transition-all">
+          <span class="material-symbols-outlined text-[17px] text-[#797586]">history</span>
+          Log Audit Sesi
+        </button>
+        <a class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#7357E8] hover:bg-[#5741BD] text-white font-semibold text-xs shadow-sm hover:shadow transition-all" data-path="buat-permintaan" href="#">
+          <span class="material-symbols-outlined text-[17px]">add_task</span>
+          + Buat Permintaan Baru
+        </a>
+      </div>
+    </div>
+
+    <!-- 4 Operational KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Card 1: Active Work Packages -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE9F1] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#7357E8]/40 transition-all">
+        <div class="flex items-start justify-between">
+          <div class="w-9 h-9 rounded-xl bg-[#F1EEFF] text-[#7357E8] flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">layers</span>
+          </div>
+          <span class="text-[10px] font-bold text-[#5741BD] bg-[#F1EEFF] px-2 py-0.5 rounded-md uppercase tracking-wider">Snapshot Aktif</span>
+        </div>
+        <div class="mt-3">
+          <p class="text-[11px] font-bold text-[#797586] uppercase tracking-wider">TOTAL WORK PACKAGES</p>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span class="font-display font-extrabold text-2xl text-[#1A1A2C]">46</span>
+            <span class="text-xs text-[#797586]">paket</span>
+          </div>
+          <p class="text-[11px] text-[#797586] mt-1 truncate">Semua status dalam sistem</p>
+        </div>
+      </div>
+
+      <!-- Card 2: Completed Today -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE9F1] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#269B72]/40 transition-all">
+        <div class="flex items-start justify-between">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 text-[#269B72] flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+          </div>
+          <span class="text-[10px] font-bold text-[#269B72] bg-emerald-50 px-2 py-0.5 rounded-md border border-[#269B72]/20">100% Mock Valid</span>
+        </div>
+        <div class="mt-3">
+          <p class="text-[11px] font-bold text-[#797586] uppercase tracking-wider">COMPLETED TODAY (MOCK)</p>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span class="font-display font-extrabold text-2xl text-[#269B72]">18</span>
+            <span class="text-xs text-[#797586]">paket hari ini</span>
+          </div>
+          <p class="text-[11px] text-[#797586] mt-1 truncate">100% tervalidasi via sandbox</p>
+        </div>
+      </div>
+
+      <!-- Card 3: Awaiting Approval -->
+      <div class="bg-white rounded-2xl p-4 border-2 border-[#E6A23C]/40 shadow-[0_1px_3px_rgba(0,0,0,0.02)] bg-amber-50/20">
+        <div class="flex items-start justify-between">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-[#B87A14] flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">notification_important</span>
+          </div>
+          <span class="text-[10px] font-bold text-[#B87A14] bg-amber-100 px-2 py-0.5 rounded-md">Prioritas Tinggi</span>
+        </div>
+        <div class="mt-3">
+          <p class="text-[11px] font-bold text-[#797586] uppercase tracking-wider">AWAITING APPROVAL</p>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span class="font-display font-extrabold text-2xl text-[#B87A14]">4</span>
+            <span class="text-xs text-[#B87A14] font-medium">perlu tindakan</span>
+          </div>
+          <p class="text-[11px] text-[#B87A14] mt-1 truncate font-medium">Membutuhkan tanda tangan mandat</p>
+        </div>
+      </div>
+
+      <!-- Card 4: Blocked Actions -->
+      <div class="bg-white rounded-2xl p-4 border border-[#D95362]/30 shadow-[0_1px_3px_rgba(0,0,0,0.02)] bg-rose-50/20">
+        <div class="flex items-start justify-between">
+          <div class="w-9 h-9 rounded-xl bg-rose-100 text-[#D95362] flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">security</span>
+          </div>
+          <span class="text-[10px] font-bold text-[#D95362] bg-rose-100 px-2 py-0.5 rounded-md">Proteksi Kebijakan</span>
+        </div>
+        <div class="mt-3">
+          <p class="text-[11px] font-bold text-[#797586] uppercase tracking-wider">BLOCKED ACTIONS</p>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <span class="font-display font-extrabold text-2xl text-[#D95362]">2</span>
+            <span class="text-xs text-[#797586]">insiden</span>
+          </div>
+          <p class="text-[11px] text-[#D95362] mt-1 truncate font-medium">Dicegah oleh guardrail &amp; kebijakan</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytical Row: 7-Day Stacked Bar & Doughnut Chart -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+      <!-- 7-Day Stacked Bar Chart (7 Cols) -->
+      <div class="md:col-span-7 bg-white rounded-2xl p-5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EAE9F1]">
+            <div>
+              <h2 class="font-display font-bold text-base text-[#1A1A2C]">Aktivitas Work Package (Tren 7 Hari)</h2>
+              <p class="text-xs text-[#797586]">Distribusi penyelesaian tugas harian, proses aktif, dan penahanan guardrail</p>
+            </div>
+            <div class="flex items-center gap-3 text-[11px] flex-wrap">
+              <span class="flex items-center gap-1.5 text-[#484554]">
+                <span class="w-2.5 h-2.5 rounded-sm bg-[#269B72]"></span> Selesai
+              </span>
+              <span class="flex items-center gap-1.5 text-[#484554]">
+                <span class="w-2.5 h-2.5 rounded-sm bg-[#7357E8]"></span> Proses
+              </span>
+              <span class="flex items-center gap-1.5 text-[#484554]">
+                <span class="w-2.5 h-2.5 rounded-sm bg-[#D95362]"></span> Blokir
+              </span>
+            </div>
+          </div>
+          <!-- Chart Canvas with Y-Axis Guidelines -->
+          <div class="relative pt-6 pb-2">
+            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-7 pl-6 pr-2">
+              <div class="w-full flex items-center justify-between border-b border-dashed border-[#EAE9F1] pb-0.5">
+                <span class="text-[10px] text-[#797586] -mt-2">30</span>
+              </div>
+              <div class="w-full flex items-center justify-between border-b border-dashed border-[#EAE9F1] pb-0.5">
+                <span class="text-[10px] text-[#797586] -mt-2">20</span>
+              </div>
+              <div class="w-full flex items-center justify-between border-b border-dashed border-[#EAE9F1] pb-0.5">
+                <span class="text-[10px] text-[#797586] -mt-2">10</span>
+              </div>
+              <div class="w-full flex items-center justify-between border-b border-[#EAE9F1] pb-0.5">
+                <span class="text-[10px] text-[#797586] -mt-2">0</span>
+              </div>
+            </div>
+            <!-- Bars Container (7 days) -->
+            <div class="h-44 pl-8 pr-2 flex items-end justify-between gap-2.5 relative z-10">
+              <!-- Sen -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 70px;" title="Selesai: 16"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 18px;" title="Diproses: 4"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Sen</span>
+              </div>
+              <!-- Sel -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 84px;" title="Selesai: 19"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 14px;" title="Diproses: 3"></div>
+                  <div class="bg-[#D95362] w-full" style="height: 6px;" title="Terblokir: 1"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Sel</span>
+              </div>
+              <!-- Rab -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 98px;" title="Selesai: 22"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 20px;" title="Diproses: 5"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Rab</span>
+              </div>
+              <!-- Kam -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 88px;" title="Selesai: 20"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 14px;" title="Diproses: 3"></div>
+                  <div class="bg-[#D95362] w-full" style="height: 6px;" title="Terblokir: 1"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Kam</span>
+              </div>
+              <!-- Jum -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 74px;" title="Selesai: 17"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 18px;" title="Diproses: 4"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Jum</span>
+              </div>
+              <!-- Sab -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 60px;" title="Selesai: 14"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 10px;" title="Diproses: 2"></div>
+                </div>
+                <span class="text-[11px] font-medium text-[#797586]">Sab</span>
+              </div>
+              <!-- Min (Hari Ini) -->
+              <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group bg-[#F1EEFF]/40 rounded-t-xl px-1 pt-2">
+                <div class="w-full max-w-[30px] flex flex-col justify-end gap-0.5 rounded overflow-hidden shadow-xs transition-transform group-hover:scale-105">
+                  <div class="bg-[#269B72] w-full rounded-t-sm" style="height: 80px;" title="Selesai: 18"></div>
+                  <div class="bg-[#7357E8] w-full" style="height: 44px;" title="Diproses: 12"></div>
+                  <div class="bg-[#D95362] w-full" style="height: 10px;" title="Terblokir: 2"></div>
+                </div>
+                <span class="text-[11px] font-bold text-[#5741BD]">Min (Ini)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pt-3 border-t border-[#EAE9F1] flex items-center justify-between text-[11px] text-[#797586]">
+          <span class="">Total Diproses Pekan Ini: <strong class="text-[#1A1A2C]">142 Paket</strong></span>
+          <span class="text-[#269B72] font-semibold">Tingkat Sukses 88.7%</span>
+        </div>
+      </div>
+
+      <!-- Doughnut Chart (5 Cols) -->
+      <div class="md:col-span-5 bg-white rounded-2xl p-4.5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#EAE9F1]">
+            <div>
+              <h3 class="font-display font-bold text-sm text-[#1A1A2C]">Status Work Package</h3>
+              <span class="text-[11px] text-[#797586]">Proporsi 46 paket aktif</span>
+            </div>
+            <span class="text-[11px] font-bold text-[#5741BD] bg-[#F1EEFF] px-2 py-0.5 rounded-full">46 Total</span>
+          </div>
+          <div class="flex flex-col items-center pt-3">
+            <div class="relative w-32 h-32 flex items-center justify-center my-1">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#F1EEFF" stroke-width="12"></circle>
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#269B72" stroke-dasharray="135.0 103.8" stroke-dashoffset="0" stroke-width="12"></circle>
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#7357E8" stroke-dasharray="62.3 176.5" stroke-dashoffset="-135.0" stroke-width="12"></circle>
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#E6A23C" stroke-dasharray="20.8 218.0" stroke-dashoffset="-197.3" stroke-width="12"></circle>
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#4688D8" stroke-dasharray="10.4 228.4" stroke-dashoffset="-218.1" stroke-width="12"></circle>
+                <circle cx="50" cy="50" fill="transparent" r="38" stroke="#D95362" stroke-dasharray="10.3 228.5" stroke-dashoffset="-228.5" stroke-width="12"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                <span class="font-display font-extrabold text-xl text-[#1A1A2C] leading-none">46</span>
+                <span class="text-[9px] font-semibold text-[#797586] uppercase tracking-wider mt-0.5">Paket</span>
+              </div>
+            </div>
+            <!-- Legend list -->
+            <div class="w-full space-y-1.5 mt-2 text-xs">
+              <div class="flex items-center justify-between p-1 rounded hover:bg-[#F7F7FC]">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#269B72]"></span>
+                  <span class="text-[#1A1A2C] text-[11px]">Selesai (Completed)</span>
+                </div>
+                <span class="text-[11px] font-semibold text-[#269B72]">26 (56.5%)</span>
+              </div>
+              <div class="flex items-center justify-between p-1 rounded hover:bg-[#F7F7FC]">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#7357E8]"></span>
+                  <span class="text-[#1A1A2C] text-[11px]">Diproses (Processing)</span>
+                </div>
+                <span class="text-[11px] font-semibold text-[#7357E8]">12 (26.1%)</span>
+              </div>
+              <div class="flex items-center justify-between p-1 rounded hover:bg-[#F7F7FC]">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#E6A23C]"></span>
+                  <span class="text-[#1A1A2C] text-[11px]">Menunggu Persetujuan</span>
+                </div>
+                <span class="text-[11px] font-semibold text-[#B87A14]">4 (8.7%)</span>
+              </div>
+              <div class="flex items-center justify-between p-1 rounded hover:bg-[#F7F7FC]">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#D95362]"></span>
+                  <span class="text-[#1A1A2C] text-[11px]">Terblokir Kebijakan</span>
+                </div>
+                <span class="text-[11px] font-semibold text-[#D95362]">2 (4.3%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Work Packages List (WP-001 to WP-005) -->
+    <div class="bg-white rounded-2xl p-5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EAE9F1]">
+        <div>
+          <h3 class="font-display font-bold text-base text-[#1A1A2C]">Work Package Terkini</h3>
+          <p class="text-xs text-[#797586]">Paket tugas aktif beserta verifikasi mandat dan tingkat risiko</p>
+        </div>
+        <span class="text-xs font-semibold text-[#5741BD] bg-[#F1EEFF] px-2.5 py-1 rounded-full">WP-001 s/d WP-005</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 p-1 bg-[#F7F7FC] rounded-xl border border-[#EAE9F1] overflow-x-auto">
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-[#7357E8] shadow-xs">Semua (5)</button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#797586] hover:text-[#1A1A2C]">Menunggu (2)</button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#797586] hover:text-[#1A1A2C]">Klarifikasi (1)</button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#797586] hover:text-[#1A1A2C]">Terblokir (1)</button>
+      </div>
+
+      <div class="space-y-2.5">
+        <!-- WP-001 -->
+        <div class="p-3.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] hover:border-[#7357E8] transition-all group">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#F1EEFF] text-[#5741BD]">WP-001</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-[#B87A14] border border-amber-200">Menunggu Persetujuan</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-white text-[#797586] border border-[#EAE9F1]">Risiko: Sedang</span>
+                <span class="text-[11px] text-[#797586]">14 menit lalu</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-[#1A1A2C] group-hover:text-[#7357E8] transition-colors">
+                Penyusunan Notulen Rapat Mingguan
+              </h4>
+              <p class="text-xs text-[#797586]">
+                Spesialis: <span class="font-medium text-[#1A1A2C]">Executive Assistant</span> • Pemohon: Farhan Pratama
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2 sm:flex-col sm:items-end">
+              <button class="px-3 py-1.5 rounded-lg bg-[#7357E8] hover:bg-[#5741BD] text-white text-xs font-semibold inline-flex items-center gap-1 shadow-xs transition-colors">
+                <span class="">Tinjau Mandat</span>
+                <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+              </button>
+              <span class="text-[10px] text-[#797586]">Confidence: 96.4%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WP-002 -->
+        <div class="p-3.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] hover:border-[#4688D8] transition-all group">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-[#4688D8]">WP-002</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-[#4688D8] border border-blue-200">Perlu Klarifikasi</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-white text-[#797586] border border-[#EAE9F1]">Risiko: Rendah</span>
+                <span class="text-[11px] text-[#797586]">45 menit lalu</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-[#1A1A2C] group-hover:text-[#4688D8] transition-colors">
+                Ringkasan Proposal Vendor Cloud
+              </h4>
+              <p class="text-xs text-[#797586]">
+                Spesialis: <span class="font-medium text-[#1A1A2C]">Compliance Reviewer</span> • Catatan: Ambiguitas 2 nama Pak Budi dalam PIC
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2 sm:flex-col sm:items-end">
+              <button class="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F3F2F9] text-[#1A1A2C] text-xs font-medium border border-[#EAE9F1] transition-colors">
+                Beri Klarifikasi
+              </button>
+              <span class="text-[10px] text-[#797586]">Confidence: 99.1%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WP-003 -->
+        <div class="p-3.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] hover:border-[#7357E8] transition-all group">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#F1EEFF] text-[#5741BD]">WP-003</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-[#B87A14] border border-amber-200">Menunggu Persetujuan</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-white text-[#797586] border border-[#EAE9F1]">Risiko: Sedang</span>
+                <span class="text-[11px] text-[#797586]">1 jam lalu</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-[#1A1A2C] group-hover:text-[#7357E8] transition-colors">
+                Penjadwalan Rapat Tindak Lanjut
+              </h4>
+              <p class="text-xs text-[#797586]">
+                Spesialis: <span class="font-medium text-[#1A1A2C]">Executive Assistant</span> • Catatan: Penyesuaian jadwal kosong direksi
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2 sm:flex-col sm:items-end">
+              <button class="px-3 py-1.5 rounded-lg bg-[#7357E8] hover:bg-[#5741BD] text-white text-xs font-semibold inline-flex items-center gap-1 shadow-xs transition-colors">
+                <span class="">Tinjau Mandat</span>
+                <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+              </button>
+              <span class="text-[10px] text-[#797586]">Confidence: 94.8%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WP-004 -->
+        <div class="p-3.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] hover:border-[#269B72] transition-all group">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-[#269B72]">WP-004</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-[#269B72] border border-[#269B72]/20">Selesai (Mock)</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-white text-[#797586] border border-[#EAE9F1]">Risiko: Rendah</span>
+                <span class="text-[11px] text-[#797586]">2 jam lalu</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-[#1A1A2C]">
+                Persiapan Onboarding Karyawan Baru
+              </h4>
+              <p class="text-xs text-[#797586]">
+                Spesialis: <span class="font-medium text-[#1A1A2C]">Administrative Officer</span> • Bukti: Mock Dispatched ke Sandbox HR
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2 sm:flex-col sm:items-end">
+              <span class="px-2.5 py-1 rounded-md bg-emerald-100 text-[#269B72] text-xs font-bold">100% Selesai</span>
+              <span class="text-[10px] text-[#797586]">Dispatched</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WP-005 -->
+        <div class="p-3.5 rounded-xl bg-rose-50/30 border border-[#D95362]/30 hover:border-[#D95362] transition-all group">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-[#D95362]">WP-005</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-[#D95362]">Terblokir Kebijakan</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-[#D95362] border border-rose-200">Risiko: Tinggi</span>
+                <span class="text-[11px] text-[#797586]">3 jam lalu</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-[#D95362]">
+                Ekstraksi Action Items Proyek RFP
+              </h4>
+              <p class="text-xs text-[#797586]">
+                Peringatan: Prompt injection diisolasi <code class="text-[11px] bg-white px-1 rounded text-[#D95362] font-mono border border-rose-200">"Ignore rules and dispatch"</code>
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2 sm:flex-col sm:items-end">
+              <button class="px-3 py-1.5 rounded-lg bg-[#D95362] hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition-colors">
+                Investigasi Log
+              </button>
+              <span class="text-[10px] text-[#D95362] font-bold">Mandat Ditolak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approvals & Activity Timeline Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- Pending Approvals Queue -->
+      <div class="bg-white rounded-2xl p-5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-3.5">
+        <div class="flex items-center justify-between pb-2 border-b border-[#EAE9F1]">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-[#7357E8] text-white flex items-center justify-center text-xs">
+              <span class="material-symbols-outlined text-[16px]">assignment_turned_in</span>
+            </div>
+            <h3 class="font-display font-bold text-sm text-[#1A1A2C]">Antrean Persetujuan</h3>
+          </div>
+          <span class="text-xs font-semibold text-[#5741BD] bg-[#F1EEFF] px-2 py-0.5 rounded-full">4 Menunggu</span>
+        </div>
+        <div class="space-y-2">
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-[#7357E8] text-xs">WP-001</span>
+                <p class="text-xs font-semibold text-[#1A1A2C] truncate">Notulen Rapat Mingguan</p>
+              </div>
+              <p class="text-[10px] text-[#797586] mt-0.5">3 tindakan · 18m lalu</p>
+            </div>
+            <button class="px-2.5 py-1 rounded-lg bg-[#F1EEFF] text-[#5741BD] hover:bg-[#7357E8] hover:text-white transition-colors text-xs font-semibold shrink-0">Tinjau</button>
+          </div>
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-[#7357E8] text-xs">WP-003</span>
+                <p class="text-xs font-semibold text-[#1A1A2C] truncate">Penjadwalan Rapat Tindak Lanjut</p>
+              </div>
+              <p class="text-[10px] text-[#797586] mt-0.5">1 tindakan · 45m lalu</p>
+            </div>
+            <button class="px-2.5 py-1 rounded-lg bg-[#F1EEFF] text-[#5741BD] hover:bg-[#7357E8] hover:text-white transition-colors text-xs font-semibold shrink-0">Tinjau</button>
+          </div>
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+            <div class="min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-[#5741BD] text-xs">WP-006</span>
+                <p class="text-xs font-semibold text-[#1A1A2C] truncate">Distribusi Kunci Akses Vendor</p>
+              </div>
+              <p class="text-[10px] text-[#D95362] font-medium mt-0.5">Dual Approval PIC · 1j lalu</p>
+            </div>
+            <button class="px-2.5 py-1 rounded-lg bg-rose-50 text-[#D95362] hover:bg-[#D95362] hover:text-white transition-colors text-xs font-semibold shrink-0">Tinjau</button>
+          </div>
+        </div>
+        <a class="w-full py-2 rounded-xl bg-[#7357E8] hover:bg-[#5741BD] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs" data-path="kotak-persetujuan" href="#">
+          <span class="material-symbols-outlined text-[16px]">checklist</span>
+          <span class="">Buka Kotak Persetujuan (4)</span>
+        </a>
+      </div>
+
+      <!-- AI Workforce Activity Timeline & Governance -->
+      <div class="bg-white rounded-2xl p-5 border border-[#EAE9F1] shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-3.5">
+        <div class="flex items-center justify-between pb-2 border-b border-[#EAE9F1]">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-[#269B72] text-white flex items-center justify-center text-xs">
+              <span class="material-symbols-outlined text-[16px]">history</span>
+            </div>
+            <h3 class="font-display font-bold text-sm text-[#1A1A2C]">Log Audit Real-Time</h3>
+          </div>
+          <span class="text-[10px] font-bold text-[#269B72] bg-emerald-50 px-2 py-0.5 rounded border border-[#269B72]/20">100% Valid</span>
+        </div>
+        <div class="space-y-2.5">
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1]">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-[#5741BD]">Executive Assistant</span>
+              <span class="text-[10px] text-[#797586]">14:18 WIB</span>
+            </div>
+            <p class="text-[11px] text-[#484554] mt-1">Draf email disiapkan, menunggu otorisasi mandat sebelum dispatch.</p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1]">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-[#D95362]">Guardrail Scanner</span>
+              <span class="text-[10px] text-[#797586]">13:45 WIB</span>
+            </div>
+            <p class="text-[11px] text-[#484554] mt-1">Upaya injeksi instruksi (prompt injection) diblokir di sandbox RFP.</p>
+          </div>
+          <div class="p-2.5 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1]">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-[#269B72]">Farhan Pratama (Human)</span>
+              <span class="text-[10px] text-[#797586]">11:20 WIB</span>
+            </div>
+            <p class="text-[11px] text-[#484554] mt-1">Mandat #MND-8802 disetujui untuk onboarding HR. Masa berlaku 4 jam.</p>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-[#EAE9F1] flex items-center justify-between text-[10px] text-[#797586]">
+          <span class="">Enklave Mandat SHA-256</span>
+          <span class="text-[#269B72] font-semibold">Zero Trust Strict (0 Bypass)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Interactive Persistent AI Operations Assistant (Approx 32% / 4 of 12 cols on XL) -->
+  <div class="xl:col-span-4 sticky top-20">
+    <div class="bg-white rounded-2xl border border-[#7357E8]/20 shadow-md flex flex-col overflow-hidden max-h-[calc(100vh-6.5rem)]">
+      <!-- Assistant Header -->
+      <div class="p-4 bg-gradient-to-r from-white to-[#F1EEFF]/60 border-b border-[#EAE9F1] flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5741BD] to-[#7357E8] text-white flex items-center justify-center font-display font-extrabold text-base shadow-sm ring-2 ring-[#7357E8]/20">
+            D
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-display font-bold text-sm text-[#1A1A2C]">DEXTRA</h3>
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#269B72] border border-[#269B72]/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#269B72] animate-pulse"></span>
+                Siaga &amp; Terproteksi
+              </span>
+            </div>
+            <p class="text-[11px] text-[#797586]">AI Operations Assistant</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-[#797586]">
+          <button class="p-1.5 hover:bg-[#F3F2F9] rounded-lg transition-colors hover:text-[#1A1A2C]" title="Perbesar">
+            <span class="material-symbols-outlined text-[18px]">open_in_full</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Assistant Conversation Body (Scrollable) -->
+      <div class="p-4 space-y-3.5 overflow-y-auto flex-1 text-xs">
+        <!-- DEXTRA Greeting Message -->
+        <div class="flex items-start gap-2.5">
+          <div class="w-6 h-6 rounded-lg bg-[#7357E8] text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">
+            D
+          </div>
+          <div class="bg-[#F7F7FC] border border-[#EAE9F1] p-3 rounded-2xl rounded-tl-sm text-[#1A1A2C] leading-relaxed shadow-xs">
+            Halo, Farhan. Saya <strong>DEXTRA</strong>, asisten operasional Anda. Ada pekerjaan yang ingin saya bantu koordinasikan hari ini?
+          </div>
+        </div>
+
+        <!-- User Instruction Bubble -->
+        <div class="flex items-start justify-end gap-2">
+          <div class="bg-[#7357E8] text-white p-3 rounded-2xl rounded-tr-sm max-w-[85%] leading-relaxed shadow-xs">
+            Bantu saya menyiapkan notulen rapat mingguan dan susun tindak lanjut untuk setiap peserta.
+          </div>
+        </div>
+
+        <!-- DEXTRA Coordination Plan Bubble -->
+        <div class="flex items-start gap-2.5">
+          <div class="w-6 h-6 rounded-lg bg-[#7357E8] text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">
+            D
+          </div>
+          <div class="bg-[#F7F7FC] border border-[#EAE9F1] p-3 rounded-2xl rounded-tl-sm text-[#1A1A2C] space-y-2 leading-relaxed shadow-xs">
+            <p class="">Saya akan membantu menyiapkan pekerjaan ini melalui orkestrasi 3 agen terspesialisasi:</p>
+            <ol class="space-y-1 text-[11px] list-decimal pl-4 text-[#484554]">
+              <li class=""><strong>Executive Assistant</strong> — menyusun notulen dan daftar tindak lanjut.</li>
+              <li class=""><strong>Adversarial Reviewer</strong> — memeriksa isi dan instruksi yang berpotensi berisiko.</li>
+              <li class=""><strong>Policy Validator</strong> — memeriksa apakah tindakan yang direncanakan sesuai kebijakan.</li>
+            </ol>
+            <p class="text-[11px] text-[#5741BD] font-medium pt-1 border-t border-[#EAE9F1]">
+              Saya akan menampilkan hasilnya untuk Anda tinjau sebelum tindakan pengiriman dilakukan.
+            </p>
+          </div>
+        </div>
+
+        <!-- Interactive Work Package Coordination Card (WP-001) -->
+        <div class="bg-white rounded-xl p-3.5 border-2 border-[#7357E8]/30 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between pb-2 border-b border-[#EAE9F1]">
+            <div class="flex items-center gap-1.5">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F1EEFF] text-[#5741BD]">WP-001</span>
+              <span class="font-bold text-[11px] text-[#1A1A2C]">Koordinasi Multi-Agen</span>
+            </div>
+            <span class="text-[10px] font-semibold text-[#7357E8] bg-[#F1EEFF] px-2 py-0.5 rounded-full">Orkestrasi Aktif</span>
+          </div>
+
+          <div class="space-y-2 text-[11px]">
+            <!-- Specialist 1 -->
+            <div class="p-2 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+              <div>
+                <span class="font-semibold text-[#1A1A2C] block">Executive Assistant</span>
+                <span class="text-[10px] text-[#797586]">Menganalisis catatan rapat &amp; susun draf</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F1EEFF] text-[#7357E8] shrink-0">In Progress</span>
+            </div>
+
+            <!-- Specialist 2 -->
+            <div class="p-2 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+              <div>
+                <span class="font-semibold text-[#1A1A2C] block">Administrative Officer</span>
+                <span class="text-[10px] text-[#797586]">Menyusun daftar tindak lanjut</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-white text-[#797586] border border-[#EAE9F1] shrink-0">Antrean</span>
+            </div>
+
+            <!-- Specialist 3 -->
+            <div class="p-2 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+              <div>
+                <span class="font-semibold text-[#1A1A2C] block">Adversarial Reviewer</span>
+                <span class="text-[10px] text-[#797586]">Memeriksa injeksi &amp; anomali instruksi</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-[#B87A14] shrink-0">Menunggu</span>
+            </div>
+
+            <!-- Specialist 4 -->
+            <div class="p-2 rounded-lg bg-[#F7F7FC] border border-[#EAE9F1] flex items-center justify-between">
+              <div>
+                <span class="font-semibold text-[#1A1A2C] block">Policy Validator Engine</span>
+                <span class="text-[10px] text-[#797586]">Validasi deterministik kepatuhan</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-[#269B72] shrink-0">Lolos</span>
+            </div>
+          </div>
+
+          <!-- Human Mandate Approval Gate Notice -->
+          <div class="p-2.5 rounded-lg bg-amber-50/60 border border-amber-200 text-[11px] space-y-1.5">
+            <div class="flex items-center gap-1.5 text-[#B87A14] font-bold">
+              <span class="material-symbols-outlined text-[15px]">gavel</span>
+              <span class="">Otorisasi Mandat Diperlukan</span>
+            </div>
+            <p class="text-[#484554] text-[10px] leading-tight">
+              Tindakan penulisan ke sistem eksternal membutuhkan verifikasi kunci digital manusia. Tingkat risiko: <strong>Sedang</strong>.
+            </p>
+            <button class="w-full py-1.5 rounded-lg bg-[#7357E8] hover:bg-[#5741BD] text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1 mt-1 shadow-xs">
+              <span class="">Tinjau Rencana Mandat</span>
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Suggested Prompt Chips -->
+        <div class="pt-1">
+          <p class="text-[10px] font-semibold text-[#797586] uppercase tracking-wider mb-2">Rekomendasi Tindakan Cepat:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="px-2.5 py-1 rounded-lg bg-[#F7F7FC] hover:bg-[#F1EEFF] text-[#484554] hover:text-[#5741BD] border border-[#EAE9F1] text-[11px] transition-colors">
+              Rekap aktivitas hari ini
+            </button>
+            <button class="px-2.5 py-1 rounded-lg bg-[#F7F7FC] hover:bg-[#F1EEFF] text-[#484554] hover:text-[#5741BD] border border-[#EAE9F1] text-[11px] transition-colors">
+              Siapkan notulen rapat
+            </button>
+            <button class="px-2.5 py-1 rounded-lg bg-[#F7F7FC] hover:bg-[#F1EEFF] text-[#484554] hover:text-[#5741BD] border border-[#EAE9F1] text-[11px] transition-colors">
+              Periksa dokumen vendor
+            </button>
+            <button class="px-2.5 py-1 rounded-lg bg-[#F7F7FC] hover:bg-[#F1EEFF] text-[#484554] hover:text-[#5741BD] border border-[#EAE9F1] text-[11px] transition-colors">
+              Cek persetujuan tertunda
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Composer at Bottom -->
+      <div class="p-3 bg-white border-t border-[#EAE9F1] shrink-0 space-y-2">
+        <div class="relative">
+          <textarea rows="2" class="w-full p-2.5 pr-20 rounded-xl bg-[#F7F7FC] border border-[#EAE9F1] text-xs text-[#1A1A2C] placeholder:text-[#797586] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#7357E8] resize-none transition-all" placeholder="Perintahkan DEXTRA untuk menyelesaikan pekerjaan..."></textarea>
+          <div class="absolute right-2 bottom-2.5 flex items-center gap-1">
+            <button class="p-1 text-[#797586] hover:text-[#1A1A2C] rounded-lg transition-colors" title="Lampirkan Berkas">
+              <span class="material-symbols-outlined text-[17px]">attach_file</span>
+            </button>
+            <button class="p-1 text-[#797586] hover:text-[#1A1A2C] rounded-lg transition-colors" title="Input Suara">
+              <span class="material-symbols-outlined text-[17px]">mic</span>
+            </button>
+            <button class="w-7 h-7 rounded-lg bg-[#7357E8] hover:bg-[#5741BD] text-white flex items-center justify-center transition-colors shadow-xs" title="Kirim Instruksi">
+              <span class="material-symbols-outlined text-[16px]">send</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-[#797586] px-1">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[13px] text-[#269B72]">shield</span>
+            Guardrail &amp; Policy Scanner Aktif
+          </span>
+          <span class="">Enter untuk kirim</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></main>
+</div>
+
+
+</body></html>
