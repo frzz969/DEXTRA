@@ -1,7 +1,15 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveScope, isAllowed, AGENT_TOOLS, OPS_TOOLS } from '../src/auth.ts';
+import { resolveScope, isAllowed, AGENT_TOOLS, OPS_TOOLS, callerContext } from '../src/auth.ts';
+import {
+  TOOL_NAMES,
+  SCOPE_CAPABILITIES,
+  UNBACKED_CAPABILITIES,
+  scopeAllowsTool,
+  toolsForScope,
+  isKnownCapability,
+} from '../../../packages/contracts/src/authorization.ts';
 
 describe('auth scoping', () => {
   test('agent token resolves to agent scope', () => {
@@ -15,8 +23,6 @@ describe('auth scoping', () => {
   });
 
   test('timingSafeEqual does not throw on length mismatch', () => {
-    process.env.DEXTRA_AGENT_TOKEN = 'agent-dev-token';
-    process.env.DEXTRA_OPS_TOKEN = 'ops-dev-token';
     assert.doesNotThrow(() => resolveScope('short'));
     assert.doesNotThrow(() => resolveScope('a'.repeat(1000)));
   });
@@ -27,12 +33,72 @@ describe('auth scoping', () => {
     }
   });
 
-  test('ops scope sees all 15 tools', () => {
-    assert.equal(OPS_TOOLS.size, 15);
-    for (const t of OPS_TOOLS) assert.equal(isAllowed('ops', t), true);
+  test('the allowlist is derived from the capability contract, not hand-written', () => {
+    // If these ever diverge, someone has re-introduced a second source of truth.
+    assert.deepEqual([...AGENT_TOOLS].sort(), [...toolsForScope('agent')].sort());
+    assert.deepEqual([...OPS_TOOLS].sort(), [...toolsForScope('ops')].sort());
+    assert.equal(OPS_TOOLS.size, 16);
+    assert.equal(AGENT_TOOLS.size, 11);
   });
 
-  test('agent scope sees exactly 10 tools', () => {
-    assert.equal(AGENT_TOOLS.size, 10);
+  test('every tool in the contract appears in at least one scope', () => {
+    const union = new Set([...AGENT_TOOLS, ...OPS_TOOLS]);
+    for (const tool of TOOL_NAMES) {
+      assert.equal(union.has(tool), true, `${tool} is declared but granted to no scope`);
+    }
+  });
+
+  test('agent scope is a strict subset of ops scope', () => {
+    for (const tool of AGENT_TOOLS) {
+      assert.equal(OPS_TOOLS.has(tool), true, `${tool} should also be available to ops`);
+    }
+  });
+
+  test('unknown tool names are denied for every scope', () => {
+    for (const scope of ['agent', 'ops'] as const) {
+      assert.equal(isAllowed(scope, 'drop_database'), false);
+      assert.equal(isAllowed(scope, ''), false);
+      assert.equal(scopeAllowsTool(scope, 'drop_database'), false);
+    }
+  });
+});
+
+describe('capability contract', () => {
+  test('admin capabilities are unbacked, not denied', () => {
+    // The distinction matters: "denied" means a decision was made; "unbacked"
+    // means the server implements no such authorization at all.
+    for (const cap of ['manage_users', 'manage_integrations', 'edit_policy']) {
+      assert.equal(isKnownCapability(cap), true);
+      assert.equal(
+        UNBACKED_CAPABILITIES.includes(cap as never),
+        true,
+        `${cap} must be reported as unbacked, not silently granted`,
+      );
+    }
+  });
+
+  test('no scope grants an unbacked capability', () => {
+    for (const scope of ['agent', 'ops'] as const) {
+      for (const cap of UNBACKED_CAPABILITIES) {
+        assert.equal(
+          SCOPE_CAPABILITIES[scope].includes(cap),
+          false,
+          `${scope} must not grant unbacked capability ${cap}`,
+        );
+      }
+    }
+  });
+
+  test('unknown capability names are not recognised', () => {
+    assert.equal(isKnownCapability('become_root'), false);
+    assert.equal(isKnownCapability(''), false);
+  });
+
+  test('caller context reports no principal and no invented identity', () => {
+    const ctx = callerContext('ops');
+    assert.equal(ctx.scope, 'ops');
+    assert.equal(ctx.principal, null, 'there is no principal; do not fabricate one');
+    assert.equal(ctx.tools.length, OPS_TOOLS.size);
+    assert.deepEqual(ctx.capabilities, [...SCOPE_CAPABILITIES.ops]);
   });
 });

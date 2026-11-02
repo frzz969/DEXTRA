@@ -630,7 +630,11 @@
 
       function confirmExecute(mandate, action) {
         var prior = executedRow(mandate, action);
-        if (prior) { ui.toast('Aksi ini sudah dijalankan (' + prior.execution_id + ').', 'info'); return; }
+        if (prior) {
+          ui.toast('Aksi ini sudah dijalankan' +
+            (prior.execution_id ? ' (' + prior.execution_id + ')' : '') + '.', 'info');
+          return;
+        }
         var demo = store.mode !== 'live';
         ui.confirm({
           title: 'Jalankan ' + action.action_id + '?',
@@ -672,7 +676,12 @@
         var at = res.executed_at || new Date().toISOString();
 
         store.executions.unshift({
-          execution_id: res.execution_id || 'EX-?', plan_id: mandate.plan_id, action_id: action.action_id,
+          /* Never invent an identifier. If the executor did not return one, the
+           * row has no execution_id and says so; a made-up id would be
+           * indistinguishable from a real one later. */
+          execution_id: res.execution_id || null,
+          source: res.execution_id ? 'execution' : 'local',
+          plan_id: mandate.plan_id, action_id: action.action_id,
           mandate_id: mandate.mandate_id, at: at, result: result,
           adapter: simulated ? 'demo' : 'mcp',
           detail: evidenceId || res.reason_code || '—', duration_ms: 0
@@ -747,7 +756,7 @@
       return store.audit.filter(function (e) {
         if (filter.type !== 'all' && e.type !== filter.type) return false;
         if (filter.q) {
-          var hay = [e.type, e.actor, e.plan_id, e.mandate_id, e.reason_code, e.detail].join(' ').toLowerCase();
+          var hay = [e.type, e.actor, e.plan_id, e.mandate_id, e.reason_code, U.detailText(e.detail)].join(' ').toLowerCase();
           if (hay.indexOf(filter.q.toLowerCase()) < 0) return false;
         }
         return true;
@@ -771,7 +780,7 @@
           { key: 'reason_code', label: 'Reason code', width: '160px', render: function (e) {
             return e.reason_code ? '<span class="badge badge--danger">' + esc(e.reason_code) + '</span>' : '<span class="faint tiny">—</span>';
           }},
-          { key: 'detail', label: 'Detail', render: function (e) { return '<span class="tiny muted truncate" style="display:block;max-width:280px">' + esc(e.detail || '—') + '</span>'; } }
+          { key: 'detail', label: 'Detail', render: function (e) { return '<span class="tiny muted truncate" style="display:block;max-width:280px">' + esc(U.detailText(e.detail) || '—') + '</span>'; } }
         ],
         rows: rows(), pageSize: 12,
         onRowClick: function (e) {
@@ -783,7 +792,7 @@
               '<dt>Mandat</dt><dd class="mono">' + esc(e.mandate_id || '—') + '</dd>' +
               '<dt>Tindakan</dt><dd class="mono">' + esc(e.action_id || '—') + '</dd>' +
               '<dt>Reason code</dt><dd>' + (e.reason_code ? '<span class="badge badge--danger">' + esc(e.reason_code) + '</span>' : '—') + '</dd>' +
-              '<dt>Detail</dt><dd>' + esc(e.detail || '—') + '</dd>' +
+              '<dt>Detail</dt><dd>' + esc(U.detailText(e.detail) || '—') + '</dd>' +
               '<dt>Waktu</dt><dd class="mono tiny">' + esc(e.at) + '</dd>' +
             '</dl><div class="banner banner--info" style="margin-top:14px"><span class="material-symbols-outlined">lock</span>' +
             '<div>Event audit tidak dapat diubah atau dihapus. Koreksi dilakukan dengan menambahkan event baru.</div></div>',
@@ -871,7 +880,7 @@
     root.querySelectorAll('[data-policy]').forEach(function (row) {
       row.addEventListener('click', function () {
         var p = store.policies.filter(function (x) { return x.id === row.getAttribute('data-policy'); })[0];
-        var blocks = store.audit.filter(function (e) { return e.reason_code === p.id || (e.detail || '').indexOf(p.id) > -1; });
+        var blocks = store.audit.filter(function (e) { return e.reason_code === p.id || U.detailText(e.detail).indexOf(p.id) > -1; });
         ui.drawer({
           eyebrow: 'Kebijakan', title: p.id + ' · ' + p.name, subtitle: p.category,
           body:
@@ -891,7 +900,7 @@
             '<h3 style="margin-bottom:8px">Blokir terkait</h3>' +
             (blocks.length ? blocks.slice(0, 4).map(function (e) {
               return '<div class="row" style="padding:7px 0;border-bottom:1px solid var(--border)"><div style="flex:1;min-width:0">' +
-                '<div class="tiny mono faint">' + esc(e.plan_id || '—') + '</div><div class="tiny muted">' + esc(e.detail || e.reason_code) + '</div></div>' +
+                '<div class="tiny mono faint">' + esc(e.plan_id || '—') + '</div><div class="tiny muted">' + esc(U.detailText(e.detail) || e.reason_code || '—') + '</div></div>' +
                 '<span class="tiny faint">' + U.rel(e.at) + '</span></div>';
             }).join('') : '<p class="tiny muted">Belum ada blokir tercatat untuk aturan ini.</p>')
           ,

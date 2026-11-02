@@ -204,9 +204,10 @@
             title: 'Bukti eksekusi', desc: 'Hanya ada jika mandat digunakan',
             body: execs.length
               ? execs.map(function (e) {
+                  var label = e.execution_id || (e.source === 'audit' ? 'dari audit' : 'tidak tercatat');
                   return '<div class="banner banner--success" style="margin-bottom:8px"><span class="material-symbols-outlined">check_circle</span>' +
-                    '<div><b>' + esc(e.execution_id) + '</b> · ' + esc(e.adapter) + ' · ' + U.fmtDate(e.at) +
-                    '<div class="mono tiny" style="margin-top:2px">' + esc(e.detail) + '</div></div></div>';
+                    '<div><b>' + esc(label) + '</b> · ' + esc(e.adapter) + ' · ' + U.fmtDate(e.at) +
+                    '<div class="mono tiny" style="margin-top:2px">' + esc(U.detailText(e.detail)) + '</div></div></div>';
                 }).join('')
               : '<div class="empty" style="padding:22px"><div class="empty__icon"><span class="material-symbols-outlined">inbox</span></div>' +
                 '<h3>Belum ada eksekusi</h3><p>Tidak ada yang dijalankan sebelum mandat terbit dan dipakai.</p></div>'
@@ -222,7 +223,7 @@
                 (tone === 'is-blocked' ? 'block' : tone === 'is-done' ? 'check' : 'chevron_right') + '</span></div>' +
                 '<div class="tl-body"><div class="tl-title">' + esc(e.type.replace(/_/g, ' ')) + '</div>' +
                 '<div class="tl-meta">' + esc(U.actorName(e.actor)) + ' · ' + U.fmtDate(e.at) + (e.reason_code ? ' · <b>' + esc(e.reason_code) + '</b>' : '') + '</div>' +
-                (e.detail ? '<div class="tiny muted" style="margin-top:2px">' + esc(e.detail) + '</div>' : '') + '</div></div>';
+                (e.detail ? '<div class="tiny muted" style="margin-top:2px">' + esc(U.detailText(e.detail)) + '</div>' : '') + '</div></div>';
             }).join('') + '</div>'
           }) +
 

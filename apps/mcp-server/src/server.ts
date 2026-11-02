@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { resolveScope, isAllowed, agentToken, opsToken, AGENT_TOOLS, OPS_TOOLS } from './auth.ts';
+import { resolveScope, isAllowed, toolsForScope } from './auth.ts';
 import { handleTool } from './handlers.ts';
 import { ensureStoreFiles } from '../../../packages/store/src/json-file.ts';
 import { appendAudit } from '../../../packages/store/src/repository.ts';
@@ -59,8 +59,8 @@ async function handleRpc(req: IncomingMessage, res: ServerResponse, body: any) {
     const token = (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '');
     const scope = resolveScope(token);
     if (!scope) return replyError(-32001, 'Unauthorized: invalid or missing token');
-    const allowed = scope === 'agent' ? AGENT_TOOLS : OPS_TOOLS;
-    const tools = [...allowed].map((name) => ({
+    const allowed = toolsForScope(scope);
+    const tools = allowed.map((name) => ({
       name,
       description: TOOL_DESCRIPTIONS[name] ?? name,
       inputSchema: TOOL_SCHEMAS[name] ?? { type: 'object', properties: {} },
@@ -93,6 +93,7 @@ async function handleRpc(req: IncomingMessage, res: ServerResponse, body: any) {
 }
 
 const TOOL_DESCRIPTIONS: Record<string, string> = {
+  get_caller_context: 'Report the scope this token authenticated as and the capabilities it holds.',
   get_org_rules: 'Read organization rules (timezones, office hours, Friday prayer, holidays).',
   find_precedent: 'Find candidate recipients by subject and context.',
   create_plan: 'Create a work plan from an instruction.',
@@ -102,7 +103,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   submit_approval: 'Submit a human approval decision for a plan.',
   get_mandate: 'Read a mandate by id.',
   list_mandates: 'List mandates, newest first. Optional status filter and limit.',
-  issue_mandate: 'Issue a mandate after verified approval (service only).',
+  issue_mandate: 'Issue a mandate from an existing granted approval. Available to the ops scope; audited as mandate_issued.',
   execute_action: 'Execute one action under a valid mandate (executor only).',
   revoke_mandate: 'Revoke an active mandate.',
   list_executions: 'List execution results, newest first. Optional mandate filter and limit.',
@@ -111,6 +112,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
 };
 
 const TOOL_SCHEMAS: Record<string, any> = {
+  get_caller_context: { type: 'object', properties: {} },
   get_org_rules: { type: 'object', properties: { org_id: { type: 'string' } }, required: ['org_id'] },
   find_precedent: { type: 'object', properties: { subject: { type: 'string' }, context: { type: 'string' }, org_id: { type: 'string' } }, required: ['subject', 'org_id'] },
   create_plan: { type: 'object', properties: { org_id: { type: 'string' }, request_id: { type: 'string' }, intent: { type: 'string' }, actions: { type: 'array' } }, required: ['org_id', 'request_id', 'intent', 'actions'] },
@@ -129,6 +131,7 @@ const TOOL_SCHEMAS: Record<string, any> = {
 };
 
 const TOOL_ANNOTATIONS: Record<string, any> = {
+  get_caller_context: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_org_rules: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   find_precedent: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   create_plan: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },

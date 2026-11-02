@@ -5,9 +5,31 @@ import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
 import { executeAction } from '../../../packages/executor/src/execute.ts';
 import { OrgSchema } from '../../../packages/contracts/src/index.ts';
 import type { Plan, Approval, Mandate } from '../../../packages/contracts/src/index.ts';
+import { isAllowed, callerContext, type Scope } from './auth.ts';
 
 export async function handleTool(name: string, args: any, scope: string): Promise<any> {
+  /*
+   * Defense in depth. handleRpc already refuses a disallowed tool, but this
+   * function is the only place that actually runs an operation, and until now
+   * it accepted a `scope` argument it never read. Any future caller that reached
+   * the handler directly (an internal job, a new transport, a test) would have
+   * bypassed authorization completely. Re-asserting here makes the handler safe
+   * on its own rather than safe only when called the expected way.
+   */
+  if (scope !== 'agent' && scope !== 'ops') {
+    return { ok: false, error: { code: 'UNAUTHORIZED', message: 'No scope resolved for this call.' } };
+  }
+  if (!isAllowed(scope, name)) {
+    return {
+      ok: false,
+      error: { code: 'ACTION_NOT_ALLOWED', message: `Tool ${name} is not available to scope ${scope}.` },
+    };
+  }
+
   switch (name) {
+    case 'get_caller_context': {
+      return { ok: true, data: callerContext(scope as Scope) };
+    }
     case 'get_org_rules': {
       const org = await getOrgRules();
       return { ok: true, data: org };
@@ -131,6 +153,19 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       if (!plan || !approval) return { ok: false, error: { code: 'INVALID_PLAN', message: 'Plan or approval not found.' } };
       const mandate = issueMandate({ plan, approval, approver_id: approval.approver_id, now: new Date().toISOString() });
       await saveMandate(mandate);
+      /* Minting authority is a governance event. submit_approval records one on
+       * the approve path; this second issuance path must be equally traceable,
+       * otherwise a mandate could exist with no audit record of who asked for it. */
+      await appendAudit({
+        event_id: `evt_${Date.now()}`,
+        at: new Date().toISOString(),
+        type: 'mandate_issued',
+        actor: 'dashboard',
+        plan_id: plan.plan_id,
+        mandate_id: mandate.mandate_id,
+        plan_hash: plan.plan_hash,
+        detail: { via: 'issue_mandate', approval_id: approval.approval_id, scope },
+      } as any);
       return { ok: true, data: { mandate } };
     }
     case 'execute_action': {

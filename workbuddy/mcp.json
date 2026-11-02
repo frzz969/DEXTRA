@@ -8,6 +8,7 @@
         "tokenEnv": "DEXTRA_AGENT_TOKEN"
       },
       "allowedTools": [
+        "get_caller_context",
         "get_org_rules",
         "find_precedent",
         "create_plan",

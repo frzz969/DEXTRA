@@ -155,23 +155,104 @@
     requester: 'Requester', auditor: 'Auditor', org_admin: 'Organization Admin'
   };
 
+  /*
+   * Session.
+   *
+   * `user` is a DISPLAY persona. It is not an identity and carries no authority:
+   * the server never receives it, so it cannot be the basis of any decision.
+   * What actually decides is `serverCapabilities`, reported by the MCP server
+   * for the token this browser authenticated with (get_caller_context).
+   *
+   * In demo mode there is no server, so the simulated permission matrix is used.
+   * Demo mode says so on every screen that uses it.
+   */
   var session = {
     user: {
       id: 'user_001', name: 'Farhan Pratama', role: 'operations_manager',
       title: 'Operations Manager', dept: 'Operasi', org: 'Kenari Group'
     },
-    roleLabel: function () { return ROLE_LABEL[this.user.role] || this.user.role; },
-    can: function (cap) {
-      if (!cap) return true;
+    scope: null,
+    serverCapabilities: null,
+    serverUnbacked: null,
+
+    applyServerContext: function (ctx) {
+      if (!ctx) {
+        this.scope = null;
+        this.serverCapabilities = null;
+        this.serverUnbacked = null;
+        return;
+      }
+      this.scope = typeof ctx.scope === 'string' ? ctx.scope : null;
+      this.serverCapabilities = Array.isArray(ctx.capabilities) ? ctx.capabilities.slice() : [];
+      this.serverUnbacked = Array.isArray(ctx.unbacked_capabilities) ? ctx.unbacked_capabilities.slice() : [];
+    },
+
+    /* True when the browser is relying on the simulated matrix instead of the server. */
+    simulated: function () { return this.serverCapabilities === null; },
+
+    /*
+     * Three outcomes, and the distinction is the whole point:
+     *   granted     — the server says this scope holds it
+     *   denied      — the capability exists, this scope does not hold it
+     *   unavailable — the server implements no authorization for it at all
+     * "unavailable" is not a refusal. Rendering it as one would claim a decision
+     * that was never made.
+     */
+    capState: function (cap) {
+      if (!cap) return 'granted';
+      if (this.serverCapabilities) {
+        if (this.serverCapabilities.indexOf(cap) >= 0) return 'granted';
+        if (this.serverUnbacked && this.serverUnbacked.indexOf(cap) >= 0) return 'unavailable';
+        return 'denied';
+      }
       var row = (D.demo.permMatrix || {})[this.user.role] || {};
       var v = row[cap];
-      return v === 'yes' || v === 'lim';
+      return (v === 'yes' || v === 'lim') ? 'granted' : 'denied';
     },
+
+    can: function (cap) { return this.capState(cap) === 'granted'; },
+
     limited: function (cap) {
+      if (this.serverCapabilities) return false; /* the server does not model partial grants */
       var row = (D.demo.permMatrix || {})[this.user.role] || {};
       return row[cap] === 'lim';
+    },
+
+    /* Identity as the server understands it, or the demo persona. Never mixed. */
+    roleLabel: function () {
+      if (this.serverCapabilities) return 'Token ' + this.scope + ' · server';
+      return ROLE_LABEL[this.user.role] || this.user.role;
+    },
+
+    identityLine: function () {
+      if (this.serverCapabilities) {
+        return 'Terautentikasi sebagai scope ' + this.scope +
+          '. Tidak ada identitas per orang: token membawa wewenang, bukan nama.';
+      }
+      return 'Mode demo: persona contoh, bukan identitas terautentikasi.';
     }
   };
+
+  /*
+   * Audit `detail` is a Record<string,string> per AuditEventSchema, but several
+   * views rendered it with esc() as if it were a string, which prints
+   * "[object Object]". Flatten it once, here, and let every caller share it.
+   */
+  function detailText(d) {
+    if (d === null || d === undefined) return '';
+    if (typeof d === 'string') return d;
+    if (typeof d === 'number' || typeof d === 'boolean') return String(d);
+    if (Array.isArray(d)) return d.map(detailText).filter(Boolean).join(' · ');
+    if (typeof d === 'object') {
+      return Object.keys(d).map(function (k) {
+        var v = d[k];
+        var s = (v === null || v === undefined) ? '—'
+          : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+        return k + '=' + s;
+      }).join(' · ');
+    }
+    return String(d);
+  }
 
   /* ---------------- API bridge ---------------- */
   var api = {
@@ -322,11 +403,33 @@
           self.mandates.forEach(function (m) { planByMandate[m.mandate_id] = m.plan_id; });
           self.executions = res[2].map(function (e) {
             e.plan_id = planByMandate[e.mandate_id] || null;
+            e.source = 'execution';
             return e;
           });
         } else {
-          self.executions = self.audit.filter(function (e) { return e.type === 'action_executed'; }).map(function (e, i) {
-            return { execution_id: 'EX-' + (5500 - i), plan_id: e.plan_id, action_id: e.action_id, mandate_id: e.mandate_id, at: e.at, result: 'sent', adapter: 'mcp', detail: (e.detail && e.detail.mock_message_id) || '—', duration_ms: 0 };
+          /*
+           * list_executions failed. Fall back to audit events, but do NOT dress
+           * them up as execution records:
+           *   - no invented execution_id (the old code minted 'EX-5500')
+           *   - result is null, because an audit event records that something
+           *     was executed, not that the send succeeded
+           * `source` lets the view say where the row came from. An audit event
+           * and an execution record are different evidence; showing one as the
+           * other would make the page claim more than the server said.
+           */
+          self.executions = self.audit.filter(function (e) { return e.type === 'action_executed'; }).map(function (e) {
+            return {
+              execution_id: null,
+              source: 'audit',
+              plan_id: e.plan_id,
+              action_id: e.action_id,
+              mandate_id: e.mandate_id,
+              at: e.at,
+              result: null,
+              adapter: 'mcp',
+              detail: (e.detail && e.detail.mock_message_id) || '—',
+              duration_ms: null
+            };
           });
         }
 
@@ -401,8 +504,22 @@
       var view = hit.route ? hit.route : null;
       if (!view) { view = routes.filter(function (r) { return r.path === '/not-found'; })[0]; }
       if (!view) return;
-      if (view.cap && !session.can(view.cap)) {
-        view = routes.filter(function (r) { return r.path === '/forbidden'; })[0];
+      /*
+       * Route guard is UX, not a security boundary. It decides what to draw; it
+       * does not decide what is permitted. Every operation behind these screens
+       * is still refused by the server on its own (see handleTool), so bypassing
+       * this guard by editing the URL yields no extra authority — only a screen
+       * the server would refuse to feed.
+       */
+      var blockedCap = null;
+      if (view.cap) {
+        var capState = session.capState(view.cap);
+        if (capState === 'unavailable') {
+          blockedCap = view.cap;
+          view = routes.filter(function (r) { return r.path === '/unavailable'; })[0] || view;
+        } else if (capState !== 'granted') {
+          view = routes.filter(function (r) { return r.path === '/forbidden'; })[0];
+        }
       }
       var root = document.getElementById('view-root');
       if (!root) return;
@@ -413,6 +530,7 @@
       root.appendChild(page);
       document.title = (view.title || 'DEXTRA') + ' · DEXTRA Dashboard';
       try {
+        hit.blockedCap = blockedCap;
         (D.views[view.view] || D.views['notFound'])(page, hit.params, hit);
       } catch (err) {
         page.innerHTML = '<div class="banner banner--danger"><span class="material-symbols-outlined">error</span><div><b>Tampilan gagal dimuat.</b> ' + esc(err.message) + '</div></div>';
@@ -444,7 +562,7 @@
   };
 
   /* ---------------- boot ---------------- */
-  D.util = { esc: esc, attr: attr, actorName: actorName, eventLabel: eventLabel, eventTone: eventTone, fmtDate: fmtDate, fmtDay: fmtDay, fmtTime: fmtTime, rel: rel, initials: initials, debounce: debounce, qs: qs, csv: csv, download: download, h: h };
+  D.util = { esc: esc, attr: attr, detailText: detailText, actorName: actorName, eventLabel: eventLabel, eventTone: eventTone, fmtDate: fmtDate, fmtDay: fmtDay, fmtTime: fmtTime, rel: rel, initials: initials, debounce: debounce, qs: qs, csv: csv, download: download, h: h };
   D.badge = badge; D.statusBadge = statusBadge; D.riskBadge = riskBadge; D.mandateBadge = mandateBadge;
   D.STATUS = STATUS; D.RISK = RISK;
   D.session = session; D.api = api; D.store = store; D.router = router; D.theme = theme;
@@ -454,8 +572,30 @@
     store.hydrateDemo();
     return api.health().then(function (ok) {
       if (!ok) { store.mode = 'demo'; return; }
-      return store.hydrateLive().then(function () { store.mode = 'live'; })
-        .catch(function () { store.mode = 'demo'; store.hydrateDemo(); });
+      if (!api.token()) { store.mode = 'demo'; return; }
+      /*
+       * Ask the server who we are before drawing anything. The scope it reports
+       * is the only thing that decides which capabilities the UI may show; the
+       * hardcoded persona never does.
+       */
+      return api.call('get_caller_context', {}).then(function (ctx) {
+        session.applyServerContext(ctx);
+        return store.hydrateLive().then(function () { store.mode = 'live'; });
+      }).catch(function (err) {
+        session.applyServerContext(null);
+        store.mode = 'demo';
+        store.hydrateDemo();
+        /*
+         * A rejected credential must not quietly become a demo session that
+         * looks normal. Drop the token and send the operator back to sign in.
+         * Anything else (server vanished mid-boot) keeps the demo fallback.
+         */
+        if (String((err && err.message) || '').toLowerCase().indexOf('unauthorized') >= 0) {
+          api.clearToken();
+          D.authRejected = true;
+          if (location.hash !== '#/login') location.hash = '#/login';
+        }
+      });
     });
   };
 })();

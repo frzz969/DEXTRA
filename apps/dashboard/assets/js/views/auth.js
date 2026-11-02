@@ -113,11 +113,44 @@
           '<div class="empty__icon" style="margin:0 auto 14px;width:52px;height:52px;background:var(--danger-100);color:var(--danger-600)">' +
             '<span class="material-symbols-outlined" style="font-size:26px">lock</span></div>' +
           '<h1 style="font-size:22px">Akses ditolak</h1>' +
-          '<p class="small muted" style="margin:8px 0 20px">Peran <b>' + esc(D.session.roleLabel()) + '</b> tidak memiliki izin untuk halaman ini. ' +
-            'Halaman tetap ada — hanya terkunci. Minta administrator organisasi jika Anda memerlukan akses.</p>' +
+          '<p class="small muted" style="margin:8px 0 20px">' + esc(D.session.roleLabel()) + ' tidak memiliki izin untuk halaman ini. ' +
+            'Halaman tetap ada — hanya terkunci.</p>' +
           '<div class="row" style="justify-content:center;gap:8px">' +
             '<a class="btn btn--primary" href="#/overview">Kembali ke overview</a>' +
             '<a class="btn btn--secondary" href="#/permissions">Lihat matriks izin</a>' +
+          '</div>' +
+        '</div>' +
+      '</div></div>';
+  };
+
+  /*
+   * Distinct from "forbidden" on purpose.
+   *
+   * "Denied" means a decision was made against this caller. "Unavailable" means
+   * no authorization for this capability exists on the server at all, so no
+   * decision was ever possible. Showing the second as the first would claim a
+   * security judgement that never happened — and would imply that some other
+   * caller *could* get in, which is also untrue today.
+   */
+  D.views.unavailable = function (root, params, hit) {
+    var cap = (hit && hit.blockedCap) || 'kemampuan ini';
+    var label = (hit && hit.route && hit.route.title) || 'Halaman ini';
+    root.innerHTML =
+      '<div class="auth auth--single"><div class="auth__form" style="justify-content:center">' +
+        '<div class="auth__forminner" style="text-align:center">' +
+          '<div class="empty__icon" style="margin:0 auto 14px;width:52px;height:52px;background:var(--warning-100);color:var(--warning-600)">' +
+            '<span class="material-symbols-outlined" style="font-size:26px">construction</span></div>' +
+          '<h1 style="font-size:22px">Belum tersedia</h1>' +
+          '<p class="small muted" style="margin:8px 0 10px">' + esc(label) + ' membutuhkan kemampuan ' +
+            '<span class="mono">' + esc(cap) + '</span>, dan server belum menyediakan otorisasi untuk kemampuan itu.</p>' +
+          '<p class="small muted" style="margin:0 0 20px">Ini <b>bukan</b> penolakan akses: tidak ada keputusan yang dibuat, ' +
+            'karena tidak ada yang bisa memutuskan. Tidak ada token, peran, maupun perubahan persona yang membuka halaman ini.</p>' +
+          '<div class="banner banner--warning" style="text-align:left;margin-bottom:18px">' +
+            '<span class="material-symbols-outlined">rule</span><div>Blocker: server belum memiliki identitas per pengguna, ' +
+            'role, maupun tool administrasi. Selama itu belum ada, halaman ini tetap terkunci apa pun yang dipilih di klien.</div></div>' +
+          '<div class="row" style="justify-content:center;gap:8px">' +
+            '<a class="btn btn--primary" href="#/overview">Kembali ke overview</a>' +
+            '<a class="btn btn--secondary" href="#/integrations">Lihat peta rute</a>' +
           '</div>' +
         '</div>' +
       '</div></div>';

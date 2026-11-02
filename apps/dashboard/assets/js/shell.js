@@ -41,6 +41,7 @@
     { path: '/review/:id', title: 'Review', view: 'review', cap: 'view_all', parent: '/review' },
     { path: '/login', title: 'Masuk', view: 'login', bare: true },
     { path: '/forbidden', title: 'Akses ditolak', view: 'forbidden', bare: true },
+    { path: '/unavailable', title: 'Belum tersedia', view: 'unavailable', bare: true },
     { path: '/not-found', title: 'Tidak ditemukan', view: 'notFound', bare: true }
   ];
 

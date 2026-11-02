@@ -1,5 +1,6 @@
 export * from './ids.ts';
 export * from './errors.ts';
+export * from './authorization.ts';
 export * from './risk.ts';
 export * from './constants.ts';
 export * from './org.ts';

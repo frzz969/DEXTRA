@@ -94,23 +94,23 @@
 
     { route: '/users', label: 'Users & Roles', domain: 'Administrasi', state: 'demo',
       tools: [], modules: ['store'],
-      note: 'Belum ada tool identitas. Daftar pengguna masih contoh.' },
+      note: 'Tidak ada tool identitas dan tidak ada otorisasi admin di server. Rute terkunci sebagai "belum tersedia", bukan "ditolak".' },
 
     { route: '/permissions', label: 'Permissions', domain: 'Administrasi', state: 'demo',
-      tools: [], modules: ['contracts'],
-      note: 'Matriks peran hidup di klien dan hanya mengatur tampilan; wewenang server ditegakkan lewat scope token (agent/ops), belum terhubung ke peran.' },
+      tools: ['get_caller_context'], modules: ['contracts'],
+      note: 'Kapabilitas efektif datang dari get_caller_context (scope token). Matriks peran di halaman ini hanya model demo; manage_users dan manage_integrations tidak didukung scope mana pun.' },
 
     { route: '/integrations', label: 'Integrations', domain: 'Administrasi', state: 'partial',
-      tools: ['get_status'], modules: ['mcp-server', 'telegram-adapter'],
-      note: 'Status runtime nyata dari get_status; adapter lain masih mock/planned.' },
+      tools: ['get_status', 'get_caller_context'], modules: ['mcp-server', 'telegram-adapter'],
+      note: 'Status runtime nyata dari get_status; scope pemanggil dari get_caller_context. Adapter lain masih mock/planned. Halaman dijaga kapabilitas manage_integrations yang belum didukung server.' },
 
     { route: '/settings', label: 'Settings', domain: 'Administrasi', state: 'partial',
       tools: ['get_org_rules'], modules: ['store', 'policy-engine'],
       note: 'Profil organisasi dari aturan server; penyimpanan preferensi masih lokal.' },
 
     { route: '/login', label: 'Login', domain: 'Akses', state: 'none',
-      tools: [], modules: ['mcp-server'],
-      note: 'Menukar token ops lalu memverifikasi lewat /health.' },
+      tools: ['get_caller_context'], modules: ['mcp-server'],
+      note: 'Menukar token lalu memverifikasi lewat tools/list; boot memanggil get_caller_context untuk menentukan scope.' },
 
     { route: '/forbidden', label: 'Forbidden', domain: 'Akses', state: 'none',
       tools: [], modules: [], note: 'Halaman statis.' },

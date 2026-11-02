@@ -264,13 +264,17 @@
             title: 'Wewenang Anda',
             desc: D.session.roleLabel(),
             body: '<div class="stack" style="gap:8px">' +
-              store.capabilities.slice(0, 8).map(function (c) {
-                var ok = D.session.can(c.key), lim = D.session.limited(c.key);
-                return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:' +
-                  (ok ? 'var(--success-600)' : 'var(--faint)') + '">' + (ok ? (lim ? 'remove_done' : 'check_circle') : 'cancel') + '</span>' +
-                  '<span class="small ' + (ok ? '' : 'muted') + '">' + esc(c.label) + (lim ? ' <span class="tiny faint">(terbatas)</span>' : '') + '</span></div>';
+              store.capabilities.map(function (c) {
+                var st = D.session.capState(c.key);
+                var lim = D.session.limited(c.key);
+                var icon = st === 'granted' ? (lim ? 'remove_done' : 'check_circle') : st === 'unavailable' ? 'construction' : 'cancel';
+                var tone = st === 'granted' ? 'var(--success-600)' : st === 'unavailable' ? 'var(--warning-600)' : 'var(--faint)';
+                var suffix = lim ? ' <span class="tiny faint">(terbatas)</span>'
+                  : st === 'unavailable' ? ' <span class="tiny faint">(belum ada di server)</span>' : '';
+                return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:' + tone + '">' + icon + '</span>' +
+                  '<span class="small ' + (st === 'granted' ? '' : 'muted') + '">' + esc(c.label) + suffix + '</span></div>';
               }).join('') +
-              '<div class="tiny faint" style="line-height:1.5;margin-top:2px">Daftar ini mengatur apa yang tampil di dashboard. Wewenang yang benar-benar ditegakkan ada di server, lewat scope token.</div>' +
+              '<div class="tiny faint" style="line-height:1.5;margin-top:2px">' + esc(D.session.identityLine()) + '</div>' +
               '<a class="btn btn--ghost btn--sm" href="#/permissions" style="justify-content:flex-start;padding-left:0">Matriks izin<span class="material-symbols-outlined">arrow_forward</span></a>' +
             '</div>'
           }) +

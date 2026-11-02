@@ -9,6 +9,7 @@ import type { Server } from 'node:http';
 
 import { startServer } from '../src/server.ts';
 import { getStorePaths, seed } from '../../../packages/store/src/index.ts';
+import { toolsForScope } from '../../../packages/contracts/src/authorization.ts';
 
 const DASHBOARD_ORIGIN = 'http://127.0.0.1:3000';
 const AGENT_TOKEN = 'agent-dev-token';
@@ -359,7 +360,12 @@ describe('D-01 HTTP verification', () => {
     assert.equal(res.status, 200);
     assert.equal(res.headers['access-control-allow-origin'], DASHBOARD_ORIGIN);
     const payload = JSON.parse(res.body);
-    assert.equal(payload.result.tools.length, 7);
+    // Derived, not a magic number: a hardcoded count silently rots every time
+    // the agent scope gains a tool.
+    assert.deepEqual(
+      payload.result.tools.map((t: { name: string }) => t.name).sort(),
+      [...toolsForScope('agent')].sort(),
+    );
   });
 
   test('U05: tools/call from the dashboard origin performs the allowed read path', async () => {
