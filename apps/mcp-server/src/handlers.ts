@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -41,6 +41,15 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'get_plan': {
       const plan = await getPlan(args.plan_id);
       return { ok: true, data: { plan } };
+    }
+    case 'list_plans': {
+      const all = await listPlans();
+      const status = typeof args?.status === 'string' ? args.status : null;
+      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const filtered = (status ? all.filter((plan) => plan.status === status) : all)
+        .slice()
+        .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+      return { ok: true, data: { plans: filtered.slice(0, limit), total: filtered.length } };
     }
     case 'submit_approval': {
       const plan = await getPlan(args.plan_id);
@@ -106,6 +115,15 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'get_mandate': {
       const mandate = await getMandate(args.mandate_id);
       return { ok: true, data: { mandate } };
+    }
+    case 'list_mandates': {
+      const all = await listMandates();
+      const status = typeof args?.status === 'string' ? args.status : null;
+      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const filtered = (status ? all.filter((mandate) => mandate.status === status) : all)
+        .slice()
+        .sort((a, b) => Date.parse(b.issued_at) - Date.parse(a.issued_at));
+      return { ok: true, data: { mandates: filtered.slice(0, limit), total: filtered.length } };
     }
     case 'issue_mandate': {
       const plan = await getPlan(args.plan_id);

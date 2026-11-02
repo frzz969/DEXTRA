@@ -228,7 +228,7 @@
           '<p>' + SRC.routes.length + ' rute · ' + summary.live + ' terhubung penuh · ' +
           summary.partial + ' sebagian · ' + summary.demo + ' data contoh · ' +
           summary.none + ' bukan rute data</p></div>' +
-          '<span class="badge badge--outline">' + SRC.tools().length + ' tool MCP</span></div>' +
+          '<span class="badge badge--outline" title="Tool MCP yang benar-benar dipanggil oleh rute di atas">' + SRC.tools().length + ' tool dipakai</span></div>' +
         '<div id="route-map-host"></div>' +
       '</div>' +
       Object.keys(groups).map(function (g) {

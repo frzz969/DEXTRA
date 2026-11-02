@@ -521,7 +521,10 @@
           return '<div class="tiny" style="white-space:nowrap">' + esc(U.fmtDate(m.issued_at)) + '</div>' +
             '<div class="tiny muted" style="white-space:nowrap">oleh ' + esc(m.issued_by) + '</div>';
         }},
-        { key: 'uses', label: 'Pakai', width: '64px', align: 'right', raw: function (m) { return m.uses; }, render: function (m) { return '<span class="tiny">' + m.uses + '/' + m.max_uses + '</span>'; } },
+        { key: 'uses', label: 'Pakai', width: '64px', align: 'right', raw: function (m) { return m.uses; }, render: function (m) {
+          if (m.uses == null) return '<span class="tiny faint" title="Server tidak melaporkan pemakaian">—</span>';
+          return '<span class="tiny">' + m.uses + '/' + m.max_uses + '</span>';
+        } },
         { key: 'status', label: 'Status', width: '110px', render: function (m) { return D.mandateBadge(m.status); } }
       ],
       rows: store.mandates.slice(), pageSize: 8,
@@ -541,7 +544,7 @@
             '<dt>Diterbitkan</dt><dd>' + esc(U.fmtDate(m.issued_at)) + '</dd>' +
             '<dt>Oleh</dt><dd>' + esc(m.issued_by) + '</dd>' +
             '<dt>Berlaku s.d.</dt><dd>' + esc(m.expires_at ? U.fmtDate(m.expires_at) : '—') + '</dd>' +
-            '<dt>Pemakaian</dt><dd>' + m.uses + ' dari ' + m.max_uses + '</dd>' +
+            '<dt>Pemakaian</dt><dd>' + (m.uses == null ? '— <span class="tiny faint">(tidak dilaporkan server)</span>' : m.uses + ' dari ' + m.max_uses) + '</dd>' +
             '<dt>Sidik rencana</dt><dd class="mono tiny" style="word-break:break-all">' + esc(m.plan_hash) + '</dd>' +
           '</dl>' +
           (m.status === 'revoked' ? '<div class="banner banner--danger" style="margin-top:14px"><span class="material-symbols-outlined">undo</span><div><b>Dicabut</b> · ' + esc(U.fmtDate(m.revoked_at)) + '<div>' + esc(m.revoke_reason || '') + '</div></div></div>' : '') +

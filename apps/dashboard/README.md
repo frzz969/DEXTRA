@@ -103,7 +103,7 @@ domain, its MCP tool(s), the repo modules that support it, and a state:
 | `demo` | No backend surface exists yet — demo data only, and the UI says so |
 | `none` | Not a data route (login, forbidden, not-found) |
 
-Current split across 23 routes: **5 live · 10 partial · 5 demo · 3 non-data**.
+Current split across 23 routes: **10 live · 5 partial · 5 demo · 3 non-data**.
 
 `/integrations` renders this table in the UI, so the claim can be checked rather than trusted.
 Adding a route means adding an entry there; adding a tool to the MCP server means updating it.
@@ -154,8 +154,9 @@ Honest list of what is **not** finished, so it is not read as working:
 
 - All mutations are in-memory. A refresh resets demo state. `D.api` is wired for the local
   MCP server but has no server to talk to in this build.
-- The MCP server exposes no *list* tools — only `get_plan` / `get_mandate` by id. That is why
-  10 routes are `partial`: their lists are assembled from audit events, not from a query API.
+- `list_plans` / `list_mandates` exist, but the server reports no per-user ownership and no
+  mandate consumption count. Routes that depend on those stay `partial` or show `—` rather than
+  a guessed number.
 - `/board` supports viewing and moving cards within the session; drag ordering is not persisted.
 - `/integrations` cannot connect anything. Adapter status is descriptive only.
 - Excel/CSV export on `/requests` and `/execution` produces a client-side file from demo rows.

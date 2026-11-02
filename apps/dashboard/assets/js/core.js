@@ -238,18 +238,46 @@
       this.assistantThread = s.assistantThread.slice();
     },
 
-    /* live: MCP server exposes no list-plans tool, so ids come from audit + local store */
+    /* live: list_plans / list_mandates are the primary source; the audit-derived
+       path stays as a fallback for an older server that only has get-by-id. */
     hydrateLive: function () {
       var self = this;
-      return api.call('get_audit_log', { limit: 200 }).then(function (d) {
+
+      var auditP = api.call('get_audit_log', { limit: 500 }).then(function (d) {
         self.audit = (d.events || []).slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
-        var ids = [];
-        self.audit.forEach(function (e) { if (e.plan_id && ids.indexOf(e.plan_id) < 0) ids.push(e.plan_id); });
-        return Promise.all(ids.map(function (id) {
-          return api.call('get_plan', { plan_id: id }).then(function (r) { return r.plan; }).catch(function () { return null; });
-        }));
-      }).then(function (plans) {
-        self.plans = plans.filter(Boolean).map(function (p) {
+      }).catch(function () { self.audit = []; });
+
+      var plansP = auditP.then(function () {
+        return api.call('list_plans', { limit: 200 }).then(function (d) {
+          return (d.plans || []).slice();
+        }).catch(function () {
+          var ids = [];
+          self.audit.forEach(function (e) { if (e.plan_id && ids.indexOf(e.plan_id) < 0) ids.push(e.plan_id); });
+          return Promise.all(ids.map(function (id) {
+            return api.call('get_plan', { plan_id: id }).then(function (r) { return r.plan; }).catch(function () { return null; });
+          })).then(function (rows) { return rows.filter(Boolean); });
+        });
+      });
+
+      var mandatesP = api.call('list_mandates', { limit: 200 }).then(function (d) {
+        return (d.mandates || []).map(function (m) {
+          return {
+            mandate_id: m.mandate_id,
+            plan_id: m.plan_id,
+            plan_hash: m.plan_hash,
+            scope: (m.allowed_action_types || []).join(' · ') + ' · maks risiko ' + m.max_risk,
+            issued_by: m.issued_by,
+            issued_at: m.issued_at,
+            expires_at: m.expires_at,
+            status: m.status,
+            max_uses: (m.allowed_action_ids || []).length,
+            uses: null /* the server does not report consumption; do not invent it */
+          };
+        });
+      }).catch(function () { return null; });
+
+      return Promise.all([plansP, mandatesP]).then(function (res) {
+        self.plans = res[0].map(function (p) {
           p.specialist = p.specialist || 'dispatcher';
           p.risk = (p.actions || []).reduce(function (m, a) {
             var order = { low: 0, medium: 1, high: 2, critical: 3 };
@@ -258,20 +286,23 @@
           p.requester = p.requester || session.user.name;
           return p;
         }).sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
-        return api.call('get_org_rules', { org_id: 'org_kenari' }).catch(function () { return null; });
-      }).then(function (o) {
-        if (o) self.org = o;
-        return api.call('get_audit_log', { limit: 500 }).catch(function () { return { events: [] }; });
-      }).then(function (a) {
-        if (a && a.events) self.audit = a.events.slice().sort(function (x, y) { return new Date(y.at) - new Date(x.at); });
-        // mandates are not exposed as a list tool; derive from approval events
-        var seen = {};
-        self.mandates = self.audit.filter(function (e) { return e.type === 'approval_granted' && e.mandate_id; })
-          .filter(function (e) { if (seen[e.mandate_id]) return false; seen[e.mandate_id] = true; return true; })
-          .map(function (e) { return { mandate_id: e.mandate_id, plan_id: e.plan_id, scope: 'lihat detail work package', issued_at: e.at, expires_at: null, issued_by: e.actor || '—', status: 'active', plan_hash: e.plan_hash || '', uses: 0, max_uses: 1 }; });
+
+        if (res[1]) {
+          self.mandates = res[1];
+        } else {
+          var seen = {};
+          self.mandates = self.audit.filter(function (e) { return e.type === 'approval_granted' && e.mandate_id; })
+            .filter(function (e) { if (seen[e.mandate_id]) return false; seen[e.mandate_id] = true; return true; })
+            .map(function (e) { return { mandate_id: e.mandate_id, plan_id: e.plan_id, scope: 'lihat detail work package', issued_at: e.at, expires_at: null, issued_by: e.actor || '—', status: 'active', plan_hash: e.plan_hash || '', uses: null, max_uses: null }; });
+        }
+
         self.executions = self.audit.filter(function (e) { return e.type === 'action_executed'; }).map(function (e, i) {
           return { execution_id: 'EX-' + (5500 - i), plan_id: e.plan_id, action_id: e.action_id, mandate_id: e.mandate_id, at: e.at, result: 'sent', adapter: 'mcp', detail: (e.detail && e.detail.mock_message_id) || '—', duration_ms: 0 };
         });
+
+        return api.call('get_org_rules', { org_id: 'org_kenari' }).catch(function () { return null; });
+      }).then(function (o) {
+        if (o) self.org = o;
       });
     },
 

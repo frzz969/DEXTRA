@@ -29,7 +29,9 @@ export const AGENT_TOOLS = new Set([
   'create_plan',
   'validate_plan',
   'get_plan',
+  'list_plans',
   'get_mandate',
+  'list_mandates',
   'get_status',
 ]);
 
@@ -39,8 +41,10 @@ export const OPS_TOOLS = new Set([
   'create_plan',
   'validate_plan',
   'get_plan',
+  'list_plans',
   'submit_approval',
   'get_mandate',
+  'list_mandates',
   'issue_mandate',
   'execute_action',
   'revoke_mandate',

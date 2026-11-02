@@ -14,7 +14,7 @@ Diperiksa pada: 2 November 2026, worktree `main-dce9c1a5`.
 |---|---|---|
 | TypeScript monorepo (npm workspaces) | ADA | `package.json` → `workspaces: ["packages/*", "apps/*"]` |
 | Domain packages (7) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay |
-| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 12 tool |
+| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 14 tool |
 | Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 23 rute) |
 | WorkBuddy config | ADA | `workbuddy/` — manifest, 4 agen, 5 knowledge |
 | Channel adapter | SEBAGIAN | `apps/telegram-adapter` — post-MVP, satu file `index.ts` |
@@ -90,19 +90,25 @@ yang dipakai, dan modul yang menopangnya. Dokumen ini hanya ringkasannya.
 
 | Status | Arti | Jumlah |
 |---|---|---|
-| `live` | Bisa menampilkan data server nyata saat MCP hidup | 5 |
-| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 10 |
+| `live` | Bisa menampilkan data server nyata saat MCP hidup | 10 |
+| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 5 |
 | `demo` | Belum ada permukaan backend; data contoh | 5 |
 | `none` | Bukan rute data (login, forbidden, not-found) | 3 |
 
-Tool MCP yang dipakai dashboard (12): `create_plan`, `execute_action`, `find_precedent`,
+Tool MCP yang dipakai dashboard (14): `create_plan`, `execute_action`, `find_precedent`,
 `get_audit_log`, `get_mandate`, `get_org_rules`, `get_plan`, `get_status`, `issue_mandate`,
-`revoke_mandate`, `submit_approval`, `validate_plan`.
+`list_mandates`, `list_plans`, `revoke_mandate`, `submit_approval`, `validate_plan`.
+
+Dari 14 tool itu, **11 dipakai** oleh rute dashboard. Tiga sisanya hanya dipanggil di jalur
+server/agen: `find_precedent` (pencarian penerima belum dipakai UI), `issue_mandate` (diterbitkan
+server setelah approval, bukan oleh tombol), dan `execute_action` (eksekusi tidak dipicu dari
+dashboard). Ini tercatat sebagai kesenjangan, bukan disembunyikan.
 
 Kesenjangan yang terlihat dari pemetaan itu, dan tidak disembunyikan:
 
-- **Tidak ada tool daftar.** `get_plan`/`get_mandate` hanya per id, jadi daftar disusun dari
-  audit. Ini sumber utama status `partial`.
+- **Kepemilikan & pemakaian tidak dilaporkan.** `list_plans` tidak menyimpan pemilik per
+  pengguna, dan mandat tidak melaporkan berapa kali dipakai. Rute yang butuh data itu tetap
+  `partial`, dan kolomnya menampilkan `—` alih-alih angka karangan.
 - **Workforce & Specialist Directory** tidak punya API; isinya dari `workbuddy/agents/*.md`.
 - **Board** mengelompokkan kolom di klien; server tidak menyimpan status papan.
 - **Users/Permissions** belum punya tool identitas sama sekali.
@@ -142,7 +148,7 @@ Sampai langkah 2 lulus, menambah stack baru hanya menambah risiko, bukan kemampu
 ls apps packages
 node -e "console.log(Object.keys(require('./package.json').workspaces))"
 
-# 12 tool MCP yang diklaim
+# 14 tool MCP yang diklaim
 grep -o "case '[a-z_]*'" apps/mcp-server/src/handlers.ts
 
 # rute dan statusnya

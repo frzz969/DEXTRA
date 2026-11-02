@@ -270,6 +270,11 @@ export async function getPlan(id: PlanId): Promise<Plan | null> {
   return plans.find((plan) => plan.plan_id === id) ?? null;
 }
 
+export async function listPlans(): Promise<Plan[]> {
+  const store = await prepare();
+  return readArray(store.plans, PlanSchema);
+}
+
 export async function savePlan(plan: Plan): Promise<void> {
   const parsed = PlanSchema.parse(plan);
   const store = await prepare();
@@ -287,6 +292,11 @@ export async function getMandate(id: MandateId): Promise<Mandate | null> {
   const store = await prepare();
   const mandates = await readArray(store.mandates, MandateSchema);
   return mandates.find((mandate) => mandate.mandate_id === id) ?? null;
+}
+
+export async function listMandates(): Promise<Mandate[]> {
+  const store = await prepare();
+  return readArray(store.mandates, MandateSchema);
 }
 
 export async function saveMandate(mandate: Mandate): Promise<void> {

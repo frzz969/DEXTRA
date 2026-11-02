@@ -28,25 +28,25 @@
   };
 
   var ROUTES = [
-    { route: '/overview', label: 'Overview', domain: 'Operasional', state: 'partial',
-      tools: ['get_audit_log', 'get_plan'], modules: ['store', 'plan', 'policy-engine'],
-      note: 'KPI diturunkan dari audit + plan. Tidak ada endpoint agregat.' },
+    { route: '/overview', label: 'Overview', domain: 'Operasional', state: 'live',
+      tools: ['list_plans', 'get_audit_log'], modules: ['store', 'plan', 'policy-engine'],
+      note: 'KPI diturunkan dari plan + audit nyata. Tidak ada endpoint agregat.' },
 
     { route: '/assistant', label: 'AI Assistant', domain: 'Operasional', state: 'partial',
       tools: ['create_plan', 'validate_plan'], modules: ['plan', 'policy-engine', 'contracts'],
-      note: 'Rencana dibuat lewat create_plan. Orkestrasi LLM belum ada di repo ini.' },
+      note: 'Rencana dibuat lewat create_plan + validate_plan. Orkestrasi LLM belum ada di repo ini.' },
 
-    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'partial',
-      tools: ['get_audit_log', 'get_plan'], modules: ['store', 'plan'],
-      note: 'Tidak ada tool daftar permintaan; id diambil dari audit lalu di-fetch satu per satu.' },
+    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'live',
+      tools: ['list_plans'], modules: ['store', 'plan'],
+      note: 'Daftar dari list_plans. Kepemilikan per pengguna belum dicatat server.' },
 
     { route: '/my-work', label: 'My Work', domain: 'Operasional', state: 'partial',
       tools: ['get_audit_log'], modules: ['store'],
       note: 'Turunan dari audit event yang menyebut pengguna ini.' },
 
-    { route: '/work-packages', label: 'Work Packages', domain: 'Manajemen kerja', state: 'partial',
-      tools: ['get_plan'], modules: ['plan', 'store'],
-      note: 'Belum ada tool list; daftar disusun dari id yang muncul di audit.' },
+    { route: '/work-packages', label: 'Work Packages', domain: 'Manajemen kerja', state: 'live',
+      tools: ['list_plans', 'get_plan'], modules: ['plan', 'store'],
+      note: 'Daftar dari list_plans, detail dari get_plan.' },
 
     { route: '/work-packages/:id', label: 'Work Package detail', domain: 'Manajemen kerja', state: 'live',
       tools: ['get_plan'], modules: ['plan', 'policy-engine', 'contracts'],
@@ -68,9 +68,9 @@
       tools: [], modules: ['workbuddy'],
       note: 'Empat spesialis dibaca dari workbuddy/agents/*.md, bukan dari API.' },
 
-    { route: '/approvals', label: 'Approval Inbox', domain: 'Tata kelola', state: 'partial',
-      tools: ['get_audit_log', 'get_plan'], modules: ['store', 'policy-engine', 'mandate-engine'],
-      note: 'Antrean disusun dari audit; keputusan memakai submit_approval.' },
+    { route: '/approvals', label: 'Approval Inbox', domain: 'Tata kelola', state: 'live',
+      tools: ['list_plans', 'get_plan', 'submit_approval'], modules: ['store', 'policy-engine', 'mandate-engine'],
+      note: 'Antrean dari list_plans berstatus READY/NEEDS_REVIEW; keputusan memakai submit_approval.' },
 
     { route: '/review', label: 'Review & Validation', domain: 'Tata kelola', state: 'live',
       tools: ['validate_plan', 'get_plan'], modules: ['policy-engine', 'plan'],
@@ -80,9 +80,9 @@
       tools: ['validate_plan', 'get_plan'], modules: ['policy-engine', 'plan', 'contracts'],
       note: 'Satu plan dengan temuan dan reason code.' },
 
-    { route: '/mandates', label: 'Mandates', domain: 'Tata kelola', state: 'partial',
-      tools: ['get_mandate', 'revoke_mandate'], modules: ['mandate-engine', 'store'],
-      note: 'Hanya get per id; belum ada tool daftar mandat.' },
+    { route: '/mandates', label: 'Mandates', domain: 'Tata kelola', state: 'live',
+      tools: ['list_mandates', 'get_mandate', 'revoke_mandate'], modules: ['mandate-engine', 'store'],
+      note: 'Daftar dari list_mandates. Pemakaian mandat tidak dilaporkan server, jadi ditampilkan "—".' },
 
     { route: '/audit', label: 'Audit Trail', domain: 'Tata kelola', state: 'live',
       tools: ['get_audit_log'], modules: ['store', 'replay'],
