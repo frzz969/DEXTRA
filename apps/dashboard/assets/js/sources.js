@@ -36,13 +36,13 @@
       tools: ['find_precedent', 'create_plan', 'validate_plan'], modules: ['plan', 'policy-engine', 'store', 'contracts'],
       note: 'Penerima dicari lewat find_precedent; penyusunan rencana masih aturan lokal, bukan model.' },
 
-    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'live',
+    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'partial',
       tools: ['list_plans'], modules: ['store', 'plan'],
-      note: 'Daftar dari list_plans. Kepemilikan per pengguna belum dicatat server.' },
+      note: 'Daftar dari list_plans. Plan tidak menyimpan pemohon dan autentikasi MCP hanya membawa scope, jadi kepemilikan per pengguna tidak dapat diketahui — layar menampilkan seluruh permintaan workspace dan menyatakannya.' },
 
     { route: '/my-work', label: 'My Work', domain: 'Operasional', state: 'partial',
-      tools: ['get_audit_log'], modules: ['store'],
-      note: 'Turunan dari audit event yang menyebut pengguna ini.' },
+      tools: ['list_plans', 'get_audit_log'], modules: ['store', 'plan'],
+      note: 'Antrean diturunkan dari status plan; tidak ada field penugasan di server, jadi isinya item terbuka seluruh workspace.' },
 
     { route: '/work-packages', label: 'Work Packages', domain: 'Manajemen kerja', state: 'live',
       tools: ['list_plans', 'get_plan'], modules: ['plan', 'store'],

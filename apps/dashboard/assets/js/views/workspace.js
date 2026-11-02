@@ -16,8 +16,15 @@
 
   D.views.requests = function (root) {
     var filter = { q: '', status: 'all', specialist: 'all' };
-    var mine = store.plans.filter(function (p) { return p.requester === D.session.user.name; });
-    var scope = mine.length ? mine : store.plans;
+
+    /* Ownership is only knowable when the source records it. Demo data does;
+     * list_plans does not. When nothing is attributed, we show the whole
+     * workspace and say so — a wrong "mine" is worse than an honest "all". */
+    var attributed = store.plans.filter(function (p) { return p.requester; });
+    var ownershipKnown = attributed.length > 0;
+    var scope = ownershipKnown
+      ? attributed.filter(function (p) { return p.requester === D.session.user.name; })
+      : store.plans;
 
     var specOpts = [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; }));
 
@@ -29,11 +36,16 @@
       ui.pageHead({
         eyebrow: 'Workspace · My Requests',
         title: 'My Requests',
-        desc: 'Permintaan yang saya kirim beserta status rencananya. Permintaan berhenti di persetujuan manusia sebelum apa pun dijalankan.',
+        desc: ownershipKnown
+          ? 'Permintaan yang saya kirim beserta status rencananya. Permintaan berhenti di persetujuan manusia sebelum apa pun dijalankan.'
+          : 'Permintaan di workspace ini beserta status rencananya. Permintaan berhenti di persetujuan manusia sebelum apa pun dijalankan.',
         actions: '<button class="btn btn--secondary" id="export"><span class="material-symbols-outlined">download</span>Ekspor CSV</button>' +
           '<a class="btn btn--primary" href="#/assistant"><span class="material-symbols-outlined">add</span>Buat permintaan</a>'
       }) +
       ui.demoBanner() +
+      (ownershipKnown ? '' : ui.partialBanner(
+        'Server tidak mencatat siapa pemohon tiap rencana — autentikasi MCP memakai scope (<span class="mono">agent</span>/<span class="mono">ops</span>), bukan identitas orang. ' +
+        'Daftar ini menampilkan <b>semua</b> permintaan di workspace, bukan hanya milik <b>' + esc(D.session.user.name) + '</b>.')) +
       '<div style="margin-bottom:16px">' + ui.statstrip([
         { label: 'Menunggu keputusan', value: count(['READY', 'NEEDS_REVIEW']), tone: 'warning', hint: 'Butuh persetujuan manusia' },
         { label: 'Diblokir kebijakan', value: count(['BLOCKED']), tone: 'danger', hint: 'Tidak dapat disetujui apa adanya' },
@@ -88,7 +100,7 @@
       return ui.card({
         className: 'card--fill',
         title: 'Perlu tindakan',
-        desc: 'Dari permintaan Anda sendiri',
+        desc: ownershipKnown ? 'Dari permintaan Anda sendiri' : 'Dari permintaan di workspace ini',
         flush: true,
         body: items.length
           ? items.map(function (p) { return ui.planRow(p, { action: true }); }).join('')
@@ -165,6 +177,11 @@
 
   /* ---------------- My Work ---------------- */
   D.views.myWork = function (root) {
+    /* Same limitation as /requests: there is no assignment or ownership field
+     * server-side, so this queue is derived from plan status across the whole
+     * workspace. Say that plainly rather than implying it is personal. */
+    var ownershipKnown = store.plans.some(function (p) { return p.requester; });
+
     var awaiting = store.plans.filter(function (p) { return p.status === 'READY'; });
     var needs = store.plans.filter(function (p) { return p.status === 'NEEDS_REVIEW'; });
     var blocked = store.plans.filter(function (p) { return p.status === 'BLOCKED'; });
@@ -211,13 +228,18 @@
       ui.pageHead({
         eyebrow: 'Workspace · My Work',
         title: 'My Work',
-        desc: 'Pekerjaan yang membutuhkan perhatian Anda — bukan seluruh workspace. Hanya item yang menunggu tindakan manusia.',
+        desc: ownershipKnown
+          ? 'Pekerjaan yang membutuhkan perhatian Anda — bukan seluruh workspace. Hanya item yang menunggu tindakan manusia.'
+          : 'Pekerjaan yang menunggu tindakan manusia di workspace ini. Penugasan per orang belum dicatat server.',
         actions: '<a class="btn btn--secondary" href="#/work-packages"><span class="material-symbols-outlined">layers</span>Semua work package</a>'
       }) +
       ui.demoBanner() +
+      (ownershipKnown ? '' : ui.partialBanner(
+        'Antrean ini disusun dari status rencana, bukan dari penugasan. Server belum menyimpan siapa yang ditugaskan pada tiap work package, ' +
+        'jadi yang tampil adalah seluruh item terbuka di workspace.')) +
       '<div class="grid" style="grid-template-columns:minmax(0,1fr) 320px;align-items:start">' +
         '<div class="stack">' +
-          group('Menunggu keputusan Anda', 'Lolos validasi kebijakan, siap disetujui atau ditolak.', awaiting, 'pending_actions', 'warning', { href: '/approvals', label: 'Buka approval inbox' }) +
+          group(ownershipKnown ? 'Menunggu keputusan Anda' : 'Menunggu keputusan', 'Lolos validasi kebijakan, siap disetujui atau ditolak.', awaiting, 'pending_actions', 'warning', { href: '/approvals', label: 'Buka approval inbox' }) +
           group('Butuh klarifikasi', 'Ada temuan yang hanya dapat diputuskan manusia.', needs, 'help', 'info', { href: '/review', label: 'Buka review & validation' }) +
           group('Diblokir kebijakan', 'Tidak dapat disetujui dalam bentuk sekarang. Perlu perubahan lingkup.', blocked, 'block', 'danger') +
           group('Draf saya', 'Belum diajukan untuk validasi.', drafts, 'edit_note', 'outline') +

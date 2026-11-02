@@ -451,6 +451,13 @@
       '<div><b>Data demo.</b> Server MCP lokal tidak terdeteksi, jadi layar ini memakai dataset contoh. Tidak ada tindakan nyata yang dijalankan.' +
       (extra ? ' ' + extra : '') + '</div></div>';
   };
+  /* Real server data, but the server cannot answer the question this screen asks.
+   * Shown in live mode so the gap is visible instead of papered over. */
+  ui.partialBanner = function (text) {
+    if (D.store.mode === 'demo') return '';
+    return '<div class="banner banner--warning" style="margin-bottom:16px"><span class="material-symbols-outlined">rule</span>' +
+      '<div><b>Data sebagian.</b> ' + text + '</div></div>';
+  };
   ui.prototypeBanner = function (text) {
     return '<div class="banner banner--warning" style="margin-bottom:16px"><span class="material-symbols-outlined">construction</span>' +
       '<div><b>Prototipe.</b> ' + text + '</div></div>';

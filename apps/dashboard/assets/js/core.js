@@ -300,7 +300,11 @@
             var order = { low: 0, medium: 1, high: 2, critical: 3 };
             return (order[a.risk] || 0) > (order[m] || 0) ? a.risk : m;
           }, 'low');
-          p.requester = p.requester || session.user.name;
+          /* The MCP server authenticates a scope (agent/ops), not a person, and the
+           * Plan contract carries no requester field. Stamping the signed-in user
+           * here would invent ownership and make /requests lie. Leave it null and
+           * let the view say ownership is not recorded. */
+          p.requester = p.requester || null;
           return p;
         }).sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
 
