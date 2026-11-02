@@ -227,7 +227,7 @@
 
         '<div class="stack">' +
           '<div class="card"><div class="card__head"><div><h2>Yang akan dijalankan</h2><p>Persetujuan mengikat pada isi persis di bawah ini</p></div>' +
-            '<div class="spacer"></div><span class="mono tiny faint">' + esc(p.plan_hash) + '</span></div>' +
+            '<div class="spacer"></div><span class="mono mono--wrap tiny faint">' + esc(p.plan_hash) + '</span></div>' +
             '<div class="card__body">' +
               acts.map(function (a, i) {
                 return '<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:' + (i === acts.length - 1 ? 0 : '12px') + '">' +

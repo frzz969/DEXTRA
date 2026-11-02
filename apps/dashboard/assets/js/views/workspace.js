@@ -270,6 +270,7 @@
                   (ok ? 'var(--success-600)' : 'var(--faint)') + '">' + (ok ? (lim ? 'remove_done' : 'check_circle') : 'cancel') + '</span>' +
                   '<span class="small ' + (ok ? '' : 'muted') + '">' + esc(c.label) + (lim ? ' <span class="tiny faint">(terbatas)</span>' : '') + '</span></div>';
               }).join('') +
+              '<div class="tiny faint" style="line-height:1.5;margin-top:2px">Daftar ini mengatur apa yang tampil di dashboard. Wewenang yang benar-benar ditegakkan ada di server, lewat scope token.</div>' +
               '<a class="btn btn--ghost btn--sm" href="#/permissions" style="justify-content:flex-start;padding-left:0">Matriks izin<span class="material-symbols-outlined">arrow_forward</span></a>' +
             '</div>'
           }) +

@@ -98,7 +98,7 @@
 
     { route: '/permissions', label: 'Permissions', domain: 'Administrasi', state: 'demo',
       tools: [], modules: ['contracts'],
-      note: 'Matriks peran masih di klien; server belum mengekspos permission.' },
+      note: 'Matriks peran hidup di klien dan hanya mengatur tampilan; wewenang server ditegakkan lewat scope token (agent/ops), belum terhubung ke peran.' },
 
     { route: '/integrations', label: 'Integrations', domain: 'Administrasi', state: 'partial',
       tools: ['get_status'], modules: ['mcp-server', 'telegram-adapter'],

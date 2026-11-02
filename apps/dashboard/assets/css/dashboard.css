@@ -319,6 +319,8 @@ body.is-collapsed .sidebar-toggle .material-symbols-outlined { transform: rotate
 
 .page-head { display: flex; align-items: flex-start; gap: var(--s-4); margin-bottom: var(--s-5); flex-wrap: wrap; }
 .page-head__text { flex: 1 1 320px; min-width: 0; }
+/* plan_hash is printed under the title and is unbreakable by default */
+.page-head__text .mono { white-space: normal; overflow-wrap: anywhere; }
 .page-head__eyebrow {
   display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px;
@@ -546,6 +548,8 @@ a.statstrip__item:hover { background: var(--surface-2); }
 .chip .material-symbols-outlined { font-size: 14px; }
 
 .mono { font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; }
+/* opt-in escape hatch for 71-char hashes and long ids in narrow containers */
+.mono--wrap { white-space: normal; overflow-wrap: anywhere; }
 .muted { color: var(--muted); }
 .faint { color: var(--faint); }
 .tiny { font-size: 11px; }
@@ -827,9 +831,15 @@ a.statstrip__item:hover { background: var(--surface-2); }
 .meter--warning > i { background: var(--warning-600); }
 .meter--danger > i { background: var(--danger-600); }
 
-.def-list { display: grid; grid-template-columns: 132px 1fr; gap: 8px 14px; font-size: 12.5px; }
+/* minmax(0,1fr), not 1fr: a 1fr track keeps min-width:auto, so an unbreakable
+   token (plan_hash, contact id) widens the column past the 340px rail and the
+   whole page scrolls sideways. Long tokens break instead. */
+.def-list { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 8px 14px; font-size: 12.5px; }
 .def-list dt { color: var(--muted); font-size: 11.5px; }
-.def-list dd { margin: 0; color: var(--text-2); }
+/* white-space:normal overrides .mono's nowrap (this selector is more specific).
+   Without it a 71-char plan_hash or a mandate id widens the 340px rail past the
+   page and the whole detail view scrolls sideways. */
+.def-list dd { margin: 0; color: var(--text-2); min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 
 .spec-card { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
 .spec-card__top { display: flex; align-items: flex-start; gap: 11px; }
@@ -985,7 +995,7 @@ body.is-bare .page { max-width: none; }
   .card__body { padding: var(--s-4); }
   .card__head { padding: 12px var(--s-4); }
   .kpi__value { font-size: 24px; }
-  .def-list { grid-template-columns: 1fr; gap: 2px 0; }
+  .def-list { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
   .def-list dd { margin-bottom: 8px; }
   .modal { max-height: calc(100vh - 24px); }
   .overlay--center { padding: 12px; }
