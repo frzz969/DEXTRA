@@ -6,7 +6,9 @@ The DEXTRA operations dashboard — **Governed Enterprise AI Workforce & Operati
 
 This dashboard replaces the 14 standalone HTML files that used to live in this folder with a single
 application shell, one design system, and a route-based information architecture.
-The previous build is preserved untouched in `apps/dashboard-legacy/` as the reference of record.
+The previous build lived in `apps/dashboard-legacy/`. That folder is git-ignored and therefore
+**not present in this repository** — it only exists on the machine where the migration ran.
+To see the old build, check out a commit before `a1ecbd3`.
 
 ## Run
 
