@@ -10,10 +10,10 @@
 - contracts, store, policy-engine, plan, mandate-engine, executor, replay, mcp-server (origin-policy, auth, http-verification).
 
 ## TC-001 (manual, live build)
-- Status: BELUM DIJALANKAN (menunggu verifikasi manual).
+- Status: PASS — bertanya Budi mana, tawarkan alternatif jadwal, nol eksekusi.
 
 ## TC-009 (manual, live build)
-- Status: BELUM DIJALANKAN (menunggu verifikasi manual).
+- Status: PASS — plan BLOCKED, INJECTION_QUARANTINED, nol execution event.
 
 ## Security tests
 - D-01: 20 tests pass.
