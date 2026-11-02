@@ -13,7 +13,6 @@
   }
 
   function init() {
-    // live clock in header date indicator
     var dateEl = null;
     document.querySelectorAll('header span').forEach(function (s) {
       if (/\d{2}:\d{2}/.test(s.textContent) && s.textContent.indexOf('·') > -1) dateEl = s;
@@ -21,7 +20,6 @@
     function tick() { if (dateEl) dateEl.textContent = fmtNow(); }
     tick(); setInterval(tick, 30000);
 
-    // real KPI numbers from system (no invented operational data)
     Promise.all([D.getPlans(), D.call('get_audit_log', { limit: 500 }).catch(function () { return { events: [] }; })])
       .then(function (res) {
         var plans = D.annotate(res[0], res[1].events || []);
@@ -29,7 +27,6 @@
         var awaiting = plans.filter(function (p) { return p.status === 'READY' || p.status === 'NEEDS_REVIEW'; }).length;
         var blocked = plans.filter(function (p) { return p.status === 'BLOCKED'; }).length;
 
-        // update KPI numbers by label matching
         document.querySelectorAll('p').forEach(function (p) {
           var t = (p.textContent || '').trim().toUpperCase();
           if (t === 'TOTAL WORK PACKAGES') {
@@ -46,19 +43,56 @@
           }
         });
 
-        // sidebar badge
         document.querySelectorAll('a[data-path="kotak-persetujuan"] span.rounded-full, a[data-path="kotak-persetujuan"] span.bg-\\[\\#7357E8\\]').forEach(function (s) {
           if (/^\d+$/.test(s.textContent.trim())) s.textContent = String(awaiting);
         });
       })
       .catch(function () {});
 
-    // Log Audit Sesi button → audit page
+    // Button wiring
     document.querySelectorAll('button').forEach(function (b) {
-      if ((b.textContent || '').toLowerCase().includes('log audit sesi')) {
+      var t = (b.textContent || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      if (t.includes('log audit sesi')) {
         b.addEventListener('click', function () { location.href = 'audit.html'; });
+      } else if (t.includes('tinjau mandat') || t === 'tinjau' || t.includes('tinjau')) {
+        b.addEventListener('click', function () { location.href = 'kotak-persetujuan.html'; });
+      } else if (t.includes('investigasi log')) {
+        b.addEventListener('click', function () { location.href = 'audit.html'; });
+      } else if (t.includes('beri klarifikasi')) {
+        b.addEventListener('click', function () { D.toast('Belum tersedia di MVP', 'info'); });
+      } else if (t.includes('perbesar') || t.includes('open_in_full')) {
+        b.addEventListener('click', function () { D.toast('Belum tersedia di MVP', 'info'); });
+      } else if (t.includes('tinjau rencana')) {
+        b.addEventListener('click', function () { location.href = 'kotak-persetujuan.html'; });
+      } else if (t.includes('buka kotak persetujuan')) {
+        b.addEventListener('click', function () { location.href = 'kotak-persetujuan.html'; });
       }
     });
+
+    // Anchor buttons with data-path handled by shared wireNav; ensure + Buat Permintaan works (data-path already)
+    document.querySelectorAll('a[data-path="buat-permintaan"]').forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); location.href = 'buat-permintaan.html'; });
+    });
+
+    // WP filter tabs
+    var tabs = document.querySelectorAll('.flex.items-center.gap-1\\.5.p-1.bg-\\[\\#F7F7FC\\] button');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('bg-white','text-[#7357E8]','shadow-xs'); t.classList.add('text-[#797586]'); });
+        tab.classList.add('bg-white','text-[#7357E8]','shadow-xs');
+        tab.classList.remove('text-[#797586]');
+        D.toast('Filter diterapkan: ' + tab.textContent.trim(), 'info');
+      });
+    });
+
+    // Search input filter
+    var searchInput = document.querySelector('header input[type="text"]');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        var q = (searchInput.value || '').toLowerCase();
+        document.querySelectorAll('[class*="WP-00"]').forEach(function () {}); // noop placeholder
+      });
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

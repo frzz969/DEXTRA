@@ -282,11 +282,11 @@ tailwind.config = {
 <a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low text-on-surface text-body-sm" href="#">
 <span class="material-symbols-outlined text-[18px]">person</span> Profil Saya
           </a>
-<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low text-on-surface text-body-sm" href="#">
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-low text-on-surface text-body-sm" data-path="pengaturan" href="#">
 <span class="material-symbols-outlined text-[18px]">settings</span> Pengaturan Akun
           </a>
 <div class="h-px bg-surface-container my-1"></div>
-<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-error text-body-sm" href="#">
+<a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-50 text-error text-body-sm" title="Keluar" href="#">
 <span class="material-symbols-outlined text-[18px]">logout</span> Keluar
           </a>
 </div>
@@ -895,8 +895,8 @@ Rencana aksi diverifikasi terhadap spesifikasi tugas agen #EA-v4. Status: <stron
     cardElement.classList.add('border-l-4', 'border-l-primary', 'shadow-md');
     cardElement.classList.remove('shadow-sm');
 
-    // Feedback notification
     showToast('Mandat Dimuat', 'Menampilkan data otoritas untuk #' + mandateId);
+    if (window.DEXTRA) { D.call('get_mandate', { mandate_id: mandateId }).catch(function () {}); }
   }
 
   function openRevokeModal() {
@@ -912,8 +912,11 @@ Rencana aksi diverifikasi terhadap spesifikasi tugas agen #EA-v4. Status: <stron
   }
 
   function confirmRevocation() {
+    var reason = (document.querySelector('#revokeModal select') || {}).value || '';
     closeRevokeModal();
-    showToast('Mandat Dicabut', 'Token MND-8829-X telah dinonaktifkan di sandbox.', 'error');
+    D.call('revoke_mandate', { mandate_id: 'MND-8829-X', reason: reason }).then(function () {
+      showToast('Mandat Dicabut', 'Token MND-8829-X telah dinonaktifkan.', 'error');
+    }).catch(function (e) { showToast('Gagal mencabut', e.message, 'error'); });
   }
 
   function showToast(title, msg, type = 'success') {

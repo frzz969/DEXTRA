@@ -963,7 +963,7 @@ dextra/
 │   ├── agents/
 │   ├── skills/
 │   ├── knowledge/
-│   └── mcp.json
+│   └── mcp.json   # agent token only; ops token never exposed (TC-010)
 ├── docs/
 └── package.json
 ```

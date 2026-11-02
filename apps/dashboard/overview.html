@@ -223,6 +223,12 @@
       </div>
     </div>
 
+    <!-- Honest banner for illustrative numbers -->
+    <div class="d-honest-banner">
+      <span class="material-symbols-outlined text-[15px]">info</span>
+      <span>Angka pada halaman ini bersifat ilustratif (snapshot sandbox) dan bukan data produksi.</span>
+    </div>
+
     <!-- 4 Operational KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Card 1: Active Work Packages -->
@@ -711,7 +717,7 @@
   </div>
 
   <!-- RIGHT COLUMN: Interactive Persistent AI Operations Assistant (Approx 32% / 4 of 12 cols on XL) -->
-  <div class="xl:col-span-4 sticky top-20">
+  <div class="xl:col-span-4 sticky top-20 hidden xl:block">
     <div class="bg-white rounded-2xl border border-[#7357E8]/20 shadow-md flex flex-col overflow-hidden max-h-[calc(100vh-6.5rem)]">
       <!-- Assistant Header -->
       <div class="p-4 bg-gradient-to-r from-white to-[#F1EEFF]/60 border-b border-[#EAE9F1] flex items-center justify-between shrink-0">
@@ -738,7 +744,7 @@
       </div>
 
       <!-- Assistant Conversation Body (Scrollable) -->
-      <div class="p-4 space-y-3.5 overflow-y-auto flex-1 text-xs">
+      <div class="p-4 space-y-3.5 overflow-y-auto flex-1 min-h-0 text-xs">
         <!-- DEXTRA Greeting Message -->
         <div class="flex items-start gap-2.5">
           <div class="w-6 h-6 rounded-lg bg-[#7357E8] text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">

@@ -66,7 +66,7 @@
       var approveBtn = el('kp-approve');
       if (approveBtn) approveBtn.addEventListener('click', function () {
         approveBtn.disabled = true; approveBtn.textContent = 'Menerbitkan…';
-        D.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: 'user_001', approval_token: 'apt_demo' })
+        D.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
           .then(function (r) {
             D.toast('Mandat diterbitkan.', 'success');
             var box = el('kp-result');
@@ -76,12 +76,17 @@
       });
       var rejectBtn = el('kp-reject');
       if (rejectBtn) rejectBtn.addEventListener('click', function () {
-        D.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: 'user_001', approval_token: 'apt_demo' })
+        D.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
           .then(function () { D.toast('Rencana ditolak.', 'success'); setTimeout(function () { location.href = 'kotak-persetujuan.html'; }, 600); })
           .catch(function (e) { D.toast('Gagal: ' + e.message, 'error'); });
       });
       var reviseBtn = el('kp-revise');
-      if (reviseBtn) reviseBtn.addEventListener('click', function () { D.toast('Permintaan revisi dicatat (lokal, tidak disimpan di server).', 'info'); });
+      if (reviseBtn) reviseBtn.addEventListener('click', function () {
+         reviseBtn.disabled = true; reviseBtn.textContent = 'Mengirim…';
+         D.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'revise', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
+           .then(function () { D.toast('Permintaan revisi dicatat.', 'success'); reviseBtn.disabled = false; reviseBtn.textContent = 'Minta Revisi'; })
+           .catch(function (e) { D.toast('Gagal: ' + e.message, 'error'); reviseBtn.disabled = false; reviseBtn.textContent = 'Minta Revisi'; });
+       });
     }
   }
 

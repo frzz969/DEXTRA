@@ -102,3 +102,36 @@ h1,h2,h3,h4 { font-family: var(--font-display); }
 
 /* focus ring */
 .d-input:focus { border-color: var(--primary-container); box-shadow: 0 0 0 3px rgba(115,87,232,.12); outline: none; }
+
+/* calm enterprise: muted status badges */
+.d-badge--success { background: var(--success-tint); color: #1f7a5a; }
+.d-badge--warning { background: var(--warning-tint); color: #9a6a12; }
+.d-badge--danger  { background: var(--danger-tint);  color: #b03a47; }
+.d-badge--info    { background: var(--info-tint);    color: #3a6fa8; }
+
+/* assistant scroll area */
+.assistant-scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* --- Balanced Enterprise Workspace tokens (Overview prototype standard) --- */
+:root {
+  /* spacing scale */
+  --space-2xs: 0.125rem;
+  --space-3xl: 3rem;
+  /* color roles */
+  --color-text-primary: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-surface: var(--card);
+  --color-surface-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--primary-container);
+  --color-brand-deep: var(--primary);
+  --color-status-success: var(--success);
+  --color-status-warning: var(--warning);
+  --color-status-danger: var(--danger);
+  --color-status-info: var(--info);
+  /* elevation calm */
+  --shadow-calm: 0 1px 3px rgba(32,32,51,.04);
+}
+.d-honest-banner { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--r-md); background:var(--warning-tint); color:#9a6a12; font-size:11px; font-weight:500; border:1px solid #F3DDBB; margin-bottom:var(--space-md); }
+.assistant-scroll::-webkit-scrollbar { width: 6px; }
+.assistant-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }

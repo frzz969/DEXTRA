@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="./assets/vendor/symbols.css" rel="stylesheet">
 <link href="./assets/vendor/symbols.css" rel="stylesheet">
 <link href="./assets/vendor/fonts.css" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="./assets/vendor/tailwind.js"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"outline-variant":"#c9c4d7","inverse-on-surface":"#f2efff","secondary-fixed":"#e5deff","on-primary":"#ffffff","surface-container-lowest":"#ffffff","on-surface-variant":"#484554","outline":"#797586","tertiary-fixed-dim":"#c7c5d5","tertiary-container":"#706f7d","surface-container":"#efecff","on-primary-fixed-variant":"#4823bc","surface-dim":"#dad7f1","surface-container-highest":"#e2e0fa","error-container":"#ffdad6","error":"#ba1a1a","on-primary-container":"#f9f3ff","primary-fixed":"#e6deff","tertiary-fixed":"#e3e0f1","on-error-container":"#93000a","on-surface":"#1a1a2c","on-secondary-fixed":"#1b0063","on-tertiary-fixed-variant":"#464553","surface-container-high":"#e8e5ff","surface-bright":"#fcf8ff","on-tertiary":"#ffffff","inverse-surface":"#2f2f42","on-secondary":"#ffffff","primary-container":"#7357e8","primary-fixed-dim":"#cabeff","tertiary":"#575764","surface":"#fcf8ff","on-background":"#1a1a2c","secondary":"#5f49c5","primary":"#5a3bce","surface-tint":"#6142d5","surface-container-low":"#f5f2ff","background":"#fcf8ff","secondary-fixed-dim":"#c9bfff","on-tertiary-container":"#f7f4ff","secondary-container":"#9581ff","on-error":"#ffffff","inverse-primary":"#cabeff","surface-variant":"#e2e0fa","on-secondary-fixed-variant":"#462eac","on-tertiary-fixed":"#1a1a26","on-secondary-container":"#2b0090","on-primary-fixed":"#1c0062"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-xl":"2rem","space-md":"1rem","margin-mobile":"1rem",gutter:"1.5rem","space-lg":"1.5rem",margin:"2rem"},fontFamily:{"body-lg":["Inter"],"body-sm":["Inter"],"headline-xl":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Inter"]},fontSize:{"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-xl":["32px",{lineHeight:"40px",fontWeight:"700"}],"headline-md":["20px",{lineHeight:"28px",fontWeight:"600"}],"headline-lg":["24px",{lineHeight:"32px",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"headline-xl-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"14px",fontWeight:"600"}]}}}};</script><link href="./shared/dextra-ui.css" rel="stylesheet">
-</head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[240px] bg-white border-r border-[#EAE9F1] z-50 flex flex-col justify-between shadow-[0_1px_6px_rgba(0,0,0,0.03)]">
+<script src="./shared/dextra.js"></script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[240px] bg-white border-r border-[#EAE9F1] z-50 flex flex-col justify-between shadow-[0_1px_6px_rgba(0,0,0,0.03)]">
 <div class="flex flex-col">
 <!-- App Brand -->
 <div class="h-16 px-4 flex items-center gap-3 border-b border-[#EAE9F1]">
@@ -728,6 +728,7 @@ Farhan Pratama
 <!-- Interactive JavaScript Behavior -->
 <script>
     (function initScopeInspector() {
+       var D = window.DEXTRA || {};
       // Raw payload modal triggers
       const rawBtn = document.getElementById('view-raw-diff-btn');
       const modal = document.getElementById('raw-diff-modal');
@@ -765,6 +766,13 @@ Farhan Pratama
         });
       }
 
+      // Resolve plan from URL param (real backend data)
+      var params = new URLSearchParams(location.search);
+      var planId = params.get('plan');
+      var planHash = null;
+      if (planId) { D.call('get_plan', { plan_id: planId }).then(function (d) { if (d && d.plan) { planHash = d.plan.plan_hash; } }).catch(function () {}); }
+      function approvalToken() { return 'apt_' + Date.now(); }
+
       // Mandate Decision Actions
       const approveBtn = document.getElementById('approve-mandate-btn');
       const revisionBtn = document.getElementById('request-revision-btn');
@@ -773,18 +781,10 @@ Farhan Pratama
       if (approveBtn) {
         approveBtn.addEventListener('click', () => {
           approveBtn.disabled = true;
-          approveBtn.innerHTML = `
-            <span class="material-symbols-outlined text-[20px] animate-spin">refresh</span>
-            <span>Menerbitkan Mandat & Mengunci Kriptografi...</span>
-          `;
-          setTimeout(() => {
-            approveBtn.innerHTML = `
-              <span class="material-symbols-outlined text-[20px]">check_circle</span>
-              <span>Mandat Diterbitkan — Eksekusi Dimulai</span>
-            `;
-            approveBtn.classList.remove('bg-primary', 'hover:bg-secondary');
-            approveBtn.classList.add('bg-surface-container', 'text-primary');
-          }, 1200);
+          approveBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span><span>Menerbitkan Mandat...</span>';
+          D.call('submit_approval', { plan_id: planId, plan_hash: planHash, decision: 'approve', approver_id: 'user_001', approval_token: approvalToken() })
+            .then(function (r) { approveBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span><span>Mandat Diterbitkan</span>'; D.toast('Mandat diterbitkan: ' + (r.mandate_id||''), 'success'); })
+            .catch(function (e) { D.toast('Gagal: ' + e.message, 'error'); approveBtn.disabled = false; approveBtn.innerHTML = '<span class="material-symbols-outlined text-[22px]">approval_delegation</span><span>SETUJUI & TERBITKAN MANDAT</span>'; });
         });
       }
 
@@ -792,7 +792,9 @@ Farhan Pratama
         revisionBtn.addEventListener('click', () => {
           const reason = prompt('Masukkan catatan revisi untuk Executive Assistant:');
           if (reason) {
-            alert('Catatan revisi telah dikirim ke sesi AI. Work Package dikembalikan ke draf.');
+            D.call('submit_approval', { plan_id: planId, plan_hash: planHash, decision: 'revise', approver_id: 'user_001', approval_token: approvalToken(), notes: reason })
+              .then(function () { D.toast('Catatan revisi dikirim.', 'success'); })
+              .catch(function (e) { D.toast('Gagal: ' + e.message, 'error'); });
           }
         });
       }
@@ -800,7 +802,9 @@ Farhan Pratama
       if (rejectBtn) {
         rejectBtn.addEventListener('click', () => {
           if (confirm('Konfirmasi: Tolak dan batalkan Work Package ini secara permanen?')) {
-            alert('Work Package dibatalkan. Catatan audit ditandai: ABORTED_BY_HUMAN.');
+            D.call('submit_approval', { plan_id: planId, plan_hash: planHash, decision: 'reject', approver_id: 'user_001', approval_token: approvalToken() })
+              .then(function () { D.toast('Rencana ditolak.', 'success'); })
+              .catch(function (e) { D.toast('Gagal: ' + e.message, 'error'); });
           }
         });
       }

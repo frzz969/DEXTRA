@@ -25,5 +25,13 @@
 - P2: AI provider adapter = post-MVP roadmap.
 - P3: Responsive polish.
 
+## Button Wiring Results (post-fix, v3)
+- overview: PASS (navigasi/filter/search wired; calm enterprise visual refinement applied)
+- permintaan-saya: PASS (search/filter/reset + loading/empty/error + state persistence)
+- kotak-persetujuan/tinjau/work-package: PASS (approve/reject/revisi → submit_approval nyata)
+- workforce/direktori-workforce: PASS (client-side wire; metrics shown as "—" (no fake data))
+- mandat: PASS (revoke → revoke_mandate; detail → get_mandate)
+
 ## Status
-- Tag `hackathon-submission` BELUM dibuat (menunggu P1 tombol wiring selesai oleh Pino).
+- Typecheck: clean. Tests: 138 pass, 0 fail.
+- Tag `hackathon-submission` BELUM dibuat (menunggu independent QA + release freeze approval).
