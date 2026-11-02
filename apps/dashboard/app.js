@@ -106,7 +106,7 @@ function renderShell() {
         </div>
         <div class="header-right">
           <div class="badge-conn"><span class="status-dot" id="conn-dot"></span><span id="conn-status">Memeriksa...</span></div>
-          <img src="https://placehold.co/32x32/7357E8/FFFFFF?text=FP" style="width:32px;height:32px;border-radius:50%;" alt="profil"/>
+          <div title="Farhan Pratama" style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">FP</div>
         </div>
       </header>
       <main class="main" id="main"></main>
@@ -152,49 +152,319 @@ async function route() {
 }
 
 // ---------- Overview ----------
+function ovGreeting() { const h = new Date().getHours(); return h < 11 ? 'pagi' : h < 15 ? 'siang' : h < 19 ? 'sore' : 'malam'; }
+
+function ovRelTime(ts) {
+  if (!ts) return '—';
+  const t = new Date(ts).getTime();
+  if (isNaN(t)) return '—';
+  const menit = Math.floor((Date.now() - t) / 60000);
+  if (menit < 1) return 'baru saja';
+  if (menit < 60) return menit + ' menit lalu';
+  const jam = Math.floor(menit / 60);
+  if (jam < 24) return jam + ' jam lalu';
+  const hari = Math.floor(jam / 24);
+  if (hari === 1) return 'kemarin';
+  if (hari < 7) return hari + ' hari lalu';
+  return fmtDate(ts);
+}
+
+const OV_EVENT_COPY = {
+  approval_granted: { icon: 'verified_user', tone: 'success', text: () => 'Mandat diterbitkan setelah persetujuan manusia' },
+  action_executed: { icon: 'send', tone: 'primary', text: () => 'Eksekusi dijalankan dengan mandat' },
+  action_blocked: { icon: 'close', tone: 'danger', text: e => 'Eksekusi ditolak: ' + (e.reason_code || 'alasan tidak tercatat') },
+  plan_validated: { icon: 'policy', tone: 'info', text: () => 'Validasi kebijakan selesai' },
+  approval_rejected: { icon: 'close', tone: 'warning', text: () => 'Persetujuan ditolak' },
+  mandate_revoked: { icon: 'lock', tone: 'neutral', text: () => 'Mandat dicabut' },
+};
+const OV_ACTOR_COPY = { agent: 'Agen DEXTRA', dashboard: 'Dashboard', executor: 'Mesin eksekusi', system: 'Sistem' };
+const OV_SPECIALISTS = [
+  { mono: 'WD', name: 'Workforce Dispatcher', tag: '', read: 'Semua permintaan kerja', write: 'Menugaskan (tanpa eksekusi)' },
+  { mono: 'EA', name: 'Executive Assistant', tag: '', read: 'Email & Kalender', write: 'Butuh Mandat' },
+  { mono: 'AO', name: 'Administrative Officer', tag: '', read: 'HR & Logistik', write: 'Butuh Mandat' },
+  { mono: 'AR', name: 'Adversarial Reviewer', tag: 'Internal AI Reviewer', read: 'Rencana & Dokumen', write: 'Tidak ada (hanya tinjauan)' },
+  { mono: 'PV', name: 'Policy Validator', tag: 'Governance Engine', read: 'Aturan Organisasi', write: 'Tidak ada (deterministik)' },
+];
+
 async function renderOverview(main) {
   setTitle('Overview', 'Ringkasan workforce AI Anda hari ini');
   loadPlans();
-  const plans = await Promise.all(state.plans.map(id => callTool('get_plan', { plan_id: id }).catch(() => null)));
-  const valid = plans.filter(Boolean);
-  const awaiting = valid.filter(p => p.status === 'READY' || p.status === 'NEEDS_REVIEW').length;
-  const blocked = valid.filter(p => p.status === 'BLOCKED').length;
-  main.innerHTML = `
-    <div class="metrics">
-      <div class="metric-card"><div class="metric-icon" style="background:var(--primary-soft);color:var(--primary);">${icon('layers',20)}</div><div class="metric-num">${valid.length}</div><div class="metric-label">Work Package Aktif</div></div>
-      <div class="metric-card"><div class="metric-icon" style="background:var(--warning-soft);color:var(--warning);">${icon('assignment_turned_in',20)}</div><div class="metric-num">${awaiting}</div><div class="metric-label">Menunggu Persetujuan</div></div>
-      <div class="metric-card"><div class="metric-icon" style="background:var(--success-soft);color:var(--success);">${icon('check',20)}</div><div class="metric-num">${valid.filter(p=>p.status==='EXECUTED').length || 0}</div><div class="metric-label">Selesai Hari Ini</div></div>
-      <div class="metric-card"><div class="metric-icon" style="background:var(--danger-soft);color:var(--danger);">${icon('error',20)}</div><div class="metric-num">${blocked}</div><div class="metric-label">Tindakan Diblokir</div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Work Package Terbaru</div><div class="card-sub">Rencana yang telah disusun</div></div></div>
-        ${valid.length ? valid.slice(0,6).map(p => `
-          <div class="inbox-item" style="cursor:pointer;" onclick="location.hash='#/tinjau/${encodeURIComponent(p.plan_id)}'">
-            <div style="flex:1;min-width:0;">
-              <div class="subject">${escapeHtml(p.intent)}</div>
-              <div class="meta">${fmtDate(p.created_at)} · ${p.actions?.length || 0} tindakan · ${badgeRisk(p.actions?.[0]?.risk || 'medium')}</div>
-            </div>
-            ${badgeStatus(p.status)}
-          </div>`).join('') : '<div class="empty-state"><h3>Belum ada work package</h3><p>Buat permintaan baru untuk memulai.</p></div>'}
+
+  const [planResults, org, audit] = await Promise.all([
+    Promise.all(state.plans.map(id => callTool('get_plan', { plan_id: id }).catch(() => null))),
+    callTool('get_org_rules', { org_id: 'org_kenari' }).catch(() => null),
+    callTool('get_audit_log', { limit: 50 }).catch(() => null),
+  ]);
+
+  // Plan yang muncul di audit tapi belum tercatat di localStorage (mis. dibuka dari browser lain)
+  // ikut dimuat supaya overview tidak kosong padahal server punya riwayat.
+  const auditPlanIds = [...new Set(((audit && audit.events) || []).map(e => e.plan_id).filter(Boolean))];
+  const extraIds = auditPlanIds.filter(id => !state.plans.includes(id));
+  if (extraIds.length) {
+    const extra = await Promise.all(extraIds.map(id => callTool('get_plan', { plan_id: id }).catch(() => null)));
+    planResults.push(...extra);
+    state.plans = [...state.plans, ...extraIds];
+    savePlans();
+  }
+
+  const plans = planResults.map(r => (r && r.plan) ? r.plan : null).filter(Boolean);
+  const events = ((audit && audit.events) || []).slice().reverse(); // terbaru lebih dulu
+
+  // Rencana dianggap terlaksana bila semua tindakannya punya jejak action_executed di audit.
+  const executedKeys = new Set();
+  events.forEach(e => { if (e.type === 'action_executed' && e.plan_id && e.action_id) executedKeys.add(e.plan_id + '::' + e.action_id); });
+  const all = plans.map(p => {
+    const acts = p.actions || [];
+    const done = p.status !== 'BLOCKED' && acts.length > 0 && acts.every(a => executedKeys.has(p.plan_id + '::' + a.action_id));
+    return { ...p, _st: done ? 'EXECUTED' : (p.status || 'DRAFT') };
+  }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  const awaiting = all.filter(p => p._st === 'READY' || p._st === 'NEEDS_REVIEW');
+  const drafts = all.filter(p => p._st === 'DRAFT');
+  const blockedPlans = all.filter(p => p._st === 'BLOCKED');
+  const donePlans = all.filter(p => p._st === 'EXECUTED');
+
+  const execEvents = events.filter(e => e.type === 'action_executed');
+  const blockedEvents = events.filter(e => e.type === 'action_blocked');
+  const today = new Date().toDateString();
+  const doneToday = new Set();
+  const execToday = execEvents.filter(e => { const d = new Date(e.at); return !isNaN(d) && d.toDateString() === today; });
+  execToday.forEach(e => doneToday.add(e.plan_id || e.event_id || e.at));
+  const blockedTotal = blockedPlans.length + blockedEvents.length;
+  const lastReason = blockedEvents.map(e => e.reason_code).find(Boolean);
+  const suspicious = all.reduce((n, p) => n + ((p.findings || []).filter(f => f.code === 'INJECTION_QUARANTINED').length), 0);
+  const hasFindings = all.some(p => (p.findings || []).length > 0);
+
+  const mandateRuns = execEvents.length;
+  const attempts = mandateRuns + blockedEvents.length;
+  const ratio = attempts ? Math.round((mandateRuns / attempts) * 100) : null;
+
+  const online = state.conn !== 'offline';
+  const orgLabel = org && org.org_id ? String(org.org_id).toUpperCase().replace(/_/g, '-') : 'org_kenari';
+
+  function planRow(p) {
+    const reviewing = p._st === 'READY' || p._st === 'NEEDS_REVIEW';
+    const reviewHref = '#/tinjau/' + encodeURIComponent(p.plan_id);
+    const detailHref = '#/detail/' + encodeURIComponent(p.plan_id);
+    const href = reviewing ? reviewHref : detailHref;
+    const risk = p.actions?.[0]?.risk || 'medium';
+    const masked = p.actions?.[0]?.target?.masked_address || 'tanpa penerima';
+    const n = (p.actions || []).length;
+    return `<div class="ov-plan" data-href="${href}">
+      <div class="ov-plan-main">
+        <div class="ov-plan-tags">${badgeStatus(p._st)}${badgeRisk(risk)}<span class="ov-time">${ovRelTime(p.created_at)}</span></div>
+        <div class="ov-plan-title">${escapeHtml(p.intent || 'Tanpa judul')}</div>
+        <div class="ov-plan-meta">Spesialis: Executive Assistant <span class="ov-sep">•</span> ${n} tindakan <span class="ov-sep">•</span> <span class="mono">${escapeHtml(masked)}</span></div>
       </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Workforce Status</div><div class="card-sub">Spesialis AI yang tersedia</div></div></div>
-        ${['Executive Assistant','Administrative Officer','Compliance Reviewer (Internal AI Reviewer)','Policy Validator (Governance Engine)'].map(n => `
-          <div class="inbox-item">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">${n.split(' ').map(w=>w[0]).join('')}</div>
-            <div style="flex:1;min-width:0;">
-              <div class="subject">${n}</div>
-              <div class="meta">Tersedia · Tidak memiliki wewenang eksekusi mandiri</div>
-            </div>
-            <span class="badge badge-success">Aktif</span>
-          </div>`).join('')}
-        <div style="margin-top:var(--space-md);padding:var(--space-sm);background:var(--bg);border-radius:var(--radius-md);font-size:12px;color:var(--muted);">
-          <strong style="color:var(--text);">Ringkasan tata kelola:</strong> Semua tindakan eksternal wajib mandat. Tidak ada eksekusi tanpa persetujuan manusia.
+      <a class="btn ${reviewing ? 'btn-primary' : 'btn-tertiary'} btn-sm" href="${href}" data-href="${href}">${reviewing ? 'Tinjau Mandat' : 'Lihat Detail'}</a>
+    </div>`;
+  }
+
+  function eventRow(e) {
+    const copy = OV_EVENT_COPY[e.type];
+    const tone = copy ? copy.tone : 'neutral';
+    const glyph = copy ? copy.icon : 'info';
+    const text = copy ? copy.text(e) : String(e.type || 'peristiwa');
+    const actor = OV_ACTOR_COPY[e.actor] || e.actor || 'Sistem';
+    return `<div class="ov-tl-item">
+      <div class="ov-tl-mark ov-tone-${tone}">${icon(glyph, 14)}</div>
+      <div class="ov-tl-body">
+        <div class="ov-tl-text">${escapeHtml(text)}</div>
+        <div class="ov-tl-meta">${escapeHtml(actor)}<span class="ov-sep">•</span>${ovRelTime(e.at)}</div>
+      </div>
+    </div>`;
+  }
+
+  main.innerHTML = `
+    <section class="ov-hero">
+      <div class="ov-hero-copy">
+        <div class="ov-hero-top">
+          <span class="ov-pill ${online ? '' : 'is-warn'}"><span class="ov-pill-dot"></span>${online ? 'Semua agen beroperasi dalam parameter mandat' : 'API tidak terhubung — menampilkan data tersimpan'}</span>
+          <span class="ov-org mono">${escapeHtml(orgLabel)}</span>
         </div>
+        <h1 class="ov-hero-title">Selamat ${ovGreeting()}, Farhan Pratama</h1>
+        <p class="ov-hero-sub">Berikut yang terjadi di workforce AI Anda hari ini. Prinsip operasional: <strong>Baca otomatis, tulis harus lewat mandat terverifikasi.</strong></p>
+      </div>
+      <div class="ov-hero-actions">
+        <a class="btn btn-tertiary" href="#/audit">${icon('history', 16)} Log Audit Sesi</a>
+        <a class="btn btn-primary" href="#/buat">${icon('add', 16)} Rancang Mandat Baru</a>
+      </div>
+    </section>
+
+    <section class="ov-metrics">
+      <div class="ov-metric">
+        <div class="ov-metric-top"><span class="ov-metric-icon ov-tone-primary">${icon('layers', 16)}</span></div>
+        <div class="ov-metric-num">${all.length}</div>
+        <div class="ov-metric-label">Total Work Package</div>
+        <div class="ov-metric-sub">${donePlans.length} selesai, ${drafts.length} aktif, ${awaiting.length} siap ditinjau</div>
+      </div>
+      <div class="ov-metric is-highlight">
+        <div class="ov-metric-top"><span class="ov-metric-icon ov-tone-primary">${icon('assignment_turned_in', 16)}</span></div>
+        <div class="ov-metric-num">${awaiting.length}</div>
+        <div class="ov-metric-label">Menunggu Persetujuan</div>
+        <div class="ov-metric-sub">Otorisasi eksekusi tulis &amp; kontak eksternal</div>
+      </div>
+      <div class="ov-metric">
+        <div class="ov-metric-top"><span class="ov-metric-icon ov-tone-success">${icon('check', 16)}</span></div>
+        <div class="ov-metric-num">${doneToday.size}</div>
+        <div class="ov-metric-label">Selesai Hari Ini</div>
+        <div class="ov-metric-sub">${execToday.length ? 'Dari ' + execToday.length + ' tindakan hari ini' : 'Belum ada eksekusi hari ini'}</div>
+      </div>
+      <div class="ov-metric">
+        <div class="ov-metric-top"><span class="ov-metric-icon ov-tone-danger">${icon('error', 16)}</span></div>
+        <div class="ov-metric-num">${blockedTotal}</div>
+        <div class="ov-metric-label">Tindakan Terblokir Kebijakan</div>
+        <div class="ov-metric-sub">${lastReason ? 'Alasan: ' + escapeHtml(lastReason) : (blockedTotal ? 'Diblokir saat validasi kebijakan' : 'Belum ada percobaan')}</div>
+      </div>
+    </section>
+
+    <div class="ov-body">
+      <div class="ov-col">
+        <section class="ov-card">
+          <header class="ov-card-head">
+            <div>
+              <div class="ov-title">Work Package Terbaru</div>
+              <div class="ov-sub">Rencana yang disusun dari permintaan Anda</div>
+            </div>
+          </header>
+          <div class="ov-card-tools">
+            <div class="ov-tabs" id="ov-plan-tabs">
+              <button class="ov-tab is-active" data-filter="all">Semua <span class="ov-tab-n">${all.length}</span></button>
+              <button class="ov-tab" data-filter="approval">Persetujuan <span class="ov-tab-n">${awaiting.length}</span></button>
+              <button class="ov-tab" data-filter="draft">Draf <span class="ov-tab-n">${drafts.length}</span></button>
+              <button class="ov-tab" data-filter="anomaly">Anomali <span class="ov-tab-n">${blockedPlans.length}</span></button>
+            </div>
+            <input class="ov-search" id="ov-plan-search" type="search" placeholder="Cari intent…" />
+          </div>
+          <div class="ov-list" id="ov-plan-list"></div>
+        </section>
+
+        <section class="ov-card">
+          <header class="ov-card-head">
+            <div>
+              <div class="ov-title">Aktivitas Workforce AI Terkini</div>
+              <div class="ov-sub">Log audit append-only, terbaru lebih dulu</div>
+            </div>
+            <a class="ov-link" href="#/audit">Buka Audit Lengkap</a>
+          </header>
+          ${events.length ? `<div class="ov-tl">${events.slice(0, 6).map(eventRow).join('')}</div>` : `<div class="ov-empty"><strong>Belum ada aktivitas</strong>Event audit muncul setelah ada permintaan yang diproses.</div>`}
+        </section>
+      </div>
+
+      <div class="ov-col">
+        <section class="ov-card ov-card-emph">
+          <header class="ov-card-head">
+            <div>
+              <div class="ov-title">Persetujuan Tertunda Segera</div>
+              <div class="ov-sub">${awaiting.length} menunggu keputusan Anda</div>
+            </div>
+          </header>
+          ${awaiting.length ? awaiting.slice(0, 3).map(p => `
+            <a class="ov-appr" href="#/tinjau/${encodeURIComponent(p.plan_id)}">
+              <div class="ov-appr-main">
+                <div class="ov-appr-title">${escapeHtml(p.intent || 'Tanpa judul')}</div>
+                <div class="ov-appr-meta">Executive Assistant <span class="ov-sep">•</span> ${(p.actions || []).length} tindakan</div>
+              </div>
+              ${badgeRisk(p.actions?.[0]?.risk || 'medium')}
+              <span class="ov-chev">›</span>
+            </a>`).join('') : `<div class="ov-empty"><strong>Tidak ada persetujuan tertunda.</strong>Semua permintaan sudah diputuskan.</div>`}
+          <div class="ov-card-foot"><a class="btn btn-secondary btn-sm" href="#/persetujuan">Buka Kotak Persetujuan</a></div>
+        </section>
+
+        <section class="ov-card">
+          <header class="ov-card-head">
+            <div>
+              <div class="ov-title">Spesialis AI Terdaftar</div>
+              <div class="ov-sub">Lima spesialis tanpa wewenang eksekusi mandiri</div>
+            </div>
+          </header>
+          ${OV_SPECIALISTS.map(s => `
+            <div class="ov-spec">
+              <div class="ov-tile">${s.mono}</div>
+              <div class="ov-spec-body">
+                <div class="ov-spec-name">${escapeHtml(s.name)}<span class="ov-live">Aktif</span>${s.tag ? `<span class="ov-spec-tag">${escapeHtml(s.tag)}</span>` : ''}</div>
+                <div class="ov-spec-grid">
+                  <div class="ov-cell"><div class="ov-cell-k">Wewenang Baca</div><div class="ov-cell-v">${escapeHtml(s.read)}</div></div>
+                  <div class="ov-cell"><div class="ov-cell-k">Wewenang Tulis</div><div class="ov-cell-v">${escapeHtml(s.write)}</div></div>
+                </div>
+              </div>
+            </div>`).join('')}
+        </section>
+
+        <section class="ov-card">
+          <header class="ov-card-head">
+            <div>
+              <div class="ov-title">Ringkasan Tata Kelola</div>
+              <div class="ov-sub">Dihitung dari log audit sesi ini</div>
+            </div>
+          </header>
+          <div class="ov-gov">
+            <div class="ov-gov-top">
+              <div>
+                <div class="ov-gov-num">${ratio === null ? '—' : ratio + '%'}</div>
+                <div class="ov-gov-label">${ratio === null ? 'Belum ada eksekusi' : 'Eksekusi dengan mandat'}</div>
+              </div>
+              <div class="ov-gov-frac mono">${mandateRuns} / ${attempts}</div>
+            </div>
+            <div class="ov-gov-bar"><span style="width:${ratio === null ? 0 : ratio}%"></span></div>
+            <div class="ov-gov-rows">
+              <div class="ov-gov-row"><span>Tindakan dijalankan dengan mandat</span><b class="ov-gov-val">${mandateRuns}</b></div>
+              <div class="ov-gov-row"><span>Upaya eksekusi tanpa izin <span class="mono">action_blocked</span></span><b class="ov-gov-val">${blockedEvents.length}</b></div>
+              <div class="ov-gov-row"><span>Rencana diblokir kebijakan</span><b class="ov-gov-val">${blockedPlans.length}</b></div>
+              ${hasFindings ? `<div class="ov-gov-row"><span>Prompt/instruksi mencurigakan tertahan</span><b class="ov-gov-val">${suspicious}</b></div>` : ''}
+            </div>
+          </div>
+          <div class="ov-footnote">Mandat terikat pada hash rencana SHA-256. Tidak ada eksekusi tanpa persetujuan manusia.</div>
+        </section>
       </div>
     </div>
   `;
+
+  // Filter work package: murni di sisi klien, tanpa panggilan server.
+  const listEl = document.getElementById('ov-plan-list');
+  const searchEl = document.getElementById('ov-plan-search');
+  const tabsEl = document.getElementById('ov-plan-tabs');
+  let filter = 'all';
+  let query = '';
+
+  function matches(p) {
+    if (filter === 'approval' && !(p._st === 'READY' || p._st === 'NEEDS_REVIEW')) return false;
+    if (filter === 'draft' && p._st !== 'DRAFT') return false;
+    if (filter === 'anomaly' && p._st !== 'BLOCKED') return false;
+    if (query && !String(p.intent || '').toLowerCase().includes(query)) return false;
+    return true;
+  }
+
+  function paint() {
+    if (!all.length) {
+      listEl.innerHTML = `<div class="ov-empty"><strong>Belum ada work package</strong>Buat permintaan baru untuk memulai.</div>`;
+      return;
+    }
+    const rows = all.filter(matches);
+    if (!rows.length) {
+      listEl.innerHTML = `<div class="ov-empty"><strong>Tidak ada hasil</strong>Ubah filter atau kata kunci pencarian.</div>`;
+      return;
+    }
+    const shown = rows.slice(0, 6);
+    listEl.innerHTML = shown.map(planRow).join('') + (rows.length > 6
+      ? `<div class="ov-list-foot">Menampilkan 6 dari ${rows.length} work package</div>` : '');
+  }
+
+  tabsEl.addEventListener('click', ev => {
+    const btn = ev.target.closest('.ov-tab');
+    if (!btn) return;
+    filter = btn.getAttribute('data-filter');
+    tabsEl.querySelectorAll('.ov-tab').forEach(b => b.classList.toggle('is-active', b === btn));
+    paint();
+  });
+  searchEl.addEventListener('input', () => { query = searchEl.value.trim().toLowerCase(); paint(); });
+  listEl.addEventListener('click', ev => {
+    const row = ev.target.closest('[data-href]');
+    if (!row) return;
+    location.hash = row.getAttribute('data-href');
+  });
+
+  paint();
 }
 
 // ---------- Buat Permintaan ----------
