@@ -4,10 +4,14 @@ Halo Pino! Kamu pegang **seluruh UI/UX** DEXTRA. Backend, data, dan integrasi su
 
 ## Referensi utama
 - Stitch export terbaru: `stitch-ref/` (11 layar + `governed_intelligence/DESIGN.md`).
-- Design tokens: `apps/dashboard/shared/dextra-ui.css`.
+- Design tokens (aktif): `apps/dashboard/assets/css/dashboard.css` — satu kontrak token untuk light + dark.
+- Design tokens (arsip, jangan dipakai untuk kerja baru): `apps/dashboard-legacy/shared/dextra-ui.css`.
 - Diff report: `docs/` (lihat audit Stitch vs implementasi).
 
-## Yang sudah selesai (jangan diubah tanpa alasan)
+> Catatan: dashboard sudah ditulis ulang sebagai SPA di `apps/dashboard/`. 14 halaman HTML lama
+> dipindahkan ke `apps/dashboard-legacy/` dan tidak dikembangkan lagi.
+
+## Yang sudah selesai (build lama — kini arsip di `apps/dashboard-legacy/`)
 - Sidebar Stitch (Menu Utama / AI Workforce / Tata Kelola + profil) di semua halaman.
 - Design-token CSS di-link di semua halaman.
 - Halaman yang sudah di-rewrite (lega, badge soft, jam live): overview, buat-permintaan, kotak-persetujuan, work-package, audit, kebijakan, pengaturan, masuk, direktori-workforce.
@@ -16,7 +20,8 @@ Halo Pino! Kamu pegang **seluruh UI/UX** DEXTRA. Backend, data, dan integrasi su
 ## Tanggung jawabmu
 
 ### P0 — Visual polish & konsistensi
-- Samakan spacing, warna, tipografi di semua halaman (gunakan token di `dextra-ui.css`: `d-card`, `d-badge--*`, `d-btn--*`, `d-page-header`, `d-empty`).
+- Samakan spacing, warna, tipografi lewat token di `assets/css/dashboard.css` (`--brand-*`, `--surface*`, `--border`, `--text*`, `--radius*`).
+- Jangan menulis CSS per halaman. Semua komponen sudah ada di `assets/js/ui.js` (`card`, `kpi`, `table`, `badge`, `modal`, `drawer`, `confirm`, `empty`, `bars`) — pakai itu, jangan bikin tabel/dialog sendiri.
 - Pastikan tidak ada elemen yang saling berhimpitan (whitespace cukup).
 - Hapus badge berlebihan; gunakan warna sebagai penanda makna, bukan hiasan.
 - Tipografi konsisten: heading Plus Jakarta Sans, body Inter.

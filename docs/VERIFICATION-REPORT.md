@@ -78,7 +78,7 @@ Semua baris di bawah dibaca langsung pada commit `b52125d`. Status "diperbaiki" 
 
 | Aspek | Isi |
 | --- | --- |
-| Lokasi | `apps/dashboard/app.js` |
+| Lokasi | `apps/dashboard-legacy/_legacy/app.js` |
 | Bukti pada checkpoint | `const TOKEN = "ops-dev-token"` di bundel browser; token itu membuka 12 tool termasuk `execute_action`, `submit_approval`, `revoke_mandate` |
 | Status | **Belum diperbaiki.** Arah yang disetujui: approval challenge sekali pakai + kode konfirmasi lewat terminal server |
 
@@ -86,7 +86,7 @@ Semua baris di bawah dibaca langsung pada commit `b52125d`. Status "diperbaiki" 
 
 | Aspek | Isi |
 | --- | --- |
-| Lokasi | `apps/dashboard/app.js`, `apps/mcp-server/src/handlers.ts` |
+| Lokasi | `apps/dashboard-legacy/_legacy/app.js`, `apps/mcp-server/src/handlers.ts` |
 | Bukti pada checkpoint | Dashboard mengirim `approval_token: "apt_demo"` dan `approver_id: "user_001"` sebagai teks; `submit_approval` tidak memeriksa token, tidak menegakkan expiry/sekali-pakai, dan memakai `approver_id` dari argumen |
 | Status | **Belum diperbaiki** |
 

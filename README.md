@@ -15,8 +15,10 @@ An office agent that acts only on human-approved mandates.
 ```
 dextra/
 ├── apps/
-│   ├── dashboard/      # Approval dashboard + mock inbox + audit
-│   └── mcp-server/     # MCP server: rules, plan, mandate, executor
+│   ├── dashboard/         # Dashboard operasional (SPA): approval, work package, audit
+│   ├── dashboard-legacy/  # 14 halaman HTML lama — arsip, tidak dipakai lagi
+│   ├── mcp-server/        # MCP server: rules, plan, mandate, executor
+│   └── telegram-adapter/
 ├── packages/
 │   ├── contracts/      # Skema Plan, Mandate, ActionResult
 │   ├── policy-engine/
@@ -28,6 +30,18 @@ dextra/
 └── docs/
     └── PRD.md          # Spesifikasi produk lengkap
 ```
+
+## Menjalankan dashboard
+
+```bash
+cd apps/dashboard
+python -m http.server 8899
+# http://127.0.0.1:8899/index.html
+```
+
+Tanpa build step, tanpa CDN, tanpa dependensi. Peta rute lengkap dan pemetaan 14 halaman lama
+ada di `apps/dashboard/README.md`. Peta monorepo (aktual vs target arsitektur) ada di
+`docs/MONOREPO-MAP.md`.
 
 ## Status
 

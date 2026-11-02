@@ -1,3 +1,0 @@
-# Balanced Enterprise Workspace — Overview prototype
-
-Tokens (dextra-ui.css): --space-2xs … --space-3xl spacing scale; color roles --color-text-primary/muted, --color-surface, --color-border, --color-brand, --color-status-*; --shadow-calm. Muted status badges via .d-badge. WP cards use title → status → specialist → action. Assistant panel uses .assistant-scroll with visible scrollbar. Honest banner (.d-honest-banner) marks illustrative numbers. No branding changes.
