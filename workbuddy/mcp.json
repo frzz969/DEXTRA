@@ -13,7 +13,10 @@
         "create_plan",
         "validate_plan",
         "get_plan",
+        "list_plans",
         "get_mandate",
+        "list_mandates",
+        "list_executions",
         "get_status"
       ],
       "note": "Agent token only. Ops token (execute_action, submit_approval, issue_mandate, revoke_mandate) is never exposed to the agent (PRD §8.3, TC-010)."
