@@ -27,7 +27,17 @@ export function checkTimezone(action: PlanAction, org: Org): Finding | null {
   return null;
 }
 
-export function checkRecipientScope(_action: PlanAction, _org: Org): Finding | null {
+export function checkRecipientScope(action: PlanAction, _org: Org, knownContactIds?: Iterable<string>): Finding | null {
+  if (knownContactIds) {
+    const set = new Set(knownContactIds);
+    if (!set.has(action.target.contact_id)) {
+      return mk('RECIPIENT_NOT_ALLOWED', 'blocking', action.action_id);
+    }
+  }
+  // Flag the ambiguous sentinel contact ids that were never resolved.
+  if (action.target.contact_id === 'c_budi_unresolved' || action.target.display_name.includes('(belum dipilih)')) {
+    return mk('AMBIGUOUS_RECIPIENT', 'blocking', action.action_id);
+  }
   return null;
 }
 

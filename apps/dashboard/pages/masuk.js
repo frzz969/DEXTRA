@@ -13,7 +13,7 @@
     });
 
     // prefill dev token
-    if (input && !input.value) input.value = 'ops-dev-token';
+    if (input && !input.value) input.value = '';
 
     // "continue" link if token already stored
     try {

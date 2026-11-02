@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -18,6 +18,7 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     }
     case 'create_plan': {
       const org = await getOrgRules();
+      const contactIds = await getContactIds();
       const plan = buildPlan({
         org_id: org.org_id,
         request_id: args.request_id,
@@ -25,14 +26,15 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         created_at: new Date().toISOString(),
         actions: args.actions ?? [],
       });
-      const validated = runValidate(plan, org);
+      const validated = runValidate(plan, org, contactIds);
       await savePlan(validated);
       return { ok: true, data: { plan: validated } };
     }
     case 'validate_plan': {
       const org = await getOrgRules();
+      const contactIds = await getContactIds();
       const plan = args.plan;
-      const validated = runValidate(plan, org);
+      const validated = runValidate(plan, org, contactIds);
       await savePlan(validated);
       return { ok: true, data: { plan: validated } };
     }
@@ -45,6 +47,18 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       if (!plan) return { ok: false, error: { code: 'INVALID_PLAN', message: 'Plan not found.' } };
       if (plan.plan_hash !== args.plan_hash) {
         return { ok: false, error: { code: 'PLAN_HASH_MISMATCH', message: 'Plan hash mismatch.' } };
+      }
+      const token = String(args.approval_token ?? '').trim();
+      if (token.length < 8) {
+        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Approval token missing or too short.' } };
+      }
+      if (token.toLowerCase() === 'apt_demo') {
+        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Weak demo approval token is not accepted.' } };
+      }
+      // reuse check: same approval_token must not be used twice
+      const existingApprovals = await listApprovals();
+      if (existingApprovals.some((a) => a.approval_token === token)) {
+        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Approval token already used.' } };
       }
       const decision = args.decision;
       const approval: Approval = {

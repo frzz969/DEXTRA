@@ -32,7 +32,7 @@ async function logUnauthorized(tool: string, scope: string | null, tokenHint: st
       type: 'action_blocked',
       actor: 'agent',
       reason_code: 'ACTION_NOT_ALLOWED',
-      detail: { tool, scope: scope ?? 'none', token_hint: tokenHint.slice(0, 6) },
+      detail: { tool, scope: scope ?? 'none', token_hint: '[redacted]' },
     } as any);
   } catch {
     // audit failure must not crash the server
@@ -191,7 +191,7 @@ export function startServer(options: ServerOptions = {}) {
       policy.port = address.port;
     }
     console.log(`DEXTRA MCP server listening on 127.0.0.1:${policy.port}`);
-    console.log(`agent token: ${agentToken()}`);
+    // D-02: never log tokens/secrets, even in dev.
   });
   return server;
 }

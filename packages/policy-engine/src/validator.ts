@@ -5,13 +5,15 @@ import {
   checkRecipientScope, checkAmbiguity, checkBulkEgress, checkInjection,
 } from './rules.ts';
 
-export function validatePlan(plan: Plan, org: Org): Finding[] {
+export function validatePlan(plan: Plan, org: Org, knownContactIds?: Iterable<string>): Finding[] {
   const findings: Finding[] = [];
   for (const a of plan.actions) {
-    for (const c of [checkOfficeHours, checkFridayPrayer, checkHoliday, checkTimezone, checkRecipientScope]) {
+    for (const c of [checkOfficeHours, checkFridayPrayer, checkHoliday, checkTimezone]) {
       const f = c(a, org);
       if (f) findings.push(f);
     }
+    const rf = checkRecipientScope(a, org, knownContactIds);
+    if (rf) findings.push(rf);
   }
   for (const c of [checkAmbiguity, checkBulkEgress, checkInjection]) {
     const f = c(plan);

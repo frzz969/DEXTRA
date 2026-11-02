@@ -161,6 +161,11 @@ export async function findContactsByHint(hint: string, limit?: number): Promise<
     .map(toPublic);
 }
 
+export async function getContactIds(): Promise<string[]> {
+  const contacts = await readContacts();
+  return contacts.map((c) => c.contact_id);
+}
+
 export async function getContactById(id: ContactId): Promise<ContactPublic | null> {
   const parsedId = ContactIdSchema.safeParse(id);
   if (!parsedId.success) {
@@ -295,6 +300,11 @@ export async function saveMandate(mandate: Mandate): Promise<void> {
     mandates[index] = parsed;
   }
   await writeJsonAtomic(store.mandates, mandates);
+}
+
+export async function listApprovals(): Promise<Approval[]> {
+  const store = await prepare();
+  return readArray(store.approvals, ApprovalSchema);
 }
 
 export async function getApproval(id: ApprovalId): Promise<Approval | null> {

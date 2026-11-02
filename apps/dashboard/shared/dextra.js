@@ -33,8 +33,8 @@
   var NOT_YET = { 'knowledge-base': 'Knowledge base belum tersedia di MVP', notifications: 'Pusat notifikasi belum tersedia di MVP' };
 
   function token() {
-    try { return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || 'ops-dev-token'; }
-    catch (_) { return 'ops-dev-token'; }
+    try { return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || ''; }
+    catch (_) { return ''; }
   }
   function setToken(t, remember) {
     try { sessionStorage.setItem(TOKEN_KEY, t); if (remember) localStorage.setItem(TOKEN_KEY, t); } catch (_) {}
