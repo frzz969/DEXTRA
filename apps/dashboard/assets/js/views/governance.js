@@ -412,7 +412,7 @@
         .then(function (r) {
           p.mandate_id = r.mandate_id || mandateId;
           ui.toast('Mandat diterbitkan oleh server: ' + p.mandate_id, 'success');
-          D.router.render();
+          return store.hydrateLive().then(function () { D.shell.refresh(); D.router.render(); });
         })
         .catch(function (e) { ui.toast('Gagal menerbitkan mandat: ' + e.message, 'error'); });
       return;
@@ -534,7 +534,7 @@
 
     function openMandate(m) {
       var p = store.plan(m.plan_id);
-      ui.drawer({
+      var drawer = ui.drawer({
         eyebrow: 'Mandat', title: m.mandate_id, subtitle: 'Terikat pada ' + m.plan_id,
         body:
           '<div class="row" style="gap:8px;margin-bottom:14px">' + D.mandateBadge(m.status) +
@@ -547,6 +547,11 @@
             '<dt>Pemakaian</dt><dd>' + (m.uses == null ? '— <span class="tiny faint">(tidak dilaporkan server)</span>' : m.uses + ' dari ' + m.max_uses) + '</dd>' +
             '<dt>Sidik rencana</dt><dd class="mono tiny" style="word-break:break-all">' + esc(m.plan_hash) + '</dd>' +
           '</dl>' +
+          '<div class="divider"></div>' +
+          '<div class="row" style="justify-content:space-between;margin-bottom:6px">' +
+            '<h3 class="small strong">Aksi dalam mandat</h3>' +
+            '<span class="tiny faint">' + (m.status === 'active' ? 'mandat aktif' : 'mandat ' + m.status) + '</span></div>' +
+          '<div id="drawer-exec">' + actionsSection(m, p) + '</div>' +
           (m.status === 'revoked' ? '<div class="banner banner--danger" style="margin-top:14px"><span class="material-symbols-outlined">undo</span><div><b>Dicabut</b> · ' + esc(U.fmtDate(m.revoked_at)) + '<div>' + esc(m.revoke_reason || '') + '</div></div></div>' : '') +
           '<div class="banner banner--info" style="margin-top:14px"><span class="material-symbols-outlined">info</span>' +
           '<div>Mandat tidak dapat diubah setelah terbit. Perubahan lingkup memerlukan work package dan persetujuan baru.</div></div>'
@@ -564,7 +569,19 @@
           required: ['mr']
         }).then(function (r) {
           if (!r || !r.ok) return;
-          if (store.mode === 'live') { ui.toast('Pencabutan mandat belum tersedia di API lokal.', 'warning'); return; }
+          if (store.mode === 'live') {
+            D.api.call('revoke_mandate', { mandate_id: m.mandate_id })
+              .then(function (res) {
+                m.status = (res.mandate && res.mandate.status) || 'revoked';
+                m.revoked_at = new Date().toISOString();
+                m.revoke_reason = r.values.mr;
+                ui.toast('Mandat ' + m.mandate_id + ' dicabut di server.', 'success');
+                drawer.close();
+                D.router.render();
+              })
+              .catch(function (e) { ui.toast('Gagal mencabut mandat: ' + e.message, 'error'); });
+            return;
+          }
           m.status = 'revoked';
           m.revoked_at = new Date().toISOString();
           m.revoke_reason = r.values.mr;
@@ -573,6 +590,111 @@
           D.router.render();
         });
       });
+
+      var execHost = document.getElementById('drawer-exec');
+      if (execHost) execHost.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-exec]');
+        if (!btn) return;
+        var actionId = btn.getAttribute('data-exec');
+        var action = ((p && p.actions) || []).filter(function (a) { return a.action_id === actionId; })[0];
+        if (action) confirmExecute(m, action);
+      });
+
+      function executedRow(mandate, action) {
+        for (var i = 0; i < store.executions.length; i++) {
+          var e = store.executions[i];
+          if (e.mandate_id === mandate.mandate_id && e.action_id === action.action_id && e.result === 'sent') return e;
+        }
+        return null;
+      }
+
+      function actionsSection(mandate, plan) {
+        if (!plan || !plan.actions || !plan.actions.length) {
+          return '<p class="small muted">Rencana untuk mandat ini tidak dimuat, jadi daftar aksi tidak tersedia. ' +
+            'Buka <a href="#/work-packages/' + encodeURIComponent(mandate.plan_id) + '">work package</a> untuk detailnya.</p>';
+        }
+        return plan.actions.map(function (a) {
+          var done = executedRow(mandate, a);
+          var canRun = mandate.status === 'active' && D.session.can('execute');
+          var right = done
+            ? '<span class="badge badge--success">Dijalankan</span>'
+            : (canRun
+              ? '<button class="btn btn--secondary btn--sm" data-exec="' + esc(a.action_id) + '">Jalankan</button>'
+              : '<span class="badge badge--outline">' + (mandate.status === 'active' ? 'Tanpa izin' : 'Tidak aktif') + '</span>');
+          return '<div class="row" style="justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="min-width:0"><div class="small strong mono">' + esc(a.action_id) + ' · ' + esc(a.action_type) + '</div>' +
+              '<div class="tiny muted">ke ' + esc(a.target.display_name) + ' · ' + esc(a.target.masked_address) + '</div></div>' +
+            '<div style="flex:0 0 auto">' + right + '</div></div>';
+        }).join('');
+      }
+
+      function confirmExecute(mandate, action) {
+        var prior = executedRow(mandate, action);
+        if (prior) { ui.toast('Aksi ini sudah dijalankan (' + prior.execution_id + ').', 'info'); return; }
+        var demo = store.mode !== 'live';
+        ui.confirm({
+          title: 'Jalankan ' + action.action_id + '?',
+          confirmLabel: 'Jalankan aksi',
+          subtitle: 'Memakai mandat ' + mandate.mandate_id,
+          body: 'Aksi <b>' + esc(action.action_type) + '</b> ke <b>' + esc(action.target.display_name) + '</b> ' +
+            '(' + esc(action.target.masked_address) + ') akan dijalankan oleh executor setelah mandat divalidasi ulang.<br><br>' +
+            (demo
+              ? '<span class="badge badge--warning">Mode demo</span> Tidak ada panggilan server. Hasilnya hanya dicatat di sesi ini.'
+              : '<span class="badge badge--outline">Adapter mock</span> Executor saat ini memakai adapter mock: pesan dicatat dengan ID bukti, tetapi tidak dikirim ke layanan eksternal.'),
+          extra: '<div class="tiny muted" style="margin-top:10px">Eksekusi yang sama tidak dapat diulang — idempotensi dijaga oleh pasangan mandat + aksi.</div>'
+        }).then(function (r) {
+          if (!r || !r.ok) return;
+          runExecute(mandate, action);
+        });
+      }
+
+      function runExecute(mandate, action) {
+        var key = mandate.mandate_id + ':' + action.action_id;
+        if (store.mode === 'live') {
+          D.api.call('execute_action', { mandate_id: mandate.mandate_id, action_id: action.action_id, execution_key: key })
+            .then(function (res) { recordExecution(mandate, action, res, false); })
+            .catch(function (e) { ui.toast('Eksekusi ditolak: ' + e.message, 'error', 6000); });
+          return;
+        }
+        recordExecution(mandate, action, {
+          execution_id: 'EX-' + (5700 + store.executions.length),
+          result: 'sent',
+          reason_code: null,
+          executed_at: new Date().toISOString(),
+          evidence: { mock_message_id: 'mock_' + Date.now().toString(36) }
+        }, true);
+      }
+
+      function recordExecution(mandate, action, res, simulated) {
+        var result = res.result || 'failed';
+        var ev = res.evidence || {};
+        var evidenceId = ev.mock_message_id || ev.mock_event_id || ev.mock_task_id || '';
+        var at = res.executed_at || new Date().toISOString();
+
+        store.executions.unshift({
+          execution_id: res.execution_id || 'EX-?', plan_id: mandate.plan_id, action_id: action.action_id,
+          mandate_id: mandate.mandate_id, at: at, result: result,
+          adapter: simulated ? 'demo' : 'mcp',
+          detail: evidenceId || res.reason_code || '—', duration_ms: 0
+        });
+        store.audit.unshift({
+          at: at, type: result === 'sent' ? 'action_executed' : 'action_blocked',
+          actor: D.session.user.name, plan_id: mandate.plan_id, mandate_id: mandate.mandate_id,
+          action_id: action.action_id, reason_code: res.reason_code || null,
+          detail: evidenceId || res.reason_code || null
+        });
+
+        if (result === 'sent') {
+          ui.toast('Aksi ' + action.action_id + ' dijalankan' +
+            (simulated ? ' (demo — tidak ada pengiriman nyata)' : ' · bukti ' + evidenceId), 'success', 5200);
+        } else {
+          ui.toast('Aksi diblokir: ' + (res.reason_code || 'tanpa alasan dari server'), 'danger', 7000);
+        }
+
+        drawer.close();
+        D.router.render();
+        openMandate(mandate);
+      }
     }
 
     root.querySelector('#export').addEventListener('click', function () {
@@ -581,6 +703,20 @@
       U.download('dextra-mandat.csv', U.csv(rows));
       ui.toast('Ekspor mandat dibuat.', 'success');
     });
+
+    /* deep link: ?mandate=MND-1234#/mandates opens that mandate, then clears the param
+       so a later visit to /mandates does not reopen it. */
+    var deep = U.qs('mandate', null);
+    if (deep) {
+      try {
+        var url = new URL(location.href);
+        url.searchParams.delete('mandate');
+        history.replaceState(null, '', url.pathname + url.search + url.hash);
+      } catch (e) { /* older browser: the param simply stays */ }
+      var target = store.mandates.filter(function (x) { return x.mandate_id === deep; })[0];
+      if (target) openMandate(target);
+      else ui.toast('Mandat ' + deep + ' tidak ditemukan pada data saat ini.', 'warning');
+    }
   };
 
   /* ---------------- Audit Trail ---------------- */

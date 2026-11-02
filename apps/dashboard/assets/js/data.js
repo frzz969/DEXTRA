@@ -117,6 +117,15 @@
       review: { adversarial: 'pass', policy: 'pass', notes: 'Lingkup sesuai permintaan. Tidak ada penerima eksternal.' }
     },
     {
+      plan_id: 'WP-2042', intent: 'Kirim notulen rapat koordinasi Q4 ke Budi Santoso', status: 'APPROVED',
+      created_at: iso(0, 6, 20), requester: 'Farhan Pratama', specialist: 'ea', risk: 'medium',
+      plan_hash: 'b3f7a1c8e5d2497a6c01', mandate_id: 'MND-1188',
+      actions: [act('a1', 'send_email', 'c_budi_fin', 'Notulen rapat koordinasi Q4',
+        'Halo Pak Budi,\n\nBerikut notulen rapat koordinasi Q4 yang disepakati hari ini.\n\nTerima kasih.', 'medium', iso(0, 9, 0))],
+      findings: [],
+      review: { adversarial: 'pass', policy: 'pass', notes: 'Disetujui manusia. Mandat terbit, eksekusi belum dijalankan.' }
+    },
+    {
       plan_id: 'WP-2040', intent: 'Jadwalkan ulang review anggaran dengan Sari Wulandari ke Kamis pagi', status: 'NEEDS_REVIEW',
       created_at: iso(0, 8, 35), requester: 'Farhan Pratama', specialist: 'ea', risk: 'low',
       plan_hash: '7c2e9d1a4f6b8035e7d2', mandate_id: null,
@@ -239,6 +248,7 @@
 
   /* ---------------- mandates ---------------- */
   var mandates = [
+    { mandate_id: 'MND-1188', plan_id: 'WP-2042', scope: 'send_email · 1 penerima internal', issued_at: iso(0, 6, 40), expires_at: iso(-1, 18, 0), issued_by: 'Farhan Pratama', status: 'active', plan_hash: 'b3f7a1c8e5d2497a6c01', uses: 0, max_uses: 1 },
     { mandate_id: 'MND-1187', plan_id: 'WP-2038', scope: 'archive_documents', issued_at: iso(1, 11, 0), expires_at: iso(-6, 17, 0), issued_by: 'Farhan Pratama', status: 'active', plan_hash: '1f8a6b3c9d0e47258a13', uses: 1, max_uses: 1 },
     { mandate_id: 'MND-1186', plan_id: 'WP-2037', scope: 'send_email · 1 penerima internal', issued_at: iso(1, 9, 20), expires_at: iso(1, 17, 0), issued_by: 'Farhan Pratama', status: 'expired', plan_hash: '3d5c8b1f7a2e9046b8c5', uses: 1, max_uses: 1 },
     { mandate_id: 'MND-1185', plan_id: 'WP-2030', scope: 'send_email · 1 penerima internal', issued_at: iso(4, 10, 5), expires_at: iso(4, 17, 0), issued_by: 'Farhan Pratama', status: 'expired', plan_hash: '4a9c2e6b1f8d0357c2e9', uses: 1, max_uses: 1 },

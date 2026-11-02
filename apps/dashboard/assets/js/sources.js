@@ -58,7 +58,7 @@
 
     { route: '/execution', label: 'Execution History', domain: 'Manajemen kerja', state: 'partial',
       tools: ['get_audit_log'], modules: ['executor', 'replay'],
-      note: 'Riwayat eksekusi dibaca dari audit; tidak ada tool khusus eksekusi.' },
+      note: 'Eksekusi dipicu dari drawer mandat; daftar di sini masih dibaca dari audit.' },
 
     { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'demo',
       tools: [], modules: ['workbuddy'],
@@ -81,8 +81,8 @@
       note: 'Satu plan dengan temuan dan reason code.' },
 
     { route: '/mandates', label: 'Mandates', domain: 'Tata kelola', state: 'live',
-      tools: ['list_mandates', 'get_mandate', 'revoke_mandate'], modules: ['mandate-engine', 'store'],
-      note: 'Daftar dari list_mandates. Pemakaian mandat tidak dilaporkan server, jadi ditampilkan "—".' },
+      tools: ['list_mandates', 'get_mandate', 'execute_action', 'revoke_mandate'], modules: ['mandate-engine', 'executor', 'store'],
+      note: 'Daftar dari list_mandates; eksekusi dan pencabutan dipicu dari drawer mandat.' },
 
     { route: '/audit', label: 'Audit Trail', domain: 'Tata kelola', state: 'live',
       tools: ['get_audit_log'], modules: ['store', 'replay'],

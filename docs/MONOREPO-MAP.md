@@ -99,10 +99,13 @@ Tool MCP yang dipakai dashboard (14): `create_plan`, `execute_action`, `find_pre
 `get_audit_log`, `get_mandate`, `get_org_rules`, `get_plan`, `get_status`, `issue_mandate`,
 `list_mandates`, `list_plans`, `revoke_mandate`, `submit_approval`, `validate_plan`.
 
-Dari 14 tool itu, **11 dipakai** oleh rute dashboard. Tiga sisanya hanya dipanggil di jalur
-server/agen: `find_precedent` (pencarian penerima belum dipakai UI), `issue_mandate` (diterbitkan
-server setelah approval, bukan oleh tombol), dan `execute_action` (eksekusi tidak dipicu dari
-dashboard). Ini tercatat sebagai kesenjangan, bukan disembunyikan.
+Dari 14 tool itu, **12 dipakai** oleh rute dashboard. Dua sisanya hanya dipanggil di jalur
+server/agen: `find_precedent` (pencarian penerima belum dipakai UI) dan `issue_mandate`
+(diterbitkan server setelah approval, bukan oleh tombol). Ini tercatat sebagai kesenjangan,
+bukan disembunyikan.
+
+Eksekusi kini dipicu dari drawer mandat (`execute_action`), jadi rantai
+approve → mandat → eksekusi → audit bisa dijalankan utuh dari UI.
 
 Kesenjangan yang terlihat dari pemetaan itu, dan tidak disembunyikan:
 

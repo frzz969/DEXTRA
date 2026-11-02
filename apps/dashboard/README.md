@@ -24,6 +24,7 @@ Useful query parameters:
 |---|---|---|
 | `role` | `operations_manager` (default), `governance_lead`, `legal_reviewer`, `finance_approver`, `requester`, `auditor`, `org_admin` | Preview the dashboard as another role. Navigation, buttons and gated routes react to it. |
 | `theme` | `light`, `dark` | Force a theme without touching stored preference. |
+| `mandate` | any mandate id | Opens that mandate's drawer on `/mandates`, then clears itself from the URL. |
 
 ## How the references were used
 
@@ -122,8 +123,9 @@ The dashboard never implies a backend call that did not happen.
 
 ## Governance rules enforced in the UI
 
-- Approving a work package issues a mandate; it does **not** execute. The executor validates
-  the mandate separately, and the UI says so.
+- Approving a work package issues a mandate; it does **not** execute. Execution is a separate,
+  explicit step: open the mandate and run the action, which calls `execute_action` against a
+  re-validated mandate.
 - A policy-blocked package renders a disabled approve button **with the blocking findings and
   reason codes shown**, not a silent dead control.
 - Rejection and revision require a written reason. The confirm dialog blocks submission until
