@@ -33,8 +33,8 @@
       note: 'KPI diturunkan dari plan + audit nyata. Tidak ada endpoint agregat.' },
 
     { route: '/assistant', label: 'AI Assistant', domain: 'Operasional', state: 'partial',
-      tools: ['create_plan', 'validate_plan'], modules: ['plan', 'policy-engine', 'contracts'],
-      note: 'Rencana dibuat lewat create_plan + validate_plan. Orkestrasi LLM belum ada di repo ini.' },
+      tools: ['find_precedent', 'create_plan', 'validate_plan'], modules: ['plan', 'policy-engine', 'store', 'contracts'],
+      note: 'Penerima dicari lewat find_precedent; penyusunan rencana masih aturan lokal, bukan model.' },
 
     { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'live',
       tools: ['list_plans'], modules: ['store', 'plan'],
