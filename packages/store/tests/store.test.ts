@@ -120,7 +120,7 @@ describe('repository: execution dedup', () => {
   test('getExecution finds the same record even when execution_key differs', async () => {
     await seed();
     const record: ActionResult = {
-      execution_id: 'exec_001',
+      execution_id: 'exec_001' as never,
       mandate_id: 'mandate_001' as never,
       action_id: 'action_001' as never,
       execution_key: 'key-a',
@@ -136,7 +136,7 @@ describe('repository: execution dedup', () => {
     assert.equal(found.execution_id, 'exec_001');
 
     // Different execution_key must not create a second record.
-    const second: ActionResult = { ...record, execution_id: 'exec_002', execution_key: 'key-b' };
+    const second: ActionResult = { ...record, execution_id: 'exec_002' as never, execution_key: 'key-b' };
     let thrown: unknown;
     try {
       await saveExecution(second);
@@ -154,7 +154,7 @@ describe('repository: audit', () => {
   test('appendAudit rejects sensitive detail keys', async () => {
     await seed();
     const event: AuditEvent = {
-      event_id: 'evt_001',
+      event_id: 'evt_001' as never,
       at: '2026-11-01T10:00:00+07:00',
       type: 'plan_created',
       actor: 'agent',
@@ -165,8 +165,8 @@ describe('repository: audit', () => {
 
   test('listAudit returns append order and persists across calls', async () => {
     await seed();
-    const e1: AuditEvent = { event_id: 'evt_001', at: '2026-11-01T10:00:00+07:00', type: 'plan_created', actor: 'agent', detail: { note: 'first' } };
-    const e2: AuditEvent = { event_id: 'evt_002', at: '2026-11-01T10:01:00+07:00', type: 'plan_validated', actor: 'agent', detail: { note: 'second' } };
+    const e1: AuditEvent = { event_id: 'evt_001' as never, at: '2026-11-01T10:00:00+07:00', type: 'plan_created', actor: 'agent', detail: { note: 'first' } };
+    const e2: AuditEvent = { event_id: 'evt_002' as never, at: '2026-11-01T10:01:00+07:00', type: 'plan_validated', actor: 'agent', detail: { note: 'second' } };
     await appendAudit(e1);
     await appendAudit(e2);
     const list = await listAudit();
@@ -227,7 +227,7 @@ describe('schema validation', () => {
 
     // audit event round-trips through schema
     const auditEvent: AuditEvent = {
-      event_id: 'evt_schema',
+      event_id: 'evt_schema' as never,
       at: '2026-11-01T10:00:00+07:00',
       type: 'plan_created',
       actor: 'agent',
