@@ -91,8 +91,8 @@ yang dipakai, dan modul yang menopangnya. Dokumen ini hanya ringkasannya.
 | Status | Arti | Jumlah |
 |---|---|---|
 | `live` | Bisa menampilkan data server nyata saat MCP hidup | 11 |
-| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 4 |
-| `demo` | Belum ada permukaan backend; data contoh | 5 |
+| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 5 |
+| `demo` | Belum ada permukaan backend; data contoh | 4 |
 | `none` | Bukan rute data (login, forbidden, not-found) | 3 |
 
 Tool MCP yang dipakai dashboard (15): `create_plan`, `execute_action`, `find_precedent`,

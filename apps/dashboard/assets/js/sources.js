@@ -52,9 +52,9 @@
       tools: ['get_plan'], modules: ['plan', 'policy-engine', 'contracts'],
       note: 'Satu plan lengkap dengan hasil validasi kebijakan.' },
 
-    { route: '/board', label: 'Task Board', domain: 'Manajemen kerja', state: 'demo',
-      tools: [], modules: ['plan'],
-      note: 'Pengelompokan kolom dilakukan di klien. Tidak ada status papan di server.' },
+    { route: '/board', label: 'Task Board', domain: 'Manajemen kerja', state: 'partial',
+      tools: ['list_plans'], modules: ['plan', 'store'],
+      note: 'Kartu diturunkan dari plan saat live; kolom mengikuti status. Urutan kartu tidak disimpan server.' },
 
     { route: '/execution', label: 'Execution History', domain: 'Manajemen kerja', state: 'live',
       tools: ['list_executions'], modules: ['executor', 'store', 'replay'],
