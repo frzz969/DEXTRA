@@ -14,7 +14,7 @@ Diperiksa pada: 2 November 2026, worktree `main-dce9c1a5`.
 |---|---|---|
 | TypeScript monorepo (npm workspaces) | ADA | `package.json` → `workspaces: ["packages/*", "apps/*"]` |
 | Domain packages (7) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay |
-| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 14 tool |
+| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 15 tool |
 | Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 23 rute) |
 | WorkBuddy config | ADA | `workbuddy/` — manifest, 4 agen, 5 knowledge |
 | Channel adapter | SEBAGIAN | `apps/telegram-adapter` — post-MVP, satu file `index.ts` |
@@ -90,16 +90,17 @@ yang dipakai, dan modul yang menopangnya. Dokumen ini hanya ringkasannya.
 
 | Status | Arti | Jumlah |
 |---|---|---|
-| `live` | Bisa menampilkan data server nyata saat MCP hidup | 10 |
-| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 5 |
+| `live` | Bisa menampilkan data server nyata saat MCP hidup | 11 |
+| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 4 |
 | `demo` | Belum ada permukaan backend; data contoh | 5 |
 | `none` | Bukan rute data (login, forbidden, not-found) | 3 |
 
-Tool MCP yang dipakai dashboard (14): `create_plan`, `execute_action`, `find_precedent`,
+Tool MCP yang dipakai dashboard (15): `create_plan`, `execute_action`, `find_precedent`,
 `get_audit_log`, `get_mandate`, `get_org_rules`, `get_plan`, `get_status`, `issue_mandate`,
-`list_mandates`, `list_plans`, `revoke_mandate`, `submit_approval`, `validate_plan`.
+`list_executions`, `list_mandates`, `list_plans`, `revoke_mandate`, `submit_approval`,
+`validate_plan`.
 
-Dari 14 tool itu, **13 dipakai** oleh rute dashboard. Satu sisanya hanya dipanggil server:
+Dari 15 tool itu, **14 dipakai** oleh rute dashboard. Satu sisanya hanya dipanggil server:
 `issue_mandate` diterbitkan setelah approval, bukan oleh tombol. Ini tercatat sebagai
 kesenjangan, bukan disembunyikan.
 
@@ -152,7 +153,7 @@ Sampai langkah 2 lulus, menambah stack baru hanya menambah risiko, bukan kemampu
 ls apps packages
 node -e "console.log(Object.keys(require('./package.json').workspaces))"
 
-# 14 tool MCP yang diklaim
+# 15 tool MCP yang diklaim
 grep -o "case '[a-z_]*'" apps/mcp-server/src/handlers.ts
 
 # rute dan statusnya

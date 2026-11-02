@@ -276,7 +276,24 @@
         });
       }).catch(function () { return null; });
 
-      return Promise.all([plansP, mandatesP]).then(function (res) {
+      var executionsP = api.call('list_executions', { limit: 200 }).then(function (d) {
+        return (d.executions || []).map(function (e) {
+          var ev = e.evidence || {};
+          return {
+            execution_id: e.execution_id,
+            plan_id: null, /* filled from the mandate below — the store does not denormalise it */
+            action_id: e.action_id,
+            mandate_id: e.mandate_id,
+            at: e.executed_at,
+            result: e.result,
+            adapter: 'mcp',
+            detail: ev.mock_message_id || ev.mock_event_id || ev.mock_task_id || e.reason_code || '—',
+            duration_ms: 0
+          };
+        });
+      }).catch(function () { return null; });
+
+      return Promise.all([plansP, mandatesP, executionsP]).then(function (res) {
         self.plans = res[0].map(function (p) {
           p.specialist = p.specialist || 'dispatcher';
           p.risk = (p.actions || []).reduce(function (m, a) {
@@ -296,9 +313,18 @@
             .map(function (e) { return { mandate_id: e.mandate_id, plan_id: e.plan_id, scope: 'lihat detail work package', issued_at: e.at, expires_at: null, issued_by: e.actor || '—', status: 'active', plan_hash: e.plan_hash || '', uses: null, max_uses: null }; });
         }
 
-        self.executions = self.audit.filter(function (e) { return e.type === 'action_executed'; }).map(function (e, i) {
-          return { execution_id: 'EX-' + (5500 - i), plan_id: e.plan_id, action_id: e.action_id, mandate_id: e.mandate_id, at: e.at, result: 'sent', adapter: 'mcp', detail: (e.detail && e.detail.mock_message_id) || '—', duration_ms: 0 };
-        });
+        if (res[2]) {
+          var planByMandate = {};
+          self.mandates.forEach(function (m) { planByMandate[m.mandate_id] = m.plan_id; });
+          self.executions = res[2].map(function (e) {
+            e.plan_id = planByMandate[e.mandate_id] || null;
+            return e;
+          });
+        } else {
+          self.executions = self.audit.filter(function (e) { return e.type === 'action_executed'; }).map(function (e, i) {
+            return { execution_id: 'EX-' + (5500 - i), plan_id: e.plan_id, action_id: e.action_id, mandate_id: e.mandate_id, at: e.at, result: 'sent', adapter: 'mcp', detail: (e.detail && e.detail.mock_message_id) || '—', duration_ms: 0 };
+          });
+        }
 
         return api.call('get_org_rules', { org_id: 'org_kenari' }).catch(function () { return null; });
       }).then(function (o) {

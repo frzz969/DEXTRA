@@ -56,9 +56,9 @@
       tools: [], modules: ['plan'],
       note: 'Pengelompokan kolom dilakukan di klien. Tidak ada status papan di server.' },
 
-    { route: '/execution', label: 'Execution History', domain: 'Manajemen kerja', state: 'partial',
-      tools: ['get_audit_log'], modules: ['executor', 'replay'],
-      note: 'Eksekusi dipicu dari drawer mandat; daftar di sini masih dibaca dari audit.' },
+    { route: '/execution', label: 'Execution History', domain: 'Manajemen kerja', state: 'live',
+      tools: ['list_executions'], modules: ['executor', 'store', 'replay'],
+      note: 'Dibaca dari list_executions. Work package diturunkan dari mandat, bukan disimpan di hasil.' },
 
     { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'demo',
       tools: [], modules: ['workbuddy'],

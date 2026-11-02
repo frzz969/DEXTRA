@@ -128,6 +128,36 @@ test('an action outside the mandate is blocked', async () => {
   assert.equal(res.data.result.reason_code, 'ACTION_NOT_ALLOWED');
 });
 
+test('list_executions reflects a real execution, newest first', async () => {
+  const { plan, mandateId } = await approvedPlan();
+  const actionId = plan.actions[0].action_id;
+  await handleTool(
+    'execute_action',
+    { mandate_id: mandateId, action_id: actionId, execution_key: `${mandateId}:${actionId}` },
+    'ops',
+  );
+
+  const all = await handleTool('list_executions', { limit: 200 }, 'ops');
+  assert.equal(all.ok, true);
+  assert.ok(all.data.executions.length > 0);
+
+  const mine = all.data.executions.filter((e: any) => e.mandate_id === mandateId);
+  assert.equal(mine.length, 1);
+  assert.equal(mine[0].result, 'sent');
+  assert.equal(mine[0].action_id, actionId);
+
+  for (let i = 1; i < all.data.executions.length; i += 1) {
+    assert.ok(
+      Date.parse(all.data.executions[i - 1].executed_at) >= Date.parse(all.data.executions[i].executed_at),
+      'executions must be sorted newest first',
+    );
+  }
+
+  const scoped = await handleTool('list_executions', { mandate_id: mandateId, limit: 200 }, 'ops');
+  assert.equal(scoped.ok, true);
+  assert.ok(scoped.data.executions.every((e: any) => e.mandate_id === mandateId));
+});
+
 test('a weak approval token cannot issue a mandate', async () => {
   const created = await handleTool('create_plan', PLAN_ARGS, 'ops');
   const plan = created.data.plan;

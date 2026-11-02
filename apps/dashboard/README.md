@@ -104,7 +104,7 @@ domain, its MCP tool(s), the repo modules that support it, and a state:
 | `demo` | No backend surface exists yet — demo data only, and the UI says so |
 | `none` | Not a data route (login, forbidden, not-found) |
 
-Current split across 23 routes: **10 live · 5 partial · 5 demo · 3 non-data**.
+Current split across 23 routes: **11 live · 4 partial · 5 demo · 3 non-data**.
 
 `/integrations` renders this table in the UI, so the claim can be checked rather than trusted.
 Adding a route means adding an entry there; adding a tool to the MCP server means updating it.

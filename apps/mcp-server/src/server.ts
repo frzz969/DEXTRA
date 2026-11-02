@@ -105,6 +105,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   issue_mandate: 'Issue a mandate after verified approval (service only).',
   execute_action: 'Execute one action under a valid mandate (executor only).',
   revoke_mandate: 'Revoke an active mandate.',
+  list_executions: 'List execution results, newest first. Optional mandate filter and limit.',
   get_status: 'Read execution status for a mandate+action.',
   get_audit_log: 'Read the audit log (dashboard only).',
 };
@@ -122,6 +123,7 @@ const TOOL_SCHEMAS: Record<string, any> = {
   issue_mandate: { type: 'object', properties: { plan_id: { type: 'string' }, approval_id: { type: 'string' } }, required: ['plan_id', 'approval_id'] },
   execute_action: { type: 'object', properties: { mandate_id: { type: 'string' }, action_id: { type: 'string' }, execution_key: { type: 'string' } }, required: ['mandate_id', 'action_id', 'execution_key'] },
   revoke_mandate: { type: 'object', properties: { mandate_id: { type: 'string' } }, required: ['mandate_id'] },
+  list_executions: { type: 'object', properties: { mandate_id: { type: 'string' }, limit: { type: 'number' } } },
   get_status: { type: 'object', properties: { mandate_id: { type: 'string' }, action_id: { type: 'string' } }, required: ['mandate_id', 'action_id'] },
   get_audit_log: { type: 'object', properties: { limit: { type: 'number' } } },
 };
@@ -139,6 +141,7 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
   issue_mandate: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
   execute_action: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
   revoke_mandate: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  list_executions: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_status: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_audit_log: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };

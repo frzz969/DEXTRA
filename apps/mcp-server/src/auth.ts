@@ -32,6 +32,7 @@ export const AGENT_TOOLS = new Set([
   'list_plans',
   'get_mandate',
   'list_mandates',
+  'list_executions',
   'get_status',
 ]);
 
@@ -48,6 +49,7 @@ export const OPS_TOOLS = new Set([
   'issue_mandate',
   'execute_action',
   'revoke_mandate',
+  'list_executions',
   'get_status',
   'get_audit_log',
 ]);

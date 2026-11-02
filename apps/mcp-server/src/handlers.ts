@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -151,6 +151,15 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         detail: { by: 'dashboard' },
       } as any);
       return { ok: true, data: { mandate: revoked } };
+    }
+    case 'list_executions': {
+      const all = await listExecutions();
+      const mandateId = typeof args?.mandate_id === 'string' ? args.mandate_id : null;
+      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const filtered = (mandateId ? all.filter((row) => row.mandate_id === mandateId) : all)
+        .slice()
+        .sort((a, b) => Date.parse(b.executed_at) - Date.parse(a.executed_at));
+      return { ok: true, data: { executions: filtered.slice(0, limit), total: filtered.length } };
     }
     case 'get_status': {
       const ex = await getExecution(args.mandate_id, args.action_id);

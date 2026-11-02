@@ -345,6 +345,10 @@ async function readExecutions(): Promise<ActionResult[]> {
   return readArray(store.executions, ActionResultSchema);
 }
 
+export async function listExecutions(): Promise<ActionResult[]> {
+  return readExecutions();
+}
+
 /**
  * Dedup lookup keyed strictly on `(mandate_id, action_id)`. `execution_key`
  * is ignored, so a client cannot bypass dedup by changing its attempt id.

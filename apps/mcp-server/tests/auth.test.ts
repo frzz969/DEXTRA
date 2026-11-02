@@ -27,12 +27,12 @@ describe('auth scoping', () => {
     }
   });
 
-  test('ops scope sees all 14 tools', () => {
-    assert.equal(OPS_TOOLS.size, 14);
+  test('ops scope sees all 15 tools', () => {
+    assert.equal(OPS_TOOLS.size, 15);
     for (const t of OPS_TOOLS) assert.equal(isAllowed('ops', t), true);
   });
 
-  test('agent scope sees exactly 9 tools', () => {
-    assert.equal(AGENT_TOOLS.size, 9);
+  test('agent scope sees exactly 10 tools', () => {
+    assert.equal(AGENT_TOOLS.size, 10);
   });
 });

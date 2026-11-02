@@ -56,6 +56,10 @@
         columns: [
           { key: 'execution_id', label: 'Eksekusi', width: '110px', render: function (e) { return '<span class="mono faint">' + esc(e.execution_id) + '</span>'; } },
           { key: 'plan_id', label: 'Work package', width: '150px', render: function (e) {
+            if (!e.plan_id) {
+              return '<span class="cell-sub">tidak tercatat</span>' +
+                '<div class="tiny faint">mandat ' + esc(e.mandate_id || '—') + '</div>';
+            }
             var p = store.plan(e.plan_id);
             return '<a href="#/work-packages/' + encodeURIComponent(e.plan_id) + '" class="cell-title" style="color:var(--brand-600)">' + esc(e.plan_id) + '</a>' +
               '<div class="cell-sub truncate" style="max-width:220px">' + esc(p ? p.intent : '—') + '</div>';
@@ -80,13 +84,13 @@
       var r = RESULT[e.result] || RESULT.failed;
       ui.drawer({
         eyebrow: 'Eksekusi ' + e.execution_id,
-        title: e.plan_id + ' · ' + r.label,
+        title: (e.plan_id || e.execution_id) + ' · ' + r.label,
         subtitle: U.fmtDate(e.at),
         body:
           '<div class="banner banner--' + r.tone + '" style="margin-bottom:14px"><span class="material-symbols-outlined">' + r.icon + '</span>' +
           '<div>' + (e.result === 'sent' ? 'Tindakan dijalankan oleh adapter dan bukti ditulis ke audit.' : 'Tidak ada perubahan yang terjadi. Kegagalan tercatat dan mandat tidak terpakai.') + '</div></div>' +
           '<dl class="def-list">' +
-            '<dt>Work package</dt><dd>' + esc(e.plan_id) + '</dd>' +
+            '<dt>Work package</dt><dd>' + esc(e.plan_id || '— (mandat ' + (e.mandate_id || '?') + ')') + '</dd>' +
             '<dt>Intent</dt><dd>' + esc(p ? p.intent : '—') + '</dd>' +
             '<dt>Tindakan</dt><dd class="mono">' + esc(e.action_id) + '</dd>' +
             '<dt>Mandat</dt><dd class="mono">' + esc(e.mandate_id || '—') + '</dd>' +
@@ -97,7 +101,7 @@
           (e.result === 'failed' ? '<div class="banner banner--warning" style="margin-top:14px"><span class="material-symbols-outlined">replay</span><div>Untuk mencoba lagi, ajukan work package baru. Mandat lama tidak dapat dipakai ulang.</div></div>' : '')
         ,
         footer: '<button class="btn btn--secondary" data-dismiss>Tutup</button>' +
-          '<a class="btn btn--primary" href="#/work-packages/' + encodeURIComponent(e.plan_id) + '">Buka work package</a>'
+          (e.plan_id ? '<a class="btn btn--primary" href="#/work-packages/' + encodeURIComponent(e.plan_id) + '">Buka work package</a>' : '')
       });
     }
 
