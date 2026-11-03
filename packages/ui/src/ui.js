@@ -512,7 +512,7 @@
         '<div style="flex:1;min-width:0">' +
           '<div class="row" style="gap:8px;margin-bottom:2px">' +
             '<span class="mono faint" style="font-size:10.5px">' + esc(p.plan_id) + '</span>' +
-            D.statusBadge(p.status) +
+            D.planStatusBadge(p) +
             (risk === 'high' || risk === 'critical' ? D.riskBadge(risk) : '') +
           '</div>' +
           '<div class="small strong truncate" style="color:var(--text)">' + esc(p.intent) + '</div>' +

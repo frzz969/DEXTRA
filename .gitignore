@@ -18,6 +18,7 @@ apps/web/next-env.d.ts
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .venv/
 venv/
