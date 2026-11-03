@@ -8,6 +8,50 @@ import type { Plan, Approval, Mandate } from '../../../packages/contracts/src/in
 import { isAllowed, callerContext, resolvePrincipal, type Scope } from './auth.ts';
 
 /**
+ * Batas halaman, ditegakkan di server.
+ *
+ * 500, bukan 100 seperti di desain: dashboard yang sudah ada meminta 200 untuk
+ * daftar dan 500 untuk audit log. Batas yang lebih rendah akan memotong data
+ * yang hari ini terlihat — perubahan perilaku yang tidak diminta siapa pun.
+ * Explorer meminta 25 per halaman, jadi batas ini tidak pernah mendekat.
+ *
+ * Yang penting bukan angkanya, melainkan bahwa angkanya ada. Tanpa batas,
+ * `limit` dari klien adalah cara memuat seluruh berkas ke memori server.
+ *
+ * Batas yang jujur: ini mencegah satu permintaan yang tak terbatas, bukan
+ * mencegah klien berwenang mengambil 500 baris berulang kali. Yang terakhir
+ * hanya bisa dibatasi oleh autentikasi, bukan oleh angka ini.
+ */
+const MAX_PAGE_LIMIT = 500;
+
+interface PageArgs {
+  limit: number;
+  offset: number;
+  q: string | null;
+  /** `limit < 0` berarti "semua", dipakai hanya oleh pemanggil lama. */
+  unbounded: boolean;
+}
+
+function readPageArgs(args: any, defaultLimit: number): PageArgs {
+  const rawLimit = typeof args?.limit === 'number' ? Math.floor(args.limit) : defaultLimit;
+  const unbounded = rawLimit < 0;
+  const limit = unbounded ? defaultLimit : Math.min(Math.max(rawLimit, 1), MAX_PAGE_LIMIT);
+  const rawOffset = typeof args?.offset === 'number' ? Math.floor(args.offset) : 0;
+  const offset = Math.max(rawOffset, 0);
+  const rawQ = typeof args?.q === 'string' ? args.q.trim().toLowerCase() : '';
+  return { limit, offset, q: rawQ === '' ? null : rawQ, unbounded };
+}
+
+/** Pencocokan substring, case-insensitive, atas nilai yang benar-benar ada. */
+function matchesQuery(q: string, values: Array<string | undefined | null>): boolean {
+  for (const value of values) {
+    if (typeof value === 'string' && value.toLowerCase().includes(q)) return true;
+  }
+  return false;
+}
+
+
+/**
  * Resource scope: a scope grants a *kind* of action, never a *record*.
  *
  * Before this, `execute_action` and `revoke_mandate` looked the mandate up by id
@@ -137,13 +181,39 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       const status = typeof args?.status === 'string' ? args.status : null;
       const requesterId = typeof args?.requester_id === 'string' ? args.requester_id : null;
       const assigneeId = typeof args?.assignee_id === 'string' ? args.assignee_id : null;
-      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const page = readPageArgs(args, 100);
       const filtered = (status ? all.filter((plan) => plan.status === status) : all)
         .filter((plan) => !requesterId || plan.requester_id === requesterId)
         .filter((plan) => !assigneeId || plan.assignee_id === assigneeId)
+        .filter((plan) =>
+          page.q === null
+            ? true
+            : matchesQuery(page.q, [
+                plan.plan_id,
+                plan.intent,
+                plan.request_id,
+                plan.status,
+                plan.requester_id,
+                plan.assignee_id,
+                plan.org_id,
+              ]),
+        )
         .slice()
         .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
-      return { ok: true, data: { plans: filtered.slice(0, limit), total: filtered.length } };
+      /*
+       * Filter dulu, potong kemudian. Urutan sebaliknya adalah bug yang paling
+       * sering terjadi di halaman pencarian: hasilnya hanya benar bila kata
+       * kuncinya kebetulan ada di halaman pertama.
+       */
+      return {
+        ok: true,
+        data: {
+          plans: filtered.slice(page.offset, page.offset + page.limit),
+          total: filtered.length,
+          offset: page.offset,
+          limit: page.limit,
+        },
+      };
     }
     case 'submit_approval': {
       const plan = await getPlan(args.plan_id);
@@ -239,11 +309,30 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'list_mandates': {
       const all = await listMandates();
       const status = typeof args?.status === 'string' ? args.status : null;
-      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const page = readPageArgs(args, 100);
       const filtered = (status ? all.filter((mandate) => mandate.status === status) : all)
+        .filter((mandate) =>
+          page.q === null
+            ? true
+            : matchesQuery(page.q, [
+                mandate.mandate_id,
+                mandate.plan_id,
+                mandate.status,
+                mandate.issued_by,
+                mandate.owner_principal_id,
+              ]),
+        )
         .slice()
         .sort((a, b) => Date.parse(b.issued_at) - Date.parse(a.issued_at));
-      return { ok: true, data: { mandates: filtered.slice(0, limit), total: filtered.length } };
+      return {
+        ok: true,
+        data: {
+          mandates: filtered.slice(page.offset, page.offset + page.limit),
+          total: filtered.length,
+          offset: page.offset,
+          limit: page.limit,
+        },
+      };
     }
     case 'issue_mandate': {
       const plan = await getPlan(args.plan_id);
@@ -323,8 +412,20 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'list_executions': {
       const all = await listExecutions();
       const mandateId = typeof args?.mandate_id === 'string' ? args.mandate_id : null;
-      const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
+      const page = readPageArgs(args, 100);
       const filtered = (mandateId ? all.filter((row) => row.mandate_id === mandateId) : all)
+        .filter((row) =>
+          page.q === null
+            ? true
+            : matchesQuery(page.q, [
+                row.execution_id,
+                row.mandate_id,
+                row.action_id,
+                row.result,
+                row.reason_code,
+                row.execution_key,
+              ]),
+        )
         .slice()
         .sort((a, b) => Date.parse(b.executed_at) - Date.parse(a.executed_at));
       /*
@@ -336,8 +437,10 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return {
         ok: true,
         data: {
-          executions: filtered.slice(0, limit),
+          executions: filtered.slice(page.offset, page.offset + page.limit),
           total: filtered.length,
+          offset: page.offset,
+          limit: page.limit,
           summary: summarizeExecutions(filtered),
         },
       };
@@ -347,15 +450,60 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { execution: ex } };
     }
     case 'get_audit_log': {
-      const limit = typeof args?.limit === 'number' ? args.limit : 50;
+      const page = readPageArgs(args, 50);
       /*
        * One read pass returns the page, the verdict, and the checkpoint
        * comparison. The verdict covers the WHOLE log: a chain that verifies only
        * the last 50 events says nothing about the 51st from the end.
        */
       const { events: all, integrity } = await listAuditWithIntegrity();
-      const page = limit >= 0 ? all.slice(-limit) : all;
-      return { ok: true, data: { events: page, total: all.length, integrity } };
+      /*
+       * Filter pertama, halaman kemudian — dan halaman dihitung dari ekor,
+       * karena log ini ditampilkan terbaru-dulu. `offset` berarti "lewati
+       * sekian event terakhir", sehingga halaman kedua adalah kejadian sebelum
+       * yang sedang dilihat.
+       */
+      const filtered =
+        page.q === null
+          ? all
+          : all.filter((event) =>
+              matchesQuery(page.q as string, [
+                event.event_id,
+                event.type,
+                event.actor,
+                event.plan_id,
+                event.mandate_id,
+                event.action_id,
+                event.reason_code,
+                /*
+                 * Kunci detail ikut dicari, bukan hanya nilainya: "cari semua
+                 * event yang punya field `reason`" adalah pertanyaan yang wajar,
+                 * dan kuncinya sudah dijamin bebas data sensitif oleh
+                 * `assertNoSensitiveDetail` saat ditulis.
+                 */
+                ...Object.entries(event.detail).flatMap(([key, value]) => [key, value]),
+              ]),
+            );
+
+      if (page.unbounded) {
+        return { ok: true, data: { events: filtered, total: filtered.length, scanned: all.length, integrity } };
+      }
+
+      const end = Math.max(0, filtered.length - page.offset);
+      const start = Math.max(0, end - page.limit);
+      return {
+        ok: true,
+        data: {
+          events: filtered.slice(start, end),
+          total: filtered.length,
+          /* Berapa banyak event yang benar-benar dibaca. `total` adalah hasil
+             filter; `scanned` adalah ukuran log. Dua angka, dua arti. */
+          scanned: all.length,
+          offset: page.offset,
+          limit: page.limit,
+          integrity,
+        },
+      };
     }
     case 'list_alerts': {
       /*

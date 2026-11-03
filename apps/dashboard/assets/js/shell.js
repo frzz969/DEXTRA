@@ -21,7 +21,8 @@
       { path: '/workforce', title: 'Workforce', icon: 'groups', view: 'workforce', cap: 'view_all', desc: 'Roster spesialis dari berkas definisi agen' }
     ]},
     { group: 'Intelligence', items: [
-      { path: '/analytics', title: 'Analytics', icon: 'query_stats', view: 'analytics', cap: 'view_all', desc: 'Ringkasan eksekusi yang benar-benar terukur' }
+      { path: '/analytics', title: 'Analytics', icon: 'query_stats', view: 'analytics', cap: 'view_all', desc: 'Ringkasan eksekusi yang benar-benar terukur' },
+      { path: '/explorer', title: 'Data Explorer', icon: 'travel_explore', view: 'explorer', cap: 'view_all', desc: 'Cari dan telusuri rekaman yang tersimpan, satu entitas per permintaan' }
     ]},
     { group: 'Governance', items: [
       { path: '/approvals', title: 'Approval Inbox', icon: 'assignment_turned_in', view: 'approvals', cap: 'approve', desc: 'Menunggu keputusan manusia', count: 'awaiting' },

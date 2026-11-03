@@ -42,7 +42,7 @@ const ROUTES = [
   '/overview', '/requests', '/my-work', '/board', '/work-packages',
   '/execution', '/workforce', '/approvals', '/review', '/mandates',
   '/audit', '/policies', '/permissions', '/settings', '/assistant', '/integrations',
-  '/analytics', '/security',
+  '/analytics', '/security', '/explorer',
 ];
 
 const CHROME_CANDIDATES = [
@@ -479,6 +479,65 @@ async function main() {
         failures.push('/security: tidak menyatakan bahwa ini bukan pemantauan real-time');
       }
       console.log(`ok     /security: integritas ok=${security.integrity ? security.integrity.ok : '?'}, terverifikasi ${security.integrity ? security.integrity.verified : '?'}, unchained ${security.integrity ? security.integrity.unchained : '?'}, checkpoint ${security.integrity ? security.integrity.checkpoint_status : '?'}`);
+    }
+
+    /*
+     * Data Explorer: halaman harus menampilkan baris yang benar-benar ada di
+     * server, dan pencarian harus dijalankan server.
+     *
+     * Yang diuji di sini bukan "halaman terbuka", melainkan dua hal yang mudah
+     * salah: (1) tabel memuat plan yang baru dibuat rantai tadi, dan (2) kata
+     * kunci yang tidak cocok menghasilkan "tidak ada", bukan halaman penuh
+     * berisi baris yang tidak relevan.
+     */
+    cdp.reset();
+    await cdp.evaluate(`location.hash = '#/explorer'; 'ok'`);
+    await sleep(1400);
+    const explorer = await cdp.evaluate(`(function () {
+      var root = document.getElementById('view-root');
+      var text = root ? root.textContent.replace(/\\s+/g, ' ') : '';
+      var rows = Array.from(document.querySelectorAll('#ex-body tbody tr'));
+      return {
+        rows: rows.length,
+        hasPlan: text.indexOf(${JSON.stringify(chain.planId)}) >= 0,
+        hasTotal: /total=\\d+/.test(text),
+        total: (text.match(/total=(\\d+)/) || [])[1] || null
+      };
+    })()`);
+
+    if (explorer.rows < 1) {
+      failures.push('/explorer: tabel kosong padahal baru ada plan yang dieksekusi');
+    }
+    if (!explorer.hasPlan) {
+      failures.push(`/explorer: plan ${chain.planId} tidak muncul di tabel`);
+    }
+    if (!explorer.hasTotal) {
+      failures.push('/explorer: tidak menampilkan total dari server');
+    }
+    console.log(`ok     /explorer: ${explorer.rows} baris, total ${explorer.total} dari server, memuat plan ${explorer.hasPlan}`);
+
+    const explorerSearch = await cdp.evaluate(`(function () {
+      var input = document.getElementById('ex-q');
+      if (!input) return { ok: false, reason: 'input pencarian tidak ada' };
+      input.value = 'zzz-tidak-ada-xyz';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return { ok: true };
+    })()`);
+    if (!explorerSearch.ok) {
+      failures.push('/explorer: ' + explorerSearch.reason);
+    }
+    await sleep(1400);
+    const noHit = await cdp.evaluate(`(function () {
+      var text = (document.getElementById('view-root') || {}).textContent || '';
+      return {
+        empty: /Tidak ada yang cocok/.test(text),
+        rows: document.querySelectorAll('#ex-body tbody tr').length
+      };
+    })()`);
+    if (!noHit.empty || noHit.rows > 0) {
+      failures.push(`/explorer: pencarian tanpa hasil menampilkan ${noHit.rows} baris — filter tidak dijalankan server`);
+    } else {
+      console.log('ok     /explorer: kata kunci tanpa hasil menghasilkan keadaan kosong, bukan halaman penuh');
     }
 
     /*

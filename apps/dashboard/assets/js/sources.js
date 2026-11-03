@@ -124,6 +124,14 @@
         { id: 'an.latency', label: 'Seberapa cepat eksekusinya?', kind: 'answer', compute: 'executionStats' }
       ] },
 
+    { route: '/explorer', label: 'Data Explorer', domain: 'Intelligence', state: 'live',
+      tools: ['list_plans', 'list_mandates', 'list_executions', 'get_audit_log'], modules: ['store'],
+      note: 'Pencarian dan paginasi dijalankan server (q, offset, limit). Tidak ada satu pencarian gabungan: empat entitas, empat tool, empat total. Approval dan Worker tidak dapat dicari karena tidak ada tool baca berpaginasi untuk keduanya — dan menyaring snapshot dashboard lalu menyebutnya pencarian akan menyesatkan.',
+      intents: [
+        { id: 'ex.find', label: 'Cari plan atau mandat tertentu', kind: 'answer', compute: 'explorerHint' },
+        { id: 'ex.limit', label: 'Kenapa hanya sebagian data yang tampil?', kind: 'answer', compute: 'explorerLimit' }
+      ] },
+
     { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'live',
       tools: ['list_specialists'], modules: ['workbuddy', 'store'],
       note: 'Roster dibaca dari workbuddy/agents/*.md lewat list_specialists. Hanya field yang benar-benar ada di berkas yang ditampilkan: nama, peran, batas, tool. Beban kerja tidak ditampilkan karena plan tidak menyimpan spesialis.',

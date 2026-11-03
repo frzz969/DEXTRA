@@ -358,6 +358,29 @@
     });
   };
 
+  computes.explorerHint = function () {
+    return res({
+      title: 'Pencarian dijalankan server, per entitas',
+      body: [
+        'Data Explorer tidak mengunduh seluruh basis data lalu menyaring di peramban. Setiap kata kunci menjadi satu permintaan ke server, dan server yang memutuskan apa yang cocok.',
+        'Hasilnya ditampilkan per entitas — Plan, Mandate, Execution, Audit — karena masing-masing punya tool baca sendiri. Tidak ada satu daftar gabungan berperingkat, sebab tidak ada yang menghitung peringkat itu.'
+      ],
+      actions: [{ label: 'Buka Data Explorer', path: '/explorer' }],
+      note: 'Approval dan Worker tidak dapat dicari: tidak ada tool baca berpaginasi untuk keduanya.'
+    });
+  };
+
+  computes.explorerLimit = function () {
+    return res({
+      title: 'Kenapa hanya sebagian data yang tampil',
+      body: [
+        'Setiap halaman berisi 25 baris, dan angka "total" di bawah tabel datang dari server — bukan dari panjang halaman. Jadi bila tertulis "total 30", artinya server punya 30 baris yang cocok, bukan 25 yang terlihat.',
+        'Batas satu permintaan ditegakkan server (500 baris). Tanpa batas, parameter `limit` dari klien menjadi cara memuat seluruh berkas ke memori.'
+      ],
+      note: 'Pencarian mencakup seluruh isi penyimpanan, bukan hanya baris yang sedang tampil.'
+    });
+  };
+
   computes.specialists = function () {
     if (D.store.mode !== 'live') {
       return res({

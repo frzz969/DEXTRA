@@ -1,6 +1,8 @@
 # Desain — Data Explorer
 
-Status: **desain, belum diimplementasikan.**
+Status: **diimplementasikan 2026-11-03** (`/explorer`, `q`/`offset` pada empat
+tool baca). §1–8 adalah kontrak yang disetujui sebelum kode ditulis; §9 mencatat
+apa yang berubah saat implementasi dan alasannya.
 Disusun dari struktur data aktual di repo, bukan dari asumsi.
 
 ## 1. Entitas yang benar-benar ada
@@ -128,3 +130,61 @@ Aturan tampilan:
 - Detail record menampilkan relasi yang ada dan menyatakan yang tidak ada.
 - Tidak ada satu pun nilai yang ditampilkan tanpa asal di data.
 - E2E: halaman memuat data nyata setelah rantai create→approve→execute.
+
+## 9. Yang berubah saat implementasi, dan alasannya
+
+**1. `q` diberikan ke keempat tool, bukan hanya `list_plans` dan `get_audit_log`.**
+Tabel di §3 hanya memberi `q` ke dua tool, tetapi §4 menyatakan Explorer
+"menjalankan hingga 5 query paralel dengan `q` yang sama". Keduanya tidak bisa
+benar bersamaan: kalau mandate dan execution tidak menerima `q`, tab-nya akan
+menampilkan seluruh isi sementara tab lain tersaring — dan pengguna membaca itu
+sebagai "tidak ada mandat yang cocok". Parameter ini aditif dan opsional, jadi
+pemanggil lama tidak berubah.
+
+**2. `before` diganti `offset` pada `get_audit_log`.** Satu mekanisme untuk
+keempat entitas lebih mudah diuji dan tidak menyiratkan apa pun tentang
+konsistensi snapshot — keberatan yang sudah ditulis di §4. `offset` dihitung
+dari ekor, karena log ditampilkan terbaru-dulu.
+
+**3. Batas halaman 500, bukan 100.** Dashboard yang sudah ada meminta 200 untuk
+daftar dan 500 untuk audit log. Batas 100 akan memotong data yang hari ini
+terlihat — regresi yang tidak diminta siapa pun. Explorer meminta 25, jadi batas
+ini tidak pernah mendekat. Batas yang jujur: ini mencegah satu permintaan tak
+terbatas, bukan mencegah klien berwenang mengambil 500 baris berulang kali.
+
+**4. Approval dan Worker tidak ada di Explorer.** Tidak ada `list_approvals`,
+dan `list_specialists` membaca berkas roster tanpa pencarian. Menampilkan
+keduanya berarti menyaring snapshot dashboard lalu menyebutnya "pencarian" —
+hasilnya bergantung pada berapa baris yang kebetulan sudah dimuat. Alasan itu
+ditulis di halaman, bukan disembunyikan. Jejak approval tetap bisa dilihat lewat
+detail plan: event `approval_*` dan `mandate_*` di audit log, dengan label bahwa
+itu jejak, bukan record approval.
+
+**5. Pencarian audit mencakup kunci `detail`, bukan hanya nilainya.** "Cari
+semua event yang punya field `reason`" adalah pertanyaan wajar, dan kuncinya
+sudah dijamin bebas data sensitif oleh `assertNoSensitiveDetail` saat ditulis.
+
+**6. `total` dan `scanned` adalah dua angka berbeda.** `total` = jumlah hasil
+filter; `scanned` = ukuran seluruh log yang dibaca untuk verdict integritas.
+Menyatukannya akan membuat "total" berubah arti tergantung ada tidaknya kata
+kunci.
+
+### Temuan selama implementasi
+
+`create_plan` **tidak menulis event audit apa pun**. `plan_created` ada di
+`AuditEventTypeSchema` tetapi belum ada yang menghasilkannya — kontrak tanpa
+produsen. Tidak diperbaiki di sini karena di luar lingkup Explorer dan akan
+mengubah isi audit log yang dilihat halaman lain; dicatat supaya tidak hilang.
+
+### Bukti
+
+- `apps/mcp-server/tests/explorer-query.test.ts` (13 tes): total vs panjang
+  halaman, offset tanpa tumpang tindih, pencarian menemukan baris yang TIDAK ada
+  di halaman pertama, pencarian tidak peka huruf besar-kecil, batas limit
+  ditegakkan server, offset melewati akhir data, audit dipaginasi dari ekor, dan
+  integritas tetap dihitung atas seluruh log meski halaman berisi 2 event.
+- Kontrol negatif: mematikan `q` di server membuat 4 tes gagal, termasuk
+  "pencarian menemukan baris yang tidak ada di halaman pertama".
+- E2E: `/explorer` memuat plan hasil rantai create→approve→execute, `total` dari
+  server, dan kata kunci tanpa hasil menghasilkan keadaan kosong — bukan halaman
+  penuh berisi baris yang tidak relevan.
