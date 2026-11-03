@@ -233,8 +233,8 @@ python -m pytest tests -q
 # salinan package tidak menyimpang dari sumber kanonik (gagal = exit 1)
 node scripts/verify-packages.mjs
 
-# legacy benar-benar diabaikan Git (harus mengembalikan sebuah baris ignore, bukan kosong)
-git check-ignore -v apps/dashboard-legacy/README.md
+# keadaan runtime tidak ikut ter-commit (harus mengembalikan sebuah baris ignore)
+git check-ignore -v data/audit.checkpoint.json data/*.lock
 ```
 
 Kalau salah satu perintah di atas hasilnya berbeda dari tabel di dokumen ini, dokumen ini

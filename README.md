@@ -46,10 +46,6 @@ dextra/
 └── stitch-ref/             # Referensi desain (bukan kode produksi)
 ```
 
-`apps/dashboard-legacy/` (14 halaman HTML lama) **tidak ada di repo ini** — folder itu
-di-ignore Git dan hanya ada di mesin yang membuatnya. Isinya masih bisa diambil dari
-commit sebelum `a1ecbd3`.
-
 ## Menjalankan
 
 Butuh **Node.js >= 20** (dipakai untuk `--experimental-strip-types`, jadi tanpa langkah build).

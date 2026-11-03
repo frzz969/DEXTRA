@@ -10,6 +10,11 @@
 > jadi rujukan seperti §20/§27/§33/§34/§35 tidak lagi menunjuk ke isi yang sama.
 > Dokumen ini **tidak** ditulis ulang agar catatan historisnya tidak berubah; versi PRD
 > v1.4.0 tetap bisa diambil dari riwayat git.
+>
+> Path `apps/dashboard-legacy/...` pada temuan **D-03** dan **D-04** merujuk pada build
+> dashboard sebelum rewrite. Folder itu tidak pernah di-commit dan sudah dihapus pada
+> 3 November 2026, jadi path tersebut tidak bisa dibuka lagi. Temuannya sendiri tidak
+> diubah — yang hilang hanya alamat berkasnya, bukan catatannya.
 
 ---
 

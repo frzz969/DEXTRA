@@ -5,9 +5,6 @@
 .DS_Store
 Thumbs.db
 
-# Dashboard lama (14 halaman HTML sebelum rewrite) — arsip lokal, tidak di-commit
-apps/dashboard-legacy/
-
 # Data kerja agen (catatan sesi lokal), bukan bagian dari produk
 .workbuddy-ai/
 
