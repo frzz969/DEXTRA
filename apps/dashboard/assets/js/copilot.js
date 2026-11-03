@@ -316,14 +316,42 @@
   };
 
   computes.executionStats = function () {
+    /*
+     * Use the server's summary when it is there. It is computed over every
+     * record; deriving from `store.executions` means deriving from one page of
+     * them.
+     *
+     * This function used to count `result === 'success' || 'ok'`, but the
+     * contract's statuses are 'sent' | 'blocked' | 'failed' | 'queued'. It
+     * therefore reported zero successes for every dataset, forever, and looked
+     * like a working answer while doing it.
+     */
+    var s = D.store.executionSummary;
+    if (s) {
+      return res({
+        title: 'Rekap eksekusi',
+        rows: [
+          { label: 'Total', value: String(s.total) },
+          { label: 'Berhasil', value: String(s.by_result.sent) },
+          { label: 'Diblokir', value: String(s.by_result.blocked) },
+          { label: 'Gagal', value: String(s.by_result.failed) },
+          { label: 'Latensi p50', value: s.latency.p50_ms === null ? 'tidak diukur' : s.latency.p50_ms + ' ms' }
+        ],
+        body: [
+          s.success_rate === null ? 'Belum ada eksekusi untuk dihitung.' : 'Tingkat keberhasilan ' + (s.success_rate * 100).toFixed(1) + '%.',
+          s.tokens.measured === 0 ? 'Pemakaian token belum terukur: adapter yang berjalan tidak memanggil model.' : s.tokens.measured + ' eksekusi melaporkan token.'
+        ]
+      });
+    }
+
     var rows = D.store.executions;
-    var ok = rows.filter(function (e) { return e.result === 'success' || e.result === 'ok'; }).length;
+    var sent = rows.filter(function (e) { return e.result === 'sent'; }).length;
     var unknown = rows.filter(function (e) { return !e.result; }).length;
     return res({
       title: 'Rekap eksekusi',
       rows: [
         { label: 'Total', value: String(rows.length) },
-        { label: 'Berhasil', value: String(ok) },
+        { label: 'Berhasil', value: String(sent) },
         { label: 'Hasil tidak dilaporkan', value: String(unknown) }
       ],
       body: unknown ? ['Sebagian baris hanya punya event audit, tanpa record hasil. Saya tidak menghitungnya sebagai berhasil.'] : []

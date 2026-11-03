@@ -42,6 +42,7 @@ const ROUTES = [
   '/overview', '/requests', '/my-work', '/board', '/work-packages',
   '/execution', '/workforce', '/approvals', '/review', '/mandates',
   '/audit', '/policies', '/permissions', '/settings', '/assistant', '/integrations',
+  '/analytics',
 ];
 
 const CHROME_CANDIDATES = [
@@ -404,6 +405,42 @@ async function main() {
         failures.push(`/board: ${board.fabricated} kartu berlabel "Workforce Dispatcher" — atribusi yang tidak ada di data`);
       }
       console.log(`ok     /board: ${board.count} kartu, ${board.unassigned} "tanpa penugasan", ${board.fabricated} atribusi karangan`);
+
+      /*
+       * /analytics harus menampilkan angka dari server, dan harus menandai apa
+       * yang BELUM terukur. Adapter yang berjalan tidak memanggil model, jadi
+       * token dan biaya wajib kosong — kalau halaman mengaku mengukurnya, itu
+       * angka karangan dan tes ini yang menangkapnya.
+       */
+      cdp.reset();
+      await cdp.evaluate(`location.hash = '#/analytics'; 'ok'`);
+      await sleep(1200);
+      const analytics = await cdp.evaluate(`(function () {
+        var root = document.getElementById('view-root');
+        var text = root ? root.textContent.replace(/\\s+/g, ' ') : '';
+        return {
+          text: text.slice(0, 400),
+          hasUnmeasured: /tidak diukur/i.test(text),
+          summary: window.DEXTRA.store.executionSummary
+        };
+      })()`);
+      if (!analytics.summary) {
+        failures.push('/analytics: ringkasan eksekusi tidak diterima dari server');
+      } else {
+        if (analytics.summary.total < 1) {
+          failures.push('/analytics: total 0 padahal baru ada eksekusi');
+        }
+        if (analytics.summary.tokens.measured !== 0) {
+          failures.push(`/analytics: ${analytics.summary.tokens.measured} baris mengaku mengukur token, padahal adapter tiruan tidak memanggil model`);
+        }
+        if (analytics.summary.latency.measured < 1) {
+          failures.push('/analytics: latensi tidak terukur padahal executor wajib mengukurnya');
+        }
+      }
+      if (!analytics.hasUnmeasured) {
+        failures.push('/analytics: tidak menandai angka yang belum terukur (token/biaya tampil seolah hasil)');
+      }
+      console.log(`ok     /analytics: total ${analytics.summary ? analytics.summary.total : '?'}, latensi terukur ${analytics.summary ? analytics.summary.latency.measured : '?'}, token terukur ${analytics.summary ? analytics.summary.tokens.measured : '?'}`);
     }
 
     /*

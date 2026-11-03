@@ -339,6 +339,7 @@
   var store = {
     mode: 'demo',
     plans: [], mandates: [], audit: [], executions: [], policies: [], org: null,
+    executionSummary: null,
     users: [], roles: [], specialists: [], integrations: [], notifications: [], board: [],
     contacts: [], capabilities: [], permMatrix: {}, assistantThread: [],
     overlay: {}, // local prototype mutations (demo only), keyed by plan id
@@ -402,6 +403,13 @@
       }).catch(function () { return null; });
 
       var executionsP = api.call('list_executions', { limit: 200 }).then(function (d) {
+        /*
+         * The server computes the summary over the whole filtered set, not over
+         * the page it returned. Recomputing it here from the 200 rows we asked
+         * for would silently change every number the moment the dataset grows
+         * past the limit.
+         */
+        self.executionSummary = d.summary || null;
         return (d.executions || []).map(function (e) {
           var ev = e.evidence || {};
           return {
@@ -413,7 +421,10 @@
             result: e.result,
             adapter: 'mcp',
             detail: ev.mock_message_id || ev.mock_event_id || ev.mock_task_id || e.reason_code || '—',
-            duration_ms: 0
+            /* Was hardcoded 0 — a duration the server never measured. Now the
+             * executor's real measurement, or null when the record predates it. */
+            duration_ms: e.usage ? e.usage.latency_ms : null,
+            usage: e.usage || null
           };
         });
       }).catch(function () { return null; });

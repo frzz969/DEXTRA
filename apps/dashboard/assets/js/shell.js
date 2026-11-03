@@ -20,6 +20,9 @@
     { group: 'Workforce', items: [
       { path: '/workforce', title: 'Workforce', icon: 'groups', view: 'workforce', cap: 'view_all', desc: 'Roster spesialis dari berkas definisi agen' }
     ]},
+    { group: 'Intelligence', items: [
+      { path: '/analytics', title: 'Analytics', icon: 'query_stats', view: 'analytics', cap: 'view_all', desc: 'Ringkasan eksekusi yang benar-benar terukur' }
+    ]},
     { group: 'Governance', items: [
       { path: '/approvals', title: 'Approval Inbox', icon: 'assignment_turned_in', view: 'approvals', cap: 'approve', desc: 'Menunggu keputusan manusia', count: 'awaiting' },
       { path: '/review', title: 'Review & Validation', icon: 'fact_check', view: 'reviewQueue', cap: 'view_all', desc: 'Tinjau rencana, lingkup, dan hasil' },

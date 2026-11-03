@@ -108,6 +108,14 @@
         { id: 'ex.count', label: 'Berapa yang berhasil dan gagal?', kind: 'answer', compute: 'executionStats' }
       ] },
 
+    { route: '/analytics', label: 'Analytics', domain: 'Intelligence', state: 'live',
+      tools: ['list_executions'], modules: ['executor', 'store'],
+      note: 'Ringkasan dihitung server dari rekaman eksekusi (summary pada list_executions), bukan di browser dan bukan dari potongan halaman. Latensi terukur; token dan biaya bernilai null selama adapter masih tiruan.',
+      intents: [
+        { id: 'an.success', label: 'Berapa tingkat keberhasilan?', kind: 'answer', compute: 'executionStats' },
+        { id: 'an.latency', label: 'Seberapa cepat eksekusinya?', kind: 'answer', compute: 'executionStats' }
+      ] },
+
     { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'live',
       tools: ['list_specialists'], modules: ['workbuddy', 'store'],
       note: 'Roster dibaca dari workbuddy/agents/*.md lewat list_specialists. Hanya field yang benar-benar ada di berkas yang ditampilkan: nama, peran, batas, tool. Beban kerja tidak ditampilkan karena plan tidak menyimpan spesialis.',
