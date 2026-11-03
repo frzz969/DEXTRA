@@ -25,7 +25,7 @@
  *   DEXTRA_E2E_PORT port dashboard (default 8899)
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -171,20 +171,42 @@ async function main() {
     return 0;
   }
 
-  /* Server yang sudah jalan dipakai ulang; yang belum, dinyalakan sendiri lalu
-     dimatikan lagi. Tanpa ini, `npm run test:e2e` akan bertabrakan dengan sesi
-     pengembangan yang sedang terbuka. */
+  /*
+   * Uji ini memiliki servernya sendiri, dan datanya sendiri.
+   *
+   * Sebelumnya server pengembangan yang sedang jalan dipakai ulang. Dua akibat:
+   * setiap kali uji dijalankan, `data/plans.json` dan kawan-kawan ikut berubah —
+   * jadi commit membawa `plan_e2e_*` palsu dan `git status` selamanya kotor; dan
+   * ketika dua proses menulis berkas yang sama, uji gagal dengan
+   * "EPERM ... plans.json.tmp" yang tidak ada hubungannya dengan kode.
+   *
+   * Data disalin ke direktori sementara lewat DEXTRA_DATA_DIR, sehingga uji tidak
+   * pernah menyentuh `data/` di repo. Port yang sudah terpakai dilaporkan
+   * terang-terangan: memakai server asing berarti menguji kode yang belum tentu
+   * yang sedang diubah.
+   */
+  if (await probe(`http://127.0.0.1:${MCP_PORT}/health`)) {
+    console.error(`GAGAL: port ${MCP_PORT} sudah dipakai. Hentikan server MCP lain dulu — uji ini menjalankan servernya sendiri.`);
+    return 1;
+  }
+  if (await probe(`http://127.0.0.1:${DASH_PORT}/`)) {
+    console.error(`GAGAL: port ${DASH_PORT} sudah dipakai. Hentikan dashboard lain dulu.`);
+    return 1;
+  }
+
+  const dataDir = mkdtempSync(join(tmpdir(), 'dextra-e2e-data-'));
+  for (const name of readdirSync(join(ROOT, 'data'))) {
+    const src = join(ROOT, 'data', name);
+    if (statSync(src).isFile()) copyFileSync(src, join(dataDir, name));
+  }
+
   const spawned = [];
-  if (!(await probe(`http://127.0.0.1:${MCP_PORT}/health`))) {
-    spawned.push(track(spawn(process.execPath, ['--experimental-strip-types', 'apps/mcp-server/src/index.ts'], {
-      cwd: ROOT, stdio: 'ignore',
-    })));
-  }
-  if (!(await probe(`http://127.0.0.1:${DASH_PORT}/`))) {
-    spawned.push(track(spawn(process.execPath, ['scripts/serve-dashboard.mjs'], {
-      cwd: ROOT, stdio: 'ignore', env: { ...process.env, DEXTRA_DASHBOARD_PORT: String(DASH_PORT) },
-    })));
-  }
+  spawned.push(track(spawn(process.execPath, ['--experimental-strip-types', 'apps/mcp-server/src/index.ts'], {
+    cwd: ROOT, stdio: 'ignore', env: { ...process.env, DEXTRA_DATA_DIR: dataDir },
+  })));
+  spawned.push(track(spawn(process.execPath, ['scripts/serve-dashboard.mjs'], {
+    cwd: ROOT, stdio: 'ignore', env: { ...process.env, DEXTRA_DASHBOARD_PORT: String(DASH_PORT) },
+  })));
   await waitFor('server MCP', `http://127.0.0.1:${MCP_PORT}/health`);
   await waitFor('dashboard', `http://127.0.0.1:${DASH_PORT}/`);
   console.log(`ok     server siap (MCP ${MCP_PORT}, dashboard ${DASH_PORT})`);
@@ -269,25 +291,168 @@ async function main() {
       }
     }
 
-    /* Regresi A1: kartu tidak boleh diatribusikan ke agen yang tidak ada. */
+    /*
+     * Regresi A1 diperiksa SETELAH rantai tata kelola, bukan sebelum: data seed
+     * `data/plans.json` kosong, jadi papan sebelum ada plan selalu 0 kartu dan
+     * pemeriksaan atribusi menjadi hampa — hijau tanpa pernah memeriksa satu
+     * kartu pun. Setelah rantai berjalan minimal ada satu kartu nyata.
+     */
+
+    /*
+     * Rantai tata kelola: create -> approve -> mandate -> execute.
+     *
+     * Dijalankan lewat klien yang dipakai aplikasi (`DEXTRA.api`), bukan curl,
+     * supaya yang diuji adalah jalur yang benar-benar dilalui pengguna. Setelah
+     * itu UI harus mencerminkan hasilnya — server yang bekerja tetapi layar yang
+     * tidak berubah tetap kegagalan.
+     */
     cdp.reset();
-    await cdp.evaluate(`location.hash = '#/board'; 'ok'`);
-    await sleep(900);
-    const board = await cdp.evaluate(`(function () {
-      var cards = Array.from(document.querySelectorAll('.kcard'));
+    const chain = await cdp.evaluate(`(async function () {
+      var api = window.DEXTRA.api;
+      var stamp = Date.now().toString(36);
+      try {
+        var created = await api.call('create_plan', {
+          org_id: 'org_kenari',
+          request_id: 'req_e2e_' + stamp,
+          intent: 'E2E: kirim ringkasan ke Budi',
+          actions: [{
+            action_type: 'send_email',
+            target: { contact_id: 'c_budi_fin', display_name: 'Budi Santoso', channel: 'email', masked_address: 'b***@kenari.co.id' },
+            schedule: { start_at: '2026-11-05T09:00:00+07:00', timezone: 'Asia/Jakarta', all_day: false },
+            content: { subject: 'E2E', body: 'E2E body', locale: 'id-ID' }
+          }]
+        });
+        var plan = created.plan;
+        var appr = await api.call('submit_approval', {
+          plan_id: plan.plan_id,
+          plan_hash: plan.plan_hash,
+          decision: 'approve',
+          approval_token: 'apt_e2e_' + stamp
+        });
+        var exec = await api.call('execute_action', {
+          mandate_id: appr.mandate_id,
+          action_id: plan.actions[0].action_id,
+          execution_key: 'ek_e2e_' + stamp
+        });
+        return { planId: plan.plan_id, planStatus: plan.status, mandateId: appr.mandate_id, result: exec.result.result, reason: exec.result.reason_code || null };
+      } catch (e) {
+        return { error: (e && e.message) || String(e) };
+      }
+    })()`);
+
+    if (chain.error) {
+      failures.push(`rantai tata kelola gagal: ${chain.error}`);
+      console.log('gagal  rantai create -> approve -> execute');
+    } else {
+      if (chain.result !== 'sent') {
+        failures.push(`rantai tata kelola: hasil eksekusi "${chain.result}" (${chain.reason || 'tanpa alasan'}), bukan "sent"`);
+      }
+      console.log(`ok     rantai: ${chain.planId} -> ${chain.mandateId} -> ${chain.result}`);
+
+      /* Audit harus mencatat eksekusi, bukan hanya menerima permintaan. */
+      cdp.reset();
+      await cdp.evaluate(`location.hash = '#/audit'; 'ok'`);
+      await sleep(1200);
+      const audit = await cdp.evaluate(`(function () {
+        var root = document.getElementById('view-root');
+        var text = root ? root.textContent : '';
+        return { hasPlan: text.indexOf(${JSON.stringify(chain.planId)}) >= 0, len: text.replace(/\\s+/g, ' ').trim().length };
+      })()`);
+      if (!audit.hasPlan) {
+        failures.push(`/audit tidak menampilkan plan ${chain.planId} yang baru dieksekusi`);
+      }
+      console.log(`ok     /audit memuat ${chain.planId}: ${audit.hasPlan}`);
+
+      /* Halaman eksekusi harus menyatakan hasil yang sama dengan server. */
+      cdp.reset();
+      await cdp.evaluate(`location.hash = '#/execution'; 'ok'`);
+      await sleep(1200);
+      const execView = await cdp.evaluate(`(function () {
+        var root = document.getElementById('view-root');
+        return root ? root.textContent.replace(/\\s+/g, ' ').trim() : '';
+      })()`);
+      if (!/terkirim|sent/i.test(execView)) {
+        failures.push('/execution tidak menampilkan hasil eksekusi yang berhasil');
+      }
+      console.log(`ok     /execution mencerminkan hasil eksekusi`);
+
+      /*
+       * Regresi A1: kartu tidak boleh diatribusikan ke agen yang tidak ada.
+       * Plan yang baru dibuat tidak punya assignee_id, jadi kartunya wajib
+       * menyatakan "tanpa penugasan" — bukan nama agen yang tidak pernah
+       * disentuh server.
+       */
+      cdp.reset();
+      await cdp.evaluate(`location.hash = '#/board'; 'ok'`);
+      await sleep(1200);
+      const board = await cdp.evaluate(`(function () {
+        var cards = Array.from(document.querySelectorAll('.kcard'));
+        return {
+          count: cards.length,
+          fabricated: cards.filter(function (c) { return /Workforce Dispatcher/.test(c.textContent); }).length,
+          hasPlan: cards.some(function (c) { return c.textContent.indexOf(${JSON.stringify(chain.planId)}) >= 0; }),
+          unassigned: cards.filter(function (c) { return /tanpa penugasan/i.test(c.textContent); }).length
+        };
+      })()`);
+      if (board.count < 1) {
+        failures.push('/board: 0 kartu padahal server punya plan — papan tidak mencerminkan data');
+      }
+      if (!board.hasPlan) {
+        failures.push(`/board tidak memuat plan ${chain.planId} yang baru dibuat`);
+      }
+      if (board.fabricated > 0) {
+        failures.push(`/board: ${board.fabricated} kartu berlabel "Workforce Dispatcher" — atribusi yang tidak ada di data`);
+      }
+      console.log(`ok     /board: ${board.count} kartu, ${board.unassigned} "tanpa penugasan", ${board.fabricated} atribusi karangan`);
+    }
+
+    /*
+     * Izin: token `agent` tidak memegang kapabilitas keputusan. Menu yang
+     * membutuhkannya harus tampil nonaktif, bukan menghilang tanpa penjelasan —
+     * dan tidak boleh ada satu pun halaman keputusan yang tetap terbuka.
+     */
+    await cdp.evaluate(`sessionStorage.setItem('dextra_ops_token', 'agent-dev-token'); 'ok'`);
+    await cdp.send('Page.reload', { ignoreCache: true });
+    await sleep(2400);
+    const agentView = await cdp.evaluate(`(function () {
+      var denied = Array.from(document.querySelectorAll('[data-denied]')).map(function (b) { return b.getAttribute('data-denied'); });
       return {
-        count: cards.length,
-        fabricated: cards.filter(function (c) { return /Workforce Dispatcher/.test(c.textContent); }).length
+        mode: window.DEXTRA.store.mode,
+        scope: window.DEXTRA.session.scope,
+        principal: window.DEXTRA.session.principal,
+        denied: denied
       };
     })()`);
-    if (board.fabricated > 0) {
-      failures.push(`/board: ${board.fabricated} kartu berlabel "Workforce Dispatcher" — atribusi yang tidak ada di data`);
+    if (agentView.mode !== 'live') failures.push(`token agent tidak masuk mode live (mode "${agentView.mode}")`);
+    if (agentView.scope !== 'agent') failures.push(`token agent dilaporkan sebagai scope "${agentView.scope}"`);
+    if (agentView.principal !== null) failures.push('token agent tidak punya principal, tetapi UI mengaku punya');
+    if (!agentView.denied.length) failures.push('token agent tidak menonaktifkan satu pun menu keputusan');
+    console.log(`ok     izin agent: scope ${agentView.scope}, principal null, ${agentView.denied.length} menu nonaktif`);
+
+    /* Kembali ke ops untuk uji error state. */
+    await cdp.evaluate(`sessionStorage.setItem('dextra_ops_token', ${JSON.stringify(TOKEN)}); 'ok'`);
+    await cdp.send('Page.reload', { ignoreCache: true });
+    await sleep(2400);
+
+    cdp.reset();
+    await cdp.evaluate(`location.hash = '#/rute-yang-tidak-ada'; 'ok'`);
+    await sleep(900);
+    const notFound = await cdp.evaluate(`(function () {
+      var root = document.getElementById('view-root');
+      return root ? root.textContent.replace(/\\s+/g, ' ').trim().slice(0, 140) : '';
+    })()`);
+    if (!/tidak ditemukan|not found/i.test(notFound)) {
+      failures.push(`rute tak dikenal tidak menampilkan halaman not-found (isi: "${notFound}")`);
     }
-    console.log(`ok     /board: ${board.count} kartu, ${board.fabricated} atribusi karangan`);
+    if (cdp.exceptions.length) {
+      failures.push(`rute tak dikenal melempar exception: ${cdp.exceptions[0]}`);
+    }
+    console.log('ok     error state: rute tak dikenal -> halaman not-found');
   } finally {
     if (cdp) cdp.close();
     shutdown();
     try { rmSync(profile, { recursive: true, force: true }); } catch { /* Windows kadang menahan berkas */ }
+    try { rmSync(dataDir, { recursive: true, force: true }); } catch { /* idem: proses server baru saja dimatikan */ }
   }
 
   if (failures.length) {

@@ -25,8 +25,16 @@ function run(label, command, args) {
   // `.cmd` tanpa shell (EINVAL sejak Node 18). Dengan shell, argumen harus
   // dirangkai sendiri, karena array argumen tidak di-escape oleh cmd.exe.
   const useShell = process.platform === 'win32' && command === 'npm';
+  /*
+   * `shell: true` resolves the shell from ComSpec. When that variable is absent
+   * (sandboxes, some CI images, and this very shell) Node throws
+   * "spawnSync ...cmd.exe ENOENT" and the whole gate dies before running a
+   * single test. Naming the shell explicitly keeps the gate runnable instead of
+   * silently unrunnable — the same failure mode this script was written to end.
+   */
+  const env = { ...process.env, ComSpec: process.env.ComSpec || 'C:\\WINDOWS\\system32\\cmd.exe' };
   const cp = useShell
-    ? spawnSync([command, ...args].map(shellArg).join(' '), { cwd: ROOT, stdio: 'inherit', shell: true })
+    ? spawnSync([command, ...args].map(shellArg).join(' '), { cwd: ROOT, stdio: 'inherit', shell: true, env })
     : spawnSync(command, args, { cwd: ROOT, stdio: 'inherit' });
   if (cp.error) {
     console.error(`gagal menjalankan ${command}: ${cp.error.message}`);

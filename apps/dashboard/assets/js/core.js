@@ -584,8 +584,46 @@
       for (var i = 0; i < this.roles.length; i++) if (this.roles[i].id === id) return this.roles[i];
       return null;
     },
-    unreadCount: function () { return this.notifications.filter(function (n) { return !n.read; }).length; }
+    unreadCount: function () { return this.notifications.filter(function (n) { return !n.read; }).length; },
+
+    /*
+     * A mutation (approve, execute, revoke, create) makes every cached snapshot
+     * wrong. A timer would be a guess; a flag is a fact. The mutation marks the
+     * store dirty and the next navigation re-reads the server.
+     *
+     * This exists because the audit trail used to be fetched once at boot and
+     * never again: execute an action, open /audit, and the event you just caused
+     * was missing. For an app whose entire claim is "what you see is what the
+     * server recorded", a stale audit page is a lie by omission.
+     */
+    stale: false,
+    markStale: function () { this.stale = true; },
+    refresh: function () {
+      this.stale = false;
+      if (this.mode !== 'live') return Promise.resolve();
+      var self = this;
+      return this.hydrateLive().catch(function () {
+        /* Keep whatever we had; the next navigation tries again. */
+        self.stale = true;
+      });
+    }
   };
+
+  /*
+   * Reads are get_/list_/find_; every other tool changes server state, so it
+   * invalidates the cache. Wrapping the transport (instead of sprinkling
+   * markStale() across six call sites) means a mutation added later cannot
+   * forget to declare itself. A failed mutation still marks stale on purpose:
+   * a refusal writes a mandate_rejected event the audit page must show.
+   */
+  (function () {
+    var rawCall = api.call.bind(api);
+    api.call = function (tool, args) {
+      var p = rawCall(tool, args);
+      if (/^(get_|list_|find_)/.test(String(tool))) return p;
+      return p.then(function (r) { store.markStale(); return r; }, function (e) { store.markStale(); throw e; });
+    };
+  })();
 
   /* ---------------- router ---------------- */
   var routes = [];
@@ -615,6 +653,23 @@
       if (opts && opts.replace) history.replaceState(null, '', target);
     },
     render: function () {
+      /*
+       * If a mutation happened since the last paint, re-read the server before
+       * drawing. Skipping the stale draw is deliberate: showing the old audit
+       * trail for a frame, then replacing it, is a worse answer than a short
+       * pause — and the E2E proves the page reflects the server, not a cache.
+       */
+      if (store.mode === 'live' && store.stale) {
+        if (router._refreshing) return;
+        router._refreshing = store.refresh().then(function () {
+          router._refreshing = null;
+          router.draw();
+        });
+        return;
+      }
+      router.draw();
+    },
+    draw: function () {
       var hit = router.resolve(location.hash);
       var view = hit.route ? hit.route : null;
       if (!view) { view = routes.filter(function (r) { return r.path === '/not-found'; })[0]; }
