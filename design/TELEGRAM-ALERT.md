@@ -1,7 +1,8 @@
 # Desain — Telegram Alert
 
-Status: **desain, belum diimplementasikan.**
-Tujuan dokumen ini: menetapkan kontrak dan batas sebelum satu baris kode ditulis.
+Status: **diimplementasikan 2026-11-03** (`packages/alerts`, tool `list_alerts`).
+Bagian 1–8 di bawah adalah kontrak yang disetujui sebelum kode ditulis; §11
+mencatat apa yang berubah saat implementasi dan alasannya.
 
 ## 1. Apa ini, dan apa yang bukan
 
@@ -157,3 +158,60 @@ Matriks tes:
 - Tidak ada jalur di mana pesan masuk Telegram mengubah status plan/mandat.
 - Setiap percobaan menghasilkan tepat satu event audit.
 - Tanpa token, sistem tetap berjalan dan menyatakan `provider: 'fake'`.
+
+## 11. Yang berubah saat implementasi, dan alasannya
+
+Empat penyimpangan dari desain di atas. Semuanya dicatat di sini karena
+menyimpang tanpa mengatakannya persis kebiasaan yang dokumen ini ada untuk
+mencegah.
+
+**1. `suppressed_duplicate` bukan status tersimpan, melainkan hasil pemanggilan.**
+Desain menaruhnya di daftar status pengiriman. Kalau diterapkan harfiah, alert
+yang sudah diterima provider lalu dikirim lagi akan berubah statusnya menjadi
+`suppressed_duplicate` — artinya catatan itu menyatakan "tidak pernah terkirim"
+sementara manusia sedang melihat pesannya di Telegram. Sekarang:
+
+- `AlertDeliveryStatus` (tersimpan): `queued | dispatching | accepted_by_provider | failed`
+- `DispatchOutcomeStatus` (hasil satu pemanggilan): status di atas + `suppressed_duplicate`
+- penahanan dihitung di `suppressed_count`, sehingga tetap terlihat di ringkasan.
+
+**2. `alert_id` memakai 16 heksadesimal, bukan 8.** Id ini adalah kunci primer
+sebuah record; tabrakan berarti dua insiden berbeda menyatu menjadi satu
+pengiriman. 32 bit terlalu sempit untuk itu, dan biaya menambah 8 karakter nol.
+
+**3. `data/alerts.json` adalah array record, bukan log append-only.** Pengiriman
+punya siklus hidup (diklaim, dicoba, diulang, selesai). Dengan log append-only,
+setiap pembaca harus memutar ulang seluruh berkas untuk tahu keadaan sekarang,
+dan pemeriksaan dedupe harus memindai semuanya. Riwayat per percobaan tetap ada
+— di audit log, tempat riwayat seharusnya berada.
+
+**4. Ada modul yang tidak ada di desain: `detect.ts`.** Desain menetapkan cara
+mengirim, bukan cara memutuskan apa yang layak dikirim. Tanpa itu paket ini
+adalah pustaka tanpa pemanggil — kontrak tanpa produsen. `detectAlerts()`
+murni: masukannya record yang sudah ada, keluarannya alert, tanpa jam, jaringan,
+atau server. Enam jenis alert di §2 semuanya punya aturan nyata di sana.
+
+### Tambahan yang muncul dari pengujian
+
+- **Penyatuan di dalam satu batch.** Tiga eksekusi gagal untuk action yang sama
+  dalam satu bucket menghasilkan tiga alert dengan `alert_id` identik, karena
+  kunci dedupe sengaja tidak memuat `execution_id`. Tanpa penyatuan,
+  `detected` melaporkan 3 untuk satu hal yang akan terkirim sekali.
+- **Pengambilalihan `dispatching` yang basi.** Proses yang mati di tengah
+  pengiriman meninggalkan status `dispatching` selamanya, dan alert itu tidak
+  akan pernah dikirim maupun dilaporkan gagal. Record berstatus `dispatching`
+  yang lebih tua dari 5 menit dianggap ditinggalkan — pola yang sama dengan
+  deteksi lock basi di audit.
+- **`retry_after` menang atas jadwal kita**, termasuk bila lebih pendek.
+
+### Yang belum ada
+
+- **Belum ada pengiriman nyata.** Tanpa `TELEGRAM_BOT_TOKEN`, transport palsu
+  dipakai dan setiap record ditandai `provider: 'fake'`. Tidak ada satu pesan
+  pun yang keluar dari proses ini. Itu keadaan yang benar untuk saat ini, dan
+  dashboard harus menampilkannya apa adanya.
+- **Belum ada loop di adapter.** `npm run alerts:scan` menjalankan satu
+  pemindaian. `--loop <detik>` sudah ada, tetapi belum dijalankan sebagai
+  layanan, dan adapter Telegram belum memanggilnya.
+- **Pesan masuk Telegram tidak berubah.** Tidak ada jalur baru dari chat ke
+  plan atau mandate; `/approve` tetap hanya membuka dashboard.

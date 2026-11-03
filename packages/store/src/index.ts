@@ -24,6 +24,15 @@ export * from './repository.ts';
 export { listSpecialists } from './specialists.ts';
 export type { SpecialistRecord } from './specialists.ts';
 
+export {
+  claimAlertDelivery,
+  getAlertDelivery,
+  listAlertDeliveries,
+  recordSuppressedDuplicate,
+  saveAlertDelivery,
+  summarizeAlertDeliveries,
+} from './alerts.ts';
+
 export { getPrincipal, listPrincipals } from './principals.ts';
 export type { Principal } from '../../contracts/src/identity.ts';
 

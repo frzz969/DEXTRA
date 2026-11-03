@@ -20,6 +20,15 @@ export const AuditEventTypeSchema = z.enum([
   'action_blocked',
   'injection_quarantined',
   'audit_integrity_checked',
+  /*
+   * Alert delivery. Two types rather than one with a `kind: 'alert'` detail,
+   * because "the AI executed an action" and "the system told a human about it"
+   * are different facts in an audit trail and must be separable by query.
+   * `alert_failed` covers every failed attempt, not only the final one, so a
+   * retry sequence is fully reconstructible from the log.
+   */
+  'alert_dispatched',
+  'alert_failed',
 ]);
 export type AuditEventType = z.infer<typeof AuditEventTypeSchema>;
 

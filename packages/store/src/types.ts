@@ -124,6 +124,7 @@ export interface StorePaths {
   mandates: string;
   approvals: string;
   executions: string;
+  alerts: string;
   audit: string;
   auditCheckpoint: string;
 }

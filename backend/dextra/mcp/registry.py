@@ -25,6 +25,10 @@ TOOL_CAPABILITY: Final[dict[str, str]] = {
     "list_executions": "view_all",
     "get_status": "view_all",
     "get_audit_log": "view_audit",
+    # Baca riwayat pengiriman alert. Read-only: tidak ada tool yang mengirim,
+    # karena pengiriman adalah akibat dari sesuatu yang sudah terjadi, bukan
+    # tindakan yang bisa diminta pemanggil.
+    "list_alerts": "view_audit",
     "get_caller_context": "view_own",
     "list_specialists": "view_all",
 }

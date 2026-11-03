@@ -61,6 +61,7 @@ export const TOOL_CAPABILITY = {
   list_executions: 'view_all',
   get_status: 'view_all',
   get_audit_log: 'view_audit',
+  list_alerts: 'view_audit',
   get_caller_context: 'view_own',
   list_specialists: 'view_all',
 } as const satisfies Record<string, Capability>;

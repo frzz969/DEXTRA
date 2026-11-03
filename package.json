@@ -28,6 +28,7 @@
     "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset",
     "demo:flow": "node scripts/demo-flow.mjs",
     "dev:mcp": "node --experimental-strip-types apps/mcp-server/src/index.ts",
+    "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
     "dev:dashboard": "node scripts/serve-dashboard.mjs"
   }
 }

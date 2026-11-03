@@ -14,3 +14,4 @@ export * from './envelope.ts';
 export * from './hash.ts';
 export * from './identity.ts';
 export * from './workflow.ts';
+export * from './alert.ts';

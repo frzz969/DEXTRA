@@ -37,7 +37,13 @@ describe('auth scoping', () => {
     // If these ever diverge, someone has re-introduced a second source of truth.
     assert.deepEqual([...AGENT_TOOLS].sort(), [...toolsForScope('agent')].sort());
     assert.deepEqual([...OPS_TOOLS].sort(), [...toolsForScope('ops')].sort());
-    assert.equal(OPS_TOOLS.size, 17);
+    /*
+     * Angka ini sengaja tetap harfiah: tujuannya menangkap perubahan izin yang
+     * tidak disengaja. `list_alerts` menambah satu tool ops (view_audit) pada
+     * 2026-11-03; agent tidak mendapatkannya, karena membaca riwayat alert
+     * adalah pandangan seluruh organisasi, bukan pandangan sendiri.
+     */
+    assert.equal(OPS_TOOLS.size, 18);
     assert.equal(AGENT_TOOLS.size, 12);
   });
 

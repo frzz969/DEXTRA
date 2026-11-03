@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -356,6 +356,27 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       const { events: all, integrity } = await listAuditWithIntegrity();
       const page = limit >= 0 ? all.slice(-limit) : all;
       return { ok: true, data: { events: page, total: all.length, integrity } };
+    }
+    case 'list_alerts': {
+      /*
+       * Read-only. There is deliberately no `send_alert` tool: dispatching is a
+       * server-side consequence of something that already happened, not an
+       * action a caller can request. A tool that sends arbitrary text to a chat
+       * is a spam primitive with an audit trail attached.
+       */
+      const limit = typeof args?.limit === 'number' ? args.limit : 50;
+      const { deliveries, invalid } = await listAlertDeliveries();
+      const filtered = deliveries.filter((d) => {
+        if (typeof args?.kind === 'string' && d.alert.kind !== args.kind) return false;
+        if (typeof args?.status === 'string' && d.status !== args.status) return false;
+        return true;
+      });
+      /* Summary over the whole filtered set, before `limit`. Computing it from
+         the page would make the counts change with page size, which reads as
+         the system changing when only the query did. */
+      const summary = summarizeAlertDeliveries(filtered);
+      const page = limit >= 0 ? filtered.slice(-limit) : filtered;
+      return { ok: true, data: { alerts: page, total: filtered.length, summary, invalid } };
     }
     case 'list_specialists': {
       /* Read straight from workbuddy/agents/*.md. Nothing is added here: no

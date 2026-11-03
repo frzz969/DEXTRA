@@ -40,6 +40,7 @@ export function getStorePaths(): StorePaths {
     mandates: resolve(dataDir, 'mandates.json'),
     approvals: resolve(dataDir, 'approvals.json'),
     executions: resolve(dataDir, 'executions.json'),
+    alerts: resolve(dataDir, 'alerts.json'),
     audit: resolve(dataDir, 'audit.jsonl'),
     /*
      * Lives beside the log, not inside it. Its job is to remember what the log
