@@ -18,7 +18,7 @@ bukan dari laporan sebelumnya.
 | `packages/ui` | **ADA** | Sumber kanonik `ui.js` |
 | `packages/design-system` | **ADA** | `tokens.json` + `dashboard.css` |
 | `packages/api-client` | **ADA** | Klien JSON-RPC, 8 tes |
-| `docker-compose.yml` | **TIDAK di root** | Ada di `infra/docker/docker-compose.yml`, sesuai struktur §28 yang menaruh infra di `infra/` |
+| `docker-compose.yml` | **ADA** | Root memakai `include:` ke `infra/docker/docker-compose.yml` — satu definisi, tidak disalin |
 | `pnpm-workspace.yaml` | **ADA** | Deklaratif; npm tetap package manager yang berlaku |
 | `pyproject.toml` | **ADA** | Metadata, dependency, konfigurasi pytest |
 
