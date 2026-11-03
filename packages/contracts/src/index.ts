@@ -13,3 +13,4 @@ export * from './audit.ts';
 export * from './envelope.ts';
 export * from './hash.ts';
 export * from './identity.ts';
+export * from './workflow.ts';
