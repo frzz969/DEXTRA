@@ -6,7 +6,8 @@
   "description": "DEXTRA — agen AI kantor dengan eksekusi berbasis mandat",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/mcp-server",
+    "apps/telegram-adapter"
   ],
   "engines": {
     "node": ">=20"

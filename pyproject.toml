@@ -1,0 +1,42 @@
+[project]
+name = "dextra-backend"
+version = "2.0.0"
+description = "DEXTRA v2 — Governed Enterprise AI Workforce & Operations Platform (backend)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "pydantic>=2.8",
+    "psycopg[binary]>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Paket Python ada di backend/, bukan di root: root adalah monorepo npm.
+package-dir = { "" = "backend" }
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["backend"]
+addopts = "-q"
+markers = [
+    "postgres: tes yang membutuhkan PostgreSQL sungguhan (dilewati jika tidak tersedia)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

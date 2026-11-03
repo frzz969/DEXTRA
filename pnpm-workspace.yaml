@@ -1,0 +1,9 @@
+# Paritas dengan struktur target §28.
+#
+# Package manager yang berlaku di repo ini tetap **npm** — ada package-lock.json
+# dan semua skrip di README memakai npm. Berkas ini disediakan agar struktur
+# workspace bisa dibaca oleh tooling yang mengharapkan pnpm, dan agar migrasi ke
+# pnpm (bila dibutuhkan) tidak menuntut penemuan ulang daftar workspace.
+packages:
+  - "packages/*"
+  - "apps/*"

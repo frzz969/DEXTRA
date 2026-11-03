@@ -13,16 +13,18 @@ dihitung dari kode, bukan disalin dari dokumen lain.
 
 | Area | Status | Catatan |
 |---|---|---|
-| TypeScript monorepo (npm workspaces) | ADA | `package.json` → `workspaces: ["packages/*", "apps/*"]` |
-| Domain packages (7) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay |
+| TypeScript monorepo (npm workspaces) | ADA | `package.json` → `["packages/*", "apps/mcp-server", "apps/telegram-adapter"]`. `apps/web` sengaja di luar workspace: symlink gagal di Windows. |
+| Domain packages (10) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay, ui, design-system, api-client |
 | MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 16 tool |
 | Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 23 rute) |
 | WorkBuddy config | ADA | `workbuddy/` — manifest, 4 agen, 5 knowledge |
 | Channel adapter | SEBAGIAN | `apps/telegram-adapter` — post-MVP, satu file `index.ts` |
-| Next.js + Tailwind + shadcn | **BELUM** | Frontend saat ini vanilla JS, tanpa dependency |
-| FastAPI + Pydantic | **BELUM** | Backend saat ini Node + TypeScript |
-| PostgreSQL + SQLAlchemy + Alembic | **BELUM** | Persistensi saat ini file JSON di `data/` |
+| Next.js + Tailwind + shadcn | **SEBAGIAN** | `apps/web` Next.js 16 berjalan (2 halaman). Tailwind/shadcn belum dipakai; styling memakai token `packages/design-system`. |
+| FastAPI + Pydantic | **ADA** | `backend/dextra` + `apps/api`, 9 router di `/api/v1`, Pydantic untuk validasi |
+| PostgreSQL + SQLAlchemy + Alembic | **SEBAGIAN** | Skema + migrasi Alembic ada (21 tabel); PostgreSQL belum dijalankan di mesin ini, tes memakai SQLite |
 | LangGraph | **BELUM** | Orkestrasi dipegang WorkBuddy, bukan LangGraph |
+| Worker | **ADA** | `apps/worker` — expire mandate + rekap eksekusi macet |
+| Tests Python | **ADA** | `tests/` pytest, 38 tes (unit, integration, security) |
 
 **Kesimpulan:** repo ini adalah monolith TypeScript yang berjalan, bukan kerangka kosong.
 Migrasi ke stack target adalah pekerjaan terpisah dan belum dimulai — dan sengaja tidak
@@ -35,10 +37,17 @@ di-scaffold sekarang (lihat §5).
 ```text
 dextra/
 ├── apps/
-│   ├── dashboard/          SPA: 23 rute, 1 stylesheet, tanpa dependency
-│   ├── dashboard-legacy/   14 halaman HTML lama — di-ignore Git, arsip lokal
-│   ├── mcp-server/         gateway JSON-RPC + auth + origin policy
+│   ├── dashboard/          SPA v1: 23 rute, tanpa dependency (masih produksi)
+│   ├── web/                Next.js 16 (v2): Overview + Workforce
+│   ├── api/                entrypoint ASGI -> backend/dextra/main.py
+│   ├── worker/             worker pemeliharaan
+│   ├── mcp-server/         gateway JSON-RPC + auth + origin policy (v1)
 │   └── telegram-adapter/   channel adapter (post-MVP)
+├── backend/dextra/         FastAPI: core, database, models, repositories,
+│                           governance, mcp, modules (9 domain), main.py
+├── database/               migrations (Alembic) + seeds
+├── tests/                  pytest: unit, integration, security
+├── infra/docker/           compose + Dockerfile + init SQL audit
 ├── packages/
 │   ├── contracts/          skema Plan, Mandate, Approval, Audit, Execution, Risk
 │   ├── store/              repository + JSON file store + masking + seed

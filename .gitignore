@@ -10,3 +10,20 @@ apps/dashboard-legacy/
 
 # Data kerja agen (catatan sesi lokal), bukan bagian dari produk
 .workbuddy-ai/
+
+# Next.js
+apps/web/.next/
+apps/web/next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Database lokal hasil pengembangan/uji (bukan data produk)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm

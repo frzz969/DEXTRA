@@ -15,19 +15,34 @@ An office agent that acts only on human-approved mandates.
 ```
 dextra/
 ├── apps/
-│   ├── dashboard/          # SPA operasional: 23 rute, tanpa build step
-│   ├── mcp-server/         # Gateway JSON-RPC di 127.0.0.1:8765
+│   ├── dashboard/          # SPA operasional v1 (produksi): 23 rute, tanpa build step
+│   ├── web/                # Next.js 16 (v2): Overview + Workforce, data dari /api/v1
+│   ├── api/                # Entrypoint ASGI -> backend/dextra/main.py
+│   ├── worker/             # Pemeliharaan: expire mandate, rekap eksekusi macet
+│   ├── mcp-server/         # Gateway JSON-RPC v1 di 127.0.0.1:8765
 │   └── telegram-adapter/   # Channel adapter (post-MVP)
+├── backend/
+│   └── dextra/             # FastAPI: core, database, models, repositories,
+│                           # governance, mcp, modules (9 domain), main.py
 ├── packages/
 │   ├── contracts/          # Skema Plan, Mandate, ActionResult + kontrak otorisasi
-│   ├── store/              # Persistensi, repository, audit log
-│   ├── policy-engine/      # Aturan deterministik + reason code
+│   ├── store/              # Persistensi JSON, repository, audit log (v1)
+│   ├── policy-engine/      # Aturan deterministik + reason code (v1)
 │   ├── plan/               # Penyusunan rencana + hash parameter
-│   ├── mandate-engine/     # Validasi siklus mandat
-│   ├── executor/           # Eksekusi terkontrol + idempotensi
-│   └── replay/             # Rekonstruksi jejak eksekusi
+│   ├── mandate-engine/     # Validasi siklus mandat (v1)
+│   ├── executor/           # Eksekusi terkontrol + idempotensi (v1)
+│   ├── replay/             # Rekonstruksi jejak eksekusi
+│   ├── ui/                 # Komponen UI — sumber kanonik
+│   ├── design-system/      # tokens.json + dashboard.css — sumber kanonik
+│   └── api-client/         # Klien JSON-RPC — sumber kanonik
+├── database/
+│   ├── migrations/         # Alembic (1 revisi awal, 21 tabel)
+│   └── seeds/              # Seed idempoten: 4 spesialis, role, policy
+├── tests/                  # pytest: unit, integration, security (38 tes)
+├── infra/docker/           # compose + Dockerfile api/web + init SQL audit
+├── scripts/                # sync/verify paket, dev-api, dev-web, migrate, test-all
 ├── workbuddy/              # Manifest agen, skills, knowledge, mcp.json
-├── docs/                   # PRD, model otorisasi, audit, peta monorepo
+├── docs/                   # PRD, audit, model otorisasi, skema DB, peta migrasi
 └── stitch-ref/             # Referensi desain (bukan kode produksi)
 ```
 
@@ -63,6 +78,39 @@ Dashboard berjalan tanpa dependensi runtime dan tanpa CDN. Kalau MCP server mati
 turun ke mode demo dan **menyatakan** bahwa datanya demo. Peta rute lengkap ada di
 `apps/dashboard/README.md`; peta monorepo (aktual vs target arsitektur) ada di
 `docs/MONOREPO-MAP.md`.
+
+## Menjalankan DEXTRA v2 (FastAPI + PostgreSQL + Next.js)
+
+Fondasi v2 berdampingan dengan v1: gateway MCP dan dashboard lama tetap jalan
+sampai parity tercapai. Yang tersedia sekarang: API REST, skema database dengan
+migrasi Alembic, seed idempoten, worker pemeliharaan, dan dua halaman Next.js.
+
+```bash
+# 1. Database — PostgreSQL adalah target, SQLite hanya untuk pengembangan
+export DATABASE_URL=sqlite+pysqlite:///./data/dextra-v2.db
+python -m alembic -c database/alembic.ini upgrade head
+python database/seeds/seed.py
+
+# 2. API
+./scripts/dev-api.sh            # http://127.0.0.1:8000/docs
+
+# 3. Web (butuh npm install di apps/web, lihat catatan di bawah)
+./scripts/dev-web.sh            # http://127.0.0.1:3000
+
+# 4. Pemeriksaan
+./scripts/test-all.sh
+```
+
+`apps/web` **tidak** ikut npm workspace root: pembuatan symlink workspace gagal
+di Windows (`EISDIR`), jadi dependensinya dipasang sendiri:
+
+```bash
+cd apps/web && npm install
+```
+
+Catatan jujur: PostgreSQL belum berjalan di mesin pengembangan (tidak terpasang,
+Docker tidak tersedia), sehingga migrasi dan tes dijalankan di SQLite. Perilaku
+khas PostgreSQL belum terbukti. Lihat `docs/REPOSITORY_AUDIT.md`.
 
 ## Model otorisasi
 
@@ -151,7 +199,9 @@ Ini didokumentasikan, bukan disembunyikan:
   karena capability-nya belum punya backend.
 - **Workforce registry & specialist** masih demo: belum ada sumber data server, dan tidak
   dibangun dari prosa Markdown.
-- **Migrasi stack** (Next.js/FastAPI/PostgreSQL) belum dimulai — lihat `docs/MONOREPO-MAP.md`.
+- **Migrasi stack** baru tahap fondasi: Next.js 2 halaman, FastAPI 9 router,
+  skema PostgreSQL + Alembic ada, tetapi PostgreSQL belum pernah dijalankan di
+  mesin ini dan data lama belum dipindahkan — lihat `docs/MIGRATION_MAP.md`.
 
 ## Dokumen rujukan
 
@@ -163,3 +213,6 @@ Ini didokumentasikan, bukan disembunyikan:
 | `docs/AUTHORIZATION_TEST_MATRIX.md` | Kasus uji otorisasi: mana yang teruji, mana yang belum |
 | `docs/CROSS_MODULE_CONSISTENCY.md` | Konsistensi Board ↔ Work Package ↔ Execution History |
 | `docs/MONOREPO-MAP.md` | Struktur aktual vs target arsitektur |
+| `docs/REPOSITORY_AUDIT.md` | Audit kondisi aktual, penyimpangan, dan bug yang ditemukan |
+| `docs/MIGRATION_MAP.md` | Peta v1 → v2 per domain: strategi, risiko, verifikasi |
+| `docs/DATABASE_SCHEMA.md` | Skema 21 tabel, index, batas transaksi, yang belum ada |

@@ -25,6 +25,10 @@ export const COPIES = [
   {
     from: 'packages/design-system/src/dashboard.css',
     to: 'apps/dashboard/assets/css/dashboard.css'
+  },
+  {
+    from: 'packages/design-system/src/dashboard.css',
+    to: 'apps/web/app/dextra-design-system.css'
   }
 ];
 
@@ -52,7 +56,16 @@ async function main() {
   console.log(changed === 0 ? '\nTidak ada yang berubah.' : `\n${changed} berkas disalin.`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/* Hanya jalankan penyalinan kalau berkas ini dieksekusi langsung.
+   Tanpa penjaga ini, `import { COPIES }` di verify-packages.mjs ikut menyalin
+   lebih dulu — sehingga verifikasi selalu lulus karena sumber dan salinan baru
+   saja disamakan oleh efek samping impor. */
+const invokedDirectly =
+  process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
