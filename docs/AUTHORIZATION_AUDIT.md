@@ -180,7 +180,7 @@ list of tokens, not of sessions. Both would be scaffolding around a missing prin
 
 ---
 
-## A-09 — No principal; `approver_id` is unverified (OPEN)
+## A-09 - No principal; `approver_id` is unverified (PARTIAL)
 
 The server cannot distinguish callers sharing a scope. `approver_id` arrives in the request
 body and is stored as given.
@@ -192,6 +192,14 @@ on it, and because a reviewer reading the approval flow could reasonably assume 
 
 **Explicitly not done:** adding `requester_id` to `Plan`. It would store an unverifiable
 client claim and make `/requests` look authoritative while remaining untrustworthy.
+
+**Status update (beba8ec):** prinsipal terverifikasi kini ada di jalur TypeScript —
+`packages/contracts/src/identity.ts`, `apps/mcp-server/src/auth.ts` (`resolvePrincipal`,
+`CallerContext.principal`), `data/principals.json`, dan `create_plan` merekam
+`requester_id`/`assignee_id` dari prinsipal (bukan dari klien). Python backend
+(`backend/dextra/core/security.py`) masih `principal=None` — parity belum dicapai.
+Resource-scope enforcement (A-03) tetap **OPEN**: penegakan kepemilikan memerlukan
+prinsipal di semua jalur + atribut ownership pada Mandate, yang belum ada.
 
 ---
 
