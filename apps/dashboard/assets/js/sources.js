@@ -58,7 +58,7 @@
         { id: 'as.compose', label: 'Susun rencana dari kalimat saya', kind: 'answer', compute: 'composeHint' }
       ] },
 
-    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'partial',
+    { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'live',
       tools: ['list_plans'], modules: ['store', 'plan'],
       note: 'Daftar dari list_plans. Kepemilikan tercatat bila server mengikat principal ke token (requester_id diisi server, bukan klien); layar menyaring dengan field itu. Tanpa ikatan, layar menampilkan seluruh permintaan workspace dan menyatakannya.',
       intents: [
@@ -66,7 +66,7 @@
         { id: 'rq.owner', label: 'Siapa pemilik permintaan ini?', kind: 'answer', compute: 'ownershipGap' }
       ] },
 
-    { route: '/my-work', label: 'My Work', domain: 'Operasional', state: 'partial',
+    { route: '/my-work', label: 'My Work', domain: 'Operasional', state: 'live',
       tools: ['list_plans', 'get_audit_log'], modules: ['store', 'plan'],
       note: 'Antrean diturunkan dari status plan dan assignee_id bila server mencatatnya. Tanpa principal atau tanpa assignee, isinya item terbuka seluruh workspace dan halaman menyatakannya.',
       intents: [
@@ -92,9 +92,9 @@
         { id: 'wpd.mandate', label: 'Mandat yang terkait', kind: 'answer', compute: 'planMandate' }
       ] },
 
-    { route: '/board', label: 'Task Board', domain: 'Manajemen kerja', state: 'partial',
+    { route: '/board', label: 'Task Board', domain: 'Manajemen kerja', state: 'live',
       tools: ['list_plans'], modules: ['plan', 'store'],
-      note: 'Kartu diturunkan dari plan saat live; kolom mengikuti status. Urutan kartu tidak disimpan server.',
+      note: 'Kartu dan kolom diturunkan dari plan yang dikirim server; atribusi memakai assignee_id/requester_id yang dicatat server. Memindahkan kartu tidak mengubah status tata kelola dan tidak disimpan — kolom adalah status, bukan pilihan bebas.',
       intents: [
         { id: 'bd.columns', label: 'Apa isi tiap kolom?', kind: 'answer', compute: 'board' },
         { id: 'bd.order', label: 'Apakah urutan kartu disimpan?', kind: 'answer', compute: 'boardGap' }

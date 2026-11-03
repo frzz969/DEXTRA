@@ -57,9 +57,9 @@ Nothing from either repository's business domain was copied.
 
 **Workspace** — `/overview` · `/assistant` · `/requests` · `/my-work`
 **Work management** — `/work-packages` · `/work-packages/:id` · `/board` · `/execution`
-**Workforce** — `/workforce` · `/specialists`
+**Workforce** — `/workforce`
 **Governance** — `/approvals` · `/review` · `/review/:id` · `/mandates` · `/audit` · `/policies`
-**Administration** — `/users` · `/permissions` · `/integrations` · `/settings`
+**Administration** — `/permissions` · `/integrations` · `/settings`
 **Bare** — `/login` · `/forbidden` · `/not-found`
 
 ## Legacy → new mapping
@@ -121,7 +121,11 @@ domain, its MCP tool(s), the repo modules that support it, and a state:
 | `demo` | No backend surface exists yet — demo data only, and the UI says so |
 | `none` | Not a data route (login, forbidden, not-found) |
 
-Current split across 21 routes: **12 live · 6 partial · 0 demo · 3 non-data**.
+Current split across 21 routes: **15 live · 3 partial · 0 demo · 3 non-data**.
+
+`/requests`, `/my-work`, and `/board` moved from `partial` to `live` once the server began
+recording `requester_id`/`assignee_id`; without a bound principal they degrade to the whole
+workspace and say so, which is a stated limitation rather than missing backend surface.
 
 There is no `demo` route left. Each one was either given a real backend surface or removed:
 `/workforce` now reads the roster through `list_specialists`; `/permissions` renders the
