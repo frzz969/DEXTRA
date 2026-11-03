@@ -33,7 +33,7 @@ Dua agen bekerja di repo yang sama, jadi yang pertama harus disepakati adalah
 
 # Bagian opencode
 
-## B1 — Nyatakan mana produk, mana referensi
+## B1 — Nyatakan mana produk, mana referensi · **SELESAI (`20b161a`)**
 
 Ini pertanyaan yang akan menghabisi kita di depan juri: repo punya dua
 implementasi domain yang sama.
@@ -165,12 +165,44 @@ Hanya dikerjakan bila B2 memilih menambah scope admin. Satu `case` di
 
 ---
 
+## B5 — Perbaiki butir "Batasan yang diketahui" di README (temuan dari A1)
+
+B1 (`20b161a`) menambah butir "Identitas per pengguna baru sebagian" yang benar,
+tetapi dua butir sesudahnya sekarang **salah** dan satu butir lain menjadi
+duplikat. README adalah dokumen yang dipakai juri untuk menilai kejujuran kita,
+jadi pernyataan yang salah di sana lebih merusak daripada bug.
+
+Berkas: `README.md` bagian "## Batasan yang diketahui".
+
+1. **Duplikat.** Butir "Identitas per pengguna baru sebagian" sudah menyebut
+   expiry/revocation dan resource-scope, lalu dua butir berikutnya
+   ("Resource scope belum ada", "Token belum punya expiry/revocation")
+   mengulanginya. Gabungkan jadi satu butir.
+2. **Salah — halaman admin.** Butir "`/users`, `/permissions`, `/integrations`
+   terkunci karena capability-nya belum punya backend" tidak berlaku lagi:
+   - `/users` sudah **dihapus** dari produk (bukan dikunci).
+   - `/permissions` berstatus **live**: menampilkan kapabilitas dan tool yang
+     dinyatakan server lewat `get_caller_context`.
+   - Hanya `/integrations` yang masih terkunci, karena `manage_integrations`
+     belum diberikan scope mana pun.
+3. **Salah — workforce.** Butir "Workforce registry & specialist masih demo:
+   belum ada sumber data server, dan tidak dibangun dari prosa Markdown"
+   sekarang keliru: tool `list_specialists` membaca `workbuddy/agents/*.md`
+   — yaitu justru prosa Markdown itu — dan halaman `/workforce` berstatus live.
+   Yang benar-benar belum ada: versi, status, dan beban kerja, karena berkasnya
+   tidak menyatakan itu.
+
+Selesai bila: setiap butir di bagian itu masih benar bila diperiksa terhadap
+kode hari ini, dan tidak ada butir yang mengulang butir lain.
+
+---
+
 # Urutan
 
 | Putaran | WorkBuddy | opencode | Titik temu |
 |---|---|---|---|
-| 1 | A1 | B1 | tidak ada — berkas terpisah |
-| 2 | A3 | B2 | A5 menunggu B2 |
+| 1 | ~~A1~~ selesai | ~~B1~~ selesai | — |
+| 2 | **A3** (berjalan) | **B2** | A5 menunggu B2 |
 | 3 | A2, A4 | B3, B4 | — |
 | 4 | A5 | — | setelah B2 hijau |
 
