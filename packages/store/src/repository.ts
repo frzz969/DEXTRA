@@ -236,6 +236,13 @@ export async function findPrecedents(input: { subject: string; context: string }
     existing.disputed = existing.disputed || record.disputed;
   }
 
+  /*
+   * Attach the same public projection the contact search uses, so a caller can
+   * build an action from a precedent without a second round trip. The address
+   * stays masked here — the raw e-mail never leaves the store.
+   */
+  const contactById = new Map((await readContacts()).map((contact) => [contact.contact_id, toPublic(contact)]));
+
   const candidates = [...grouped.values()]
     .sort((left, right) => {
       if (right.score !== left.score) {
@@ -243,13 +250,23 @@ export async function findPrecedents(input: { subject: string; context: string }
       }
       return left.contact_id < right.contact_id ? -1 : left.contact_id > right.contact_id ? 1 : 0;
     })
-    .map((entry) => ({
-      contact_id: entry.contact_id,
-      score: entry.score,
-      evidence: [...entry.evidence],
-      last_used_days_ago: entry.last_used_days_ago,
-      disputed: entry.disputed,
-    }));
+    .map((entry) => {
+      const contact = contactById.get(entry.contact_id);
+      return {
+        contact_id: entry.contact_id,
+        score: entry.score,
+        evidence: [...entry.evidence],
+        last_used_days_ago: entry.last_used_days_ago,
+        disputed: entry.disputed,
+        ...(contact === undefined
+          ? {}
+          : {
+              display_name: contact.display_name,
+              department: contact.department,
+              masked_address: contact.masked_address,
+            }),
+      };
+    });
 
   let resolution: PrecedentResult['resolution'] = 'none';
   if (candidates.length === 1) {

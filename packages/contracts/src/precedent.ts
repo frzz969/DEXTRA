@@ -11,6 +11,14 @@ export const PrecedentCandidateSchema = z
     evidence: z.array(z.string()),
     last_used_days_ago: z.number().int().nonnegative(),
     disputed: z.boolean(),
+    /*
+     * Display fields, so a caller can act on the result without a second lookup.
+     * They come from the same contact projection as the search tool — the
+     * address stays masked; the raw e-mail never leaves the store.
+     */
+    display_name: z.string().min(1).optional(),
+    department: z.string().optional(),
+    masked_address: z.string().optional(),
   })
   .strict();
 export type PrecedentCandidate = z.infer<typeof PrecedentCandidateSchema>;

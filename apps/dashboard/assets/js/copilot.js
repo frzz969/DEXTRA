@@ -751,11 +751,17 @@
     }
     return {
       text: 'Draf disusun di peramban. Server tidak aktif, jadi rencana ini tidak tersimpan dan tidak bisa disetujui.',
+      /*
+       * These steps used to name three agents — "Workforce Dispatcher memecah
+       * permintaan", "Executive Assistant menyusun draf", "Adversarial Reviewer
+       * menguji lingkup" — none of which ran. No agent is involved in a browser
+       * draft; saying otherwise is the same class of claim as inventing data.
+       */
       steps: [
-        'Workforce Dispatcher memecah permintaan menjadi 1 tindakan',
-        'Executive Assistant menyusun draf',
-        'Adversarial Reviewer menguji lingkup',
-        'Policy Validator belum dijalankan (butuh server)'
+        'Penerima dicocokkan dengan kontak contoh di peramban',
+        'Tindakan disusun dari templat lokal, bukan oleh agen',
+        'Tidak ada agen yang dijalankan — server tidak aktif',
+        'Validasi kebijakan belum dijalankan (butuh server)'
       ],
       recipient: lookup,
       plan: {
@@ -797,6 +803,98 @@
     }).catch(function (e) {
       return stopped(lookup, 'Server menolak pembuatan rencana, jadi tidak ada draf yang saya tampilkan.', 'CREATE_FAILED', e.message || String(e));
     });
+  }
+
+  /*
+   * Recipient lookup.
+   *
+   * This function was called but never defined: `compose()` referenced it, so
+   * submitting a request from `/assistant` threw a ReferenceError and the whole
+   * drafting path was dead. The help text already promised "Saya akan mencari
+   * penerima lewat find_precedent" — the tool exists, so the promise is now kept
+   * instead of the text being softened.
+   *
+   * find_precedent matches on `subject`, so a whole sentence will not match
+   * anything: it compares `record.subject.includes(subject)`. Names are
+   * extracted first, then tried in order, and the first lookup that returns a
+   * candidate wins. Nothing is guessed if all of them miss — the caller gets
+   * `resolution: 'none'` and says so.
+   */
+  function nameHints(text) {
+    var hints = [];
+    var afterPreposition = /(?:ke|kepada|untuk|dengan|buat)\s+([A-Za-z][A-Za-z.'-]*(?:\s+[A-Za-z][A-Za-z.'-]*)?)/i.exec(text);
+    if (afterPreposition) hints.push(afterPreposition[1].trim());
+    String(text).split(/[^A-Za-z.'-]+/).forEach(function (word) {
+      if (word.length >= 3 && /^[A-Z]/.test(word) && hints.indexOf(word) === -1) hints.push(word);
+    });
+    return hints.filter(function (h) { return h.length >= 3; }).slice(0, 4);
+  }
+
+  function localRecipientLookup(text) {
+    var hints = nameHints(text);
+    var contacts = D.store.contacts || [];
+    var matches = [];
+    hints.forEach(function (hint) {
+      var needle = hint.toLowerCase();
+      contacts.forEach(function (c) {
+        if (matches.some(function (m) { return m.contact_id === c.contact_id; })) return;
+        if (String(c.display_name).toLowerCase().indexOf(needle) >= 0 || String(c.department).toLowerCase().indexOf(needle) >= 0) {
+          matches.push(c);
+        }
+      });
+    });
+    return {
+      resolution: matches.length === 0 ? 'none' : matches.length === 1 ? 'unique' : 'ambiguous',
+      candidates: matches.map(function (c) {
+        return {
+          contact_id: c.contact_id,
+          display_name: c.display_name,
+          department: c.department,
+          masked: c.masked_address,
+          score: 1,
+          evidence: ['kontak demo di peramban'],
+          disputed: false
+        };
+      })
+    };
+  }
+
+  function lookupRecipient(text) {
+    if (D.store.mode !== 'live') {
+      return Promise.resolve(localRecipientLookup(text));
+    }
+    var hints = nameHints(text);
+    if (hints.length === 0) {
+      return Promise.resolve({ resolution: 'none', candidates: [] });
+    }
+    var context = String(text).toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 60);
+
+    function attempt(index) {
+      if (index >= hints.length) return Promise.resolve({ resolution: 'none', candidates: [] });
+      return D.api.call('find_precedent', { subject: hints[index], context: context, org_id: orgId() })
+        .then(function (d) {
+          var list = (d && d.candidates) || [];
+          if (list.length === 0) return attempt(index + 1);
+          return {
+            resolution: d.resolution,
+            candidates: list.map(function (c) {
+              return {
+                contact_id: c.contact_id,
+                display_name: c.display_name || c.contact_id,
+                department: c.department || '',
+                masked: c.masked_address || '',
+                score: c.score,
+                evidence: c.evidence || [],
+                disputed: !!c.disputed
+              };
+            })
+          };
+        })
+        .catch(function () {
+          return attempt(index + 1);
+        });
+    }
+    return attempt(0);
   }
 
   function compose(text) {
