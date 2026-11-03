@@ -340,6 +340,7 @@
     mode: 'demo',
     plans: [], mandates: [], audit: [], executions: [], policies: [], org: null,
     executionSummary: null,
+    auditIntegrity: null,
     users: [], roles: [], specialists: [], integrations: [], notifications: [], board: [],
     contacts: [], capabilities: [], permMatrix: {}, assistantThread: [],
     overlay: {}, // local prototype mutations (demo only), keyed by plan id
@@ -371,7 +372,13 @@
 
       var auditP = api.call('get_audit_log', { limit: 500 }).then(function (d) {
         self.audit = (d.events || []).slice().sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
-      }).catch(function () { self.audit = []; });
+        /*
+         * The server's verdict on the hash chain, computed over the whole log.
+         * The dashboard must not recompute it from the page it fetched — that
+         * would verify 500 events and call it "the audit log".
+         */
+        self.auditIntegrity = d.integrity || null;
+      }).catch(function () { self.audit = []; self.auditIntegrity = null; });
 
       var plansP = auditP.then(function () {
         return api.call('list_plans', { limit: 200 }).then(function (d) {

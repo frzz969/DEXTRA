@@ -27,6 +27,7 @@
       { path: '/approvals', title: 'Approval Inbox', icon: 'assignment_turned_in', view: 'approvals', cap: 'approve', desc: 'Menunggu keputusan manusia', count: 'awaiting' },
       { path: '/review', title: 'Review & Validation', icon: 'fact_check', view: 'reviewQueue', cap: 'view_all', desc: 'Tinjau rencana, lingkup, dan hasil' },
       { path: '/mandates', title: 'Mandates', icon: 'verified_user', view: 'mandates', cap: 'view_all', desc: 'Batas wewenang yang terbit' },
+      { path: '/security', title: 'Security Center', icon: 'shield', view: 'security', cap: 'view_audit', desc: 'Penolakan, karantina, dan integritas rekaman' },
       { path: '/audit', title: 'Audit Trail', icon: 'receipt_long', view: 'audit', cap: 'view_audit', desc: 'Rekaman append-only' },
       { path: '/policies', title: 'Policies', icon: 'policy', view: 'policies', cap: 'view_all', desc: 'Aturan operasional dan batasannya' }
     ]},

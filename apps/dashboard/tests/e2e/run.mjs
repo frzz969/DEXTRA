@@ -42,7 +42,7 @@ const ROUTES = [
   '/overview', '/requests', '/my-work', '/board', '/work-packages',
   '/execution', '/workforce', '/approvals', '/review', '/mandates',
   '/audit', '/policies', '/permissions', '/settings', '/assistant', '/integrations',
-  '/analytics',
+  '/analytics', '/security',
 ];
 
 const CHROME_CANDIDATES = [
@@ -441,6 +441,41 @@ async function main() {
         failures.push('/analytics: tidak menandai angka yang belum terukur (token/biaya tampil seolah hasil)');
       }
       console.log(`ok     /analytics: total ${analytics.summary ? analytics.summary.total : '?'}, latensi terukur ${analytics.summary ? analytics.summary.latency.measured : '?'}, token terukur ${analytics.summary ? analytics.summary.tokens.measured : '?'}`);
+
+      /*
+       * /security: verdict integritas harus datang dari server, dan halaman
+       * harus menampilkannya. Halaman yang tidak menyebut verdict berarti
+       * operator mengira audit-nya terverifikasi padahal tidak diperiksa.
+       */
+      cdp.reset();
+      await cdp.evaluate(`location.hash = '#/security'; 'ok'`);
+      await sleep(1200);
+      const security = await cdp.evaluate(`(function () {
+        var root = document.getElementById('view-root');
+        var text = root ? root.textContent.replace(/\\s+/g, ' ') : '';
+        return {
+          integrity: window.DEXTRA.store.auditIntegrity,
+          hasVerdict: /Rantai utuh|Rantai terputus/.test(text),
+          deniesRealtime: /Bukan pemantauan real-time/.test(text)
+        };
+      })()`);
+      if (!security.integrity) {
+        failures.push('/security: server tidak mengirim verdict integritas audit');
+      } else {
+        if (!security.integrity.ok) {
+          failures.push(`/security: rantai audit terputus di ${security.integrity.broken_at}`);
+        }
+        if (security.integrity.verified < 1) {
+          failures.push('/security: tidak ada satu pun event audit yang terverifikasi');
+        }
+      }
+      if (!security.hasVerdict) {
+        failures.push('/security: tidak menampilkan verdict integritas');
+      }
+      if (!security.deniesRealtime) {
+        failures.push('/security: tidak menyatakan bahwa ini bukan pemantauan real-time');
+      }
+      console.log(`ok     /security: integritas ok=${security.integrity ? security.integrity.ok : '?'}, terverifikasi ${security.integrity ? security.integrity.verified : '?'}, unchained ${security.integrity ? security.integrity.unchained : '?'}`);
     }
 
     /*

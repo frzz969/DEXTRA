@@ -108,6 +108,14 @@
         { id: 'ex.count', label: 'Berapa yang berhasil dan gagal?', kind: 'answer', compute: 'executionStats' }
       ] },
 
+    { route: '/security', label: 'Security Center', domain: 'Tata kelola', state: 'live',
+      tools: ['get_audit_log', 'list_mandates', 'list_executions'], modules: ['store', 'policy-engine'],
+      note: 'Dihitung dari event audit, status mandat, dan hasil eksekusi. Kedaluwarsa memakai jam sekarang, bukan kolom status. Bukan pemantauan real-time: data dibaca saat halaman dimuat dan setelah mutasi.',
+      intents: [
+        { id: 'sec.denied', label: 'Apa yang ditolak sistem?', kind: 'answer', compute: 'auditProof' },
+        { id: 'sec.expiry', label: 'Mandat mana yang kedaluwarsa?', kind: 'answer', compute: 'mandatesExpiring' }
+      ] },
+
     { route: '/analytics', label: 'Analytics', domain: 'Intelligence', state: 'live',
       tools: ['list_executions'], modules: ['executor', 'store'],
       note: 'Ringkasan dihitung server dari rekaman eksekusi (summary pada list_executions), bukan di browser dan bukan dari potongan halaman. Latensi terukur; token dan biaya bernilai null selama adapter masih tiruan.',
