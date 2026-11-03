@@ -134,17 +134,28 @@ Berkas: `apps/dashboard/assets/js/views/assistant.js`, `copilot.js`,
 Selesai bila: tidak ada kalimat di layar yang mengklaim kemampuan yang tidak
 dimiliki, dan tidak ada jawaban yang mengarang data.
 
-## A3 — E2E browser masuk repo
+## A3 — E2E browser masuk repo · **SELESAI**
 
-Verifikasi 17 rute selama ini dijalankan dengan skrip ad-hoc di folder Temp dan
-**tidak pernah masuk repo** — jadi tidak ada yang mengulanginya.
+`apps/dashboard/tests/e2e/run.mjs` — membuka dashboard sungguhan di Chrome,
+memeriksa 16 rute, gagal pada exception/console error/`#view-root` kosong. Ia
+menyalakan sendiri server MCP dan server statis bila belum jalan, lalu mematikan
+yang ia nyalakan.
 
-Berkas: `apps/dashboard/tests/e2e/**`, `package.json`, `scripts/test-all.mjs`.
+Tanpa dependensi: `npm i` di repo ini **gagal di Windows** karena symlink
+workspace `@dextra/*` (`EISDIR`), jadi Playwright tidak bisa dipasang. Chrome
+dikendalikan lewat CDP memakai `WebSocket` bawaan Node.
 
-Selesai bila: `npm run test:e2e` menjalankan Chrome headless, memeriksa setiap
-rute live di mode live, gagal bila ada galat konsol atau `#view-root` kosong.
-Tes ini harus **gagal** pada `beba8ec` (dashboard kosong) — buktikan, jangan
-diasumsikan.
+Dua hal yang sempat membuat uji ini hijau padahal tidak menguji apa-apa, dan
+sudah diperbaiki:
+- Mengubah `location.hash` tidak memuat ulang halaman, sehingga seluruh uji
+  berjalan di **mode demo**. Sekarang ada `Page.reload` eksplisit dan asersi
+  `store.mode === 'live'` serta `session.principal` tidak null.
+- Ambang "chip bukan `Token …`" meloloskan persona demo "Farhan Pratama".
+  Sekarang persona itu juga menggagalkan uji.
+
+Terbukti menangkap bug asalnya: dengan literal `\n` disuntikkan kembali ke
+`core.js`, 16 rute melaporkan "layar kosong" dan skrip keluar dengan `EXIT=1`;
+setelah dipulihkan, `EXIT=0`.
 
 ## A4 — Inventaris rute jujur
 
@@ -202,8 +213,8 @@ kode hari ini, dan tidak ada butir yang mengulang butir lain.
 | Putaran | WorkBuddy | opencode | Titik temu |
 |---|---|---|---|
 | 1 | ~~A1~~ selesai | ~~B1~~ selesai | — |
-| 2 | **A3** (berjalan) | **B2** | A5 menunggu B2 |
-| 3 | A2, A4 | B3, B4 | — |
+| 2 | ~~A3~~ selesai | **B2** | A5 menunggu B2 |
+| 3 | **A2, A4** (berikutnya) | B3, B4 | — |
 | 4 | A5 | — | setelah B2 hijau |
 
 Putaran 1 dan 2 sengaja tidak berbagi berkas sama sekali, supaya dua agen bisa

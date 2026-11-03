@@ -68,5 +68,13 @@ run('tes paket + gateway', 'npm', ['test']);
 run('kontrak dashboard', 'npm', ['run', 'test:dashboard']);
 run('tes HTTP gateway', 'npm', ['run', 'test:http']);
 run('tes Python', python, ['-m', 'pytest', 'tests', '-q']);
+/*
+ * Terakhir, karena paling lambat (~25 detik) dan butuh Chrome. Skrip ini
+ * membuka dashboard sungguhan: ia menangkap kelas kerusakan yang lolos dari
+ * parse dan dari tes berbasis regex — misalnya core.js yang sintaksnya benar
+ * tetapi gagal saat dijalankan. Di mesin tanpa Chrome ia menyatakan LEWATI dan
+ * tidak menggagalkan gerbang.
+ */
+run('rute dashboard dirender di peramban', 'npm', ['run', 'test:e2e']);
 
 console.log('\nSemua pemeriksaan lulus.');

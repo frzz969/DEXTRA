@@ -216,13 +216,40 @@ apps/dashboard/
 
 Honest list of what is **not** finished, so it is not read as working:
 
-- All mutations are in-memory. A refresh resets demo state. `D.api` is wired for the local
-  MCP server but has no server to talk to in this build.
-- `list_plans` / `list_mandates` exist, but the server reports no per-user ownership and no
-  mandate consumption count. Routes that depend on those stay `partial` or show `—` rather than
-  a guessed number.
-- `/board` supports viewing and moving cards within the session; drag ordering is not persisted.
-- `/integrations` cannot connect anything. Adapter status is descriptive only.
+- **Storage is files, not a database.** Every mutation goes through the local MCP server and is
+  written to `data/*.json` (atomic write, serialized per file). It survives a refresh and a
+  restart, but there is no concurrency control beyond a single process, no transactions, and no
+  PostgreSQL yet — the schema for that exists in `database/` and has never been run against a
+  live database.
+- **Ownership is only partly recorded.** `requester_id`/`assignee_id` are filled by the server
+  from the principal bound to the token, so plans created before that binding have neither. Those
+  routes say so on screen instead of guessing.
+- **`/board` drag is deliberately local.** The column is governance state, and governance state is
+  decided by the policy engine plus a human approval — not by dragging a card. Persisting a move
+  would let the UI claim a plan was approved because someone dragged it. The banner says this.
+- **`/assistant` composes with local rules, not a model.** Recipients come from `find_precedent`;
+  the plan draft is deterministic. It does not decide anything.
+- **`/integrations` cannot connect anything.** `manage_integrations` is not granted to any scope,
+  so the page is gated and adapter status is descriptive only.
+- **Settings preferences are browser-local.** Organisation rules come from the server; theme and
+  display choices do not.
+- **The token has no expiry and no revocation.** One token maps to one principal; rotating it means
+  changing an environment variable.
+
+## Tests
+
+```bash
+npm run test:dashboard   # contract: no intent points at a missing tool/compute/route
+npm run test:e2e         # opens the real dashboard in Chrome, checks every route
+npm run test:all         # the full gate, including both of the above
+```
+
+`test:e2e` needs a Chrome or Chromium install (`DEXTRA_CHROME` overrides the path). It starts the
+MCP server and the static server itself if they are not already running, then fails on any runtime
+exception, any console error, or any route that renders an empty `#view-root`. It prints `LEWATI`
+and exits 0 when no browser is found, so CI without Chrome stays green — which is why it is not the
+only check: `scripts/check-syntax.mjs` covers the parse layer without a browser.
+
 - Excel/CSV export on `/requests` and `/execution` produces a client-side file from demo rows.
 - Rich-text / Markdown / JSON editors from the vue-element-admin reference were **not** adopted —
   DEXTRA has no content-authoring workflow that would justify them.
