@@ -15,3 +15,4 @@ export * from './hash.ts';
 export * from './identity.ts';
 export * from './workflow.ts';
 export * from './alert.ts';
+export * from './skill.ts';
