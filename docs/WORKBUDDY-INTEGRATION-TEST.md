@@ -5,7 +5,7 @@
 | ID | Skenario | Expected | Status |
 | --- | --- | --- | --- |
 | WB-01 | MCP connection dari WorkBuddy ke 127.0.0.1:8765 | Connected | BELUM (butuh WorkBuddy client) |
-| WB-02 | Tool discovery (tools/list) | 7 read/plan tools, tanpa execute/submit/issue/revoke | BELUM |
+| WB-02 | Tool discovery (tools/list) | 12 read/plan tools, tanpa execute/submit/issue/revoke | BELUM |
 | WB-03 | Agent token auth | Valid → scope agent | BELUM |
 | WB-04 | Forbidden tool call (execute_action dengan agent token) | 403 / Forbidden | BELUM |
 | WB-05 | Error handling (invalid JSON) | parse error | BELUM |

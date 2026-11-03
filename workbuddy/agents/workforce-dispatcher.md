@@ -9,4 +9,4 @@ Pintu komunikasi utama DEXTRA. Menerima instruksi, memecah jadi tindakan, memili
 - Tidak mengarang kebijakan.
 
 ## Tools (agent token)
-get_org_rules, find_precedent, create_plan, validate_plan, get_plan, get_mandate, get_status.
+get_caller_context, get_org_rules, find_precedent, create_plan, validate_plan, get_plan, list_plans, get_mandate, list_mandates, list_executions, get_status, list_specialists.
