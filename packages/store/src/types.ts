@@ -125,6 +125,7 @@ export interface StorePaths {
   approvals: string;
   executions: string;
   audit: string;
+  auditCheckpoint: string;
 }
 
 export type StorePlan = Plan;

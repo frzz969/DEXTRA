@@ -24,7 +24,7 @@ import {
   type PrecedentResult,
 } from '../../contracts/src/index.ts';
 
-import { ensureStoreFiles, appendJsonLine, readJsonFile, readJsonLines, withFileLock, writeJsonAtomic } from './json-file.ts';
+import { ensureStoreFiles, appendJsonLine, readJsonFile, readJsonLinesLenient, withCrossProcessLock, withFileLock, writeJsonAtomic } from './json-file.ts';
 import { maskEmail } from './mask.ts';
 import { getStorePaths } from './paths.ts';
 import {
@@ -580,6 +580,12 @@ export function auditHash(event: AuditEvent, prevHash: string | null): string {
   return createHash('sha256').update(canonicalAuditPayload(event, prevHash)).digest('hex');
 }
 
+export interface AuditCheckpoint {
+  event_count: number;
+  head_hash: string;
+  at: string;
+}
+
 export interface AuditIntegrity {
   /** Events that carried a hash and matched their predecessor. */
   verified: number;
@@ -588,6 +594,15 @@ export interface AuditIntegrity {
   /** null when the chain is intact. */
   broken_at: string | null;
   broken_index: number | null;
+  /**
+   * Zero-based index of the first unparseable line, or null. A crash during an
+   * append leaves a half-written line; the events before it are still readable
+   * and still evidence.
+   */
+  malformed_at: number | null;
+  /** What the last successful write recorded. Null for logs written before it. */
+  checkpoint: AuditCheckpoint | null;
+  checkpoint_status: 'matches' | 'missing' | 'truncated' | 'ahead' | 'head_mismatch';
   ok: boolean;
 }
 
@@ -597,8 +612,13 @@ export interface AuditIntegrity {
  * This is the difference between "append-only" as a promise and append-only as
  * a property: editing one line in `data/audit.jsonl` invalidates every hash
  * after it, and the first bad link is reported by event id.
+ *
+ * A hash chain proves "each event points at its predecessor". It cannot prove
+ * "this is the last event": truncating the tail leaves a shorter but perfectly
+ * valid chain. That is what the checkpoint is for — it remembers how many
+ * events existed and what the head hash was, so a shorter log is visible.
  */
-export function verifyAuditChain(events: AuditEvent[]): AuditIntegrity {
+export function verifyAuditChain(events: AuditEvent[], checkpoint: AuditCheckpoint | null = null): AuditIntegrity {
   let expectedPrev: string | null = null;
   let verified = 0;
   let unchained = 0;
@@ -611,16 +631,48 @@ export function verifyAuditChain(events: AuditEvent[]): AuditIntegrity {
       continue;
     }
     if ((event.prev_hash ?? null) !== expectedPrev) {
-      return { verified, unchained, broken_at: event.event_id, broken_index: index, ok: false };
+      return {
+        verified, unchained, broken_at: event.event_id, broken_index: index,
+        malformed_at: null, checkpoint, checkpoint_status: compareCheckpoint(events, checkpoint), ok: false,
+      };
     }
     if (auditHash(event, expectedPrev) !== event.hash) {
-      return { verified, unchained, broken_at: event.event_id, broken_index: index, ok: false };
+      return {
+        verified, unchained, broken_at: event.event_id, broken_index: index,
+        malformed_at: null, checkpoint, checkpoint_status: compareCheckpoint(events, checkpoint), ok: false,
+      };
     }
     verified += 1;
     expectedPrev = event.hash;
   }
 
-  return { verified, unchained, broken_at: null, broken_index: null, ok: true };
+  const status = compareCheckpoint(events, checkpoint);
+  return {
+    verified,
+    unchained,
+    broken_at: null,
+    broken_index: null,
+    malformed_at: null,
+    checkpoint,
+    checkpoint_status: status,
+    /*
+     * `ahead` is not a failure: it means events were appended after the last
+     * checkpoint write, which a crash between the two steps can produce. It is
+     * reported, not alarmed — the alternative is a false "tampered" verdict on
+     * an honest crash, which is the exact failure this whole change exists to
+     * remove.
+     */
+    ok: status !== 'truncated' && status !== 'head_mismatch',
+  };
+}
+
+function compareCheckpoint(events: AuditEvent[], checkpoint: AuditCheckpoint | null): AuditIntegrity['checkpoint_status'] {
+  if (!checkpoint) return 'missing';
+  if (events.length < checkpoint.event_count) return 'truncated';
+  if (events.length > checkpoint.event_count) return 'ahead';
+  const head = events[events.length - 1];
+  if (!head || head.hash !== checkpoint.head_hash) return 'head_mismatch';
+  return 'matches';
 }
 
 export async function appendAudit(event: AuditEvent): Promise<void> {
@@ -628,33 +680,95 @@ export async function appendAudit(event: AuditEvent): Promise<void> {
   assertNoSensitiveDetail(parsed.detail);
   const store = await prepare();
   /*
-   * Read-last-then-append must be one critical section. Two concurrent appends
-   * that both read the same predecessor would chain to the same `prev_hash` and
-   * fork the chain — producing a "tampered" verdict later for events nobody
-   * touched.
+   * Two locks, and both are needed.
+   *
+   * `withFileLock` is an in-process queue: it keeps callers inside this Node
+   * process from interleaving. `withCrossProcessLock` is the one that matters
+   * when the MCP server, the Telegram adapter, and the seed script are separate
+   * processes — without it they each read the same predecessor and fork the
+   * chain, and the verifier then reports a legitimate write as tampering.
    */
-  await withFileLock(store.audit, async () => {
-    const existing = await readAuditEvents(store.audit);
-    const last = existing[existing.length - 1];
-    const prevHash = last?.hash ?? null;
-    const chained: AuditEvent = { ...parsed, prev_hash: prevHash, hash: auditHash(parsed, prevHash) };
-    await appendJsonLine(store.audit, chained);
-  });
+  await withFileLock(store.audit, () =>
+    withCrossProcessLock(store.audit, async () => {
+      const { events: existing } = await readAuditEvents(store.audit);
+      const last = existing[existing.length - 1];
+      const prevHash = last?.hash ?? null;
+      const hash = auditHash(parsed, prevHash);
+      const chained: AuditEvent = { ...parsed, prev_hash: prevHash, hash };
+      await appendJsonLine(store.audit, chained);
+      /*
+       * Written after the append, inside the same lock. If the process dies
+       * between the two, the checkpoint is one short of the log — reported as
+       * `ahead`, not as tampering.
+       */
+      await writeJsonAtomic(store.auditCheckpoint, {
+        event_count: existing.length + 1,
+        head_hash: hash,
+        at: chained.at,
+      } satisfies AuditCheckpoint);
+    }),
+  );
 }
 
-async function readAuditEvents(file: string): Promise<AuditEvent[]> {
-  const raw = await readJsonLines<unknown>(file);
-  return raw.map((entry, index) => parseRecord(file, AuditEventSchema, entry, index));
+/**
+ * Reads the audit log without letting one bad line destroy the rest.
+ *
+ * The chain stops at the first unparseable line by definition — everything after
+ * it is unverifiable — but the events before it are still evidence and are still
+ * returned.
+ */
+async function readAuditEvents(file: string): Promise<{ events: AuditEvent[]; malformed_at: number | null }> {
+  const { records, malformed_at } = await readJsonLinesLenient<unknown>(file);
+  const events: AuditEvent[] = [];
+  for (let index = 0; index < records.length; index += 1) {
+    try {
+      events.push(AuditEventSchema.parse(records[index]));
+    } catch {
+      return { events, malformed_at: malformed_at ?? index };
+    }
+  }
+  return { events, malformed_at };
+}
+
+async function readCheckpoint(file: string): Promise<AuditCheckpoint | null> {
+  try {
+    const raw = await readJsonFile<unknown>(file, null);
+    if (!raw || typeof raw !== 'object') return null;
+    const candidate = raw as Partial<AuditCheckpoint>;
+    if (typeof candidate.event_count !== 'number' || typeof candidate.head_hash !== 'string') return null;
+    return { event_count: candidate.event_count, head_hash: candidate.head_hash, at: String(candidate.at ?? '') };
+  } catch {
+    return null;
+  }
 }
 
 /** Returns audit events in append order (oldest first), optionally last N. */
 export async function listAudit(limit?: number): Promise<AuditEvent[]> {
   const store = await prepare();
-  const events = await readAuditEvents(store.audit);
+  const { events } = await readAuditEvents(store.audit);
   if (limit !== undefined && limit >= 0) {
     return events.slice(-limit);
   }
   return events;
+}
+
+/**
+ * One read pass that returns the events, the chain verdict, and the checkpoint
+ * comparison. Callers that need a verdict must use this rather than calling
+ * `listAudit` and verifying a page: the verdict has to cover the whole log.
+ */
+export async function listAuditWithIntegrity(): Promise<{ events: AuditEvent[]; integrity: AuditIntegrity }> {
+  const store = await prepare();
+  const { events, malformed_at } = await readAuditEvents(store.audit);
+  const checkpoint = await readCheckpoint(store.auditCheckpoint);
+  const integrity = verifyAuditChain(events, checkpoint);
+  if (malformed_at !== null) {
+    return {
+      events,
+      integrity: { ...integrity, malformed_at, ok: false },
+    };
+  }
+  return { events, integrity };
 }
 
 export async function listCalendarEvents(): Promise<CalendarEvent[]> {

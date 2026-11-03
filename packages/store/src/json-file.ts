@@ -1,8 +1,8 @@
-﻿import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+﻿import { appendFile, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { getDocumentsDir, getStorePaths } from './paths.ts';
-import { StoreFileError } from './types.ts';
+import { StoreError, StoreFileError } from './types.ts';
 
 const WRITE_QUEUES = new Map<string, Promise<void>>();
 
@@ -55,6 +55,72 @@ export function withFileLock<T>(file: string, run: () => Promise<T>): Promise<T>
     }
   });
   return result;
+}
+
+/**
+ * Lock that holds across processes, not just across calls.
+ *
+ * `withFileLock` below serializes callers inside one Node process, which is not
+ * the same thing. The MCP server, the Telegram adapter, the seed script and the
+ * tests are separate processes; two of them appending at once both read the same
+ * predecessor and both chain to it, forking the audit chain. The verifier then
+ * reports a fork as tampering — a false alarm on a legitimate write, which is
+ * worse than no alarm at all.
+ *
+ * `open(path, 'wx')` is the primitive: it fails with EEXIST if the file exists,
+ * atomically, on POSIX and Windows alike. There is no portable advisory lock in
+ * Node without a dependency, and this is enough for the critical section here
+ * (read last hash, append, write checkpoint).
+ *
+ * Stale locks are broken after 30s. The section this protects takes
+ * milliseconds, so a lock that old belongs to a process that died.
+ */
+const LOCK_STALE_MS = 30_000;
+const LOCK_TIMEOUT_MS = 10_000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function withCrossProcessLock<T>(target: string, run: () => Promise<T>): Promise<T> {
+  const lockPath = `${target}.lock`;
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  let handle: Awaited<ReturnType<typeof open>> | null = null;
+
+  for (;;) {
+    try {
+      handle = await open(lockPath, 'wx');
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+
+      try {
+        const info = await stat(lockPath);
+        if (Date.now() - info.mtimeMs > LOCK_STALE_MS) {
+          // The holder died without releasing. Remove and retry immediately.
+          await unlink(lockPath).catch(() => undefined);
+          continue;
+        }
+      } catch {
+        // The lock vanished between open and stat: retry.
+        continue;
+      }
+
+      if (Date.now() > deadline) {
+        throw new StoreError('AUDIT_WRITE_FAILED', `lock timeout: ${lockPath} (proses lain menahan lebih dari ${LOCK_TIMEOUT_MS}ms)`);
+      }
+      // Jitter keeps two waiters from retrying in lockstep forever.
+      await sleep(10 + Math.floor(Math.random() * 25));
+    }
+  }
+
+  try {
+    await handle.writeFile(JSON.stringify({ pid: process.pid, at: new Date().toISOString() }));
+    return await run();
+  } finally {
+    await handle.close().catch(() => undefined);
+    await unlink(lockPath).catch(() => undefined);
+  }
 }
 
 /**
@@ -123,6 +189,41 @@ export async function readJsonLines<T>(file: string): Promise<T[]> {
       throw new StoreFileError(file, (error as Error).message);
     }
   });
+}
+
+/**
+ * Reads JSON Lines but stops at the first unparseable line instead of failing
+ * the whole file.
+ *
+ * A crash during an append can leave a half-written last line. For a data file
+ * that is corruption, and refusing to read it is defensible. For the audit log
+ * it is the opposite: one truncated line would make the entire history
+ * unreadable, so a single bad write would erase the evidence of everything
+ * before it. This reader keeps what is intact and reports where it stopped.
+ *
+ * `malformed_at` is the zero-based index of the first bad line, or null.
+ */
+export async function readJsonLinesLenient<T>(file: string): Promise<{ records: T[]; malformed_at: number | null }> {
+  let raw: string;
+  try {
+    raw = await readFile(file, 'utf8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return { records: [], malformed_at: null };
+    }
+    throw error;
+  }
+
+  const lines = raw.split(/\r?\n/).filter((line) => line.trim() !== '');
+  const records: T[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    try {
+      records.push(JSON.parse(lines[index]!) as T);
+    } catch {
+      return { records, malformed_at: index };
+    }
+  }
+  return { records, malformed_at: null };
 }
 
 /**

@@ -41,6 +41,12 @@ export function getStorePaths(): StorePaths {
     approvals: resolve(dataDir, 'approvals.json'),
     executions: resolve(dataDir, 'executions.json'),
     audit: resolve(dataDir, 'audit.jsonl'),
+    /*
+     * Lives beside the log, not inside it. Its job is to remember what the log
+     * looked like the last time it was written, so a truncated tail can be
+     * noticed — a hash chain alone cannot prove "this is the last event".
+     */
+    auditCheckpoint: resolve(dataDir, 'audit.checkpoint.json'),
   };
 }
 

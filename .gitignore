@@ -28,3 +28,14 @@ data/*.db
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+
+# Keadaan runtime, bukan data produk.
+# Checkpoint hanya bermakna bila dibaca bersama audit.jsonl di mesin yang sama;
+# meng-commit-nya berarti membawa klaim "ini event terakhir" ke mesin lain,
+# yang justru memicu truncated palsu.
+data/audit.checkpoint.json
+# Lockfile antar-proses (open 'wx'); sisa proses yang mati tidak boleh masuk repo.
+data/*.lock
+
+# Sisa kompilasi TypeScript
+*.tsbuildinfo

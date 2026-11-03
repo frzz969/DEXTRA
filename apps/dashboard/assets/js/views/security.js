@@ -86,22 +86,44 @@
       var icon = integrity.ok ? 'verified_user' : 'gpp_bad';
       var headline = integrity.ok
         ? 'Rantai utuh pada ' + integrity.verified + ' event'
-        : 'Rantai terputus pada ' + esc(integrity.broken_at || '?');
+        : integrity.malformed_at !== null
+          ? 'Berkas audit rusak di baris ' + integrity.malformed_at
+          : integrity.checkpoint_status === 'truncated'
+            ? 'Log lebih pendek dari checkpoint'
+            : 'Rantai terputus pada ' + esc(integrity.broken_at || '?');
+
+      /* What the checkpoint comparison actually means, spelled out rather than
+       * reduced to a colour. Each state is a different fact. */
+      var ckptText = {
+        matches: 'Checkpoint cocok: jumlah dan kepala rantai sama dengan saat terakhir ditulis.',
+        missing: 'Belum ada checkpoint. Rantai tetap diperiksa, tetapi pemotongan di ekor tidak bisa dideteksi tanpa pembanding.',
+        truncated: 'Log lebih pendek daripada checkpoint: ada event yang hilang dari ekor.',
+        ahead: 'Ada event setelah checkpoint terakhir. Biasanya proses berhenti di antara tulis dan checkpoint — bukan bukti pemalsuan.',
+        head_mismatch: 'Jumlah event sama, tetapi hash terakhir berbeda dari checkpoint.'
+      }[integrity.checkpoint_status] || 'Status checkpoint tidak dikenal.';
 
       return ui.card({
         title: 'Integritas audit',
-        desc: 'Setiap event menandatangani event sebelumnya. Menyunting satu baris memutus rantai setelahnya.',
+        desc: 'Setiap event menandatangani event sebelumnya. Checkpoint mencatat seberapa panjang rantai seharusnya.',
         body: '<div class="banner banner--' + tone + '"><span class="material-symbols-outlined">' + icon + '</span><div>' +
             '<b>' + headline + '</b><br>' +
             (integrity.ok
               ? 'Tidak ada baris yang berubah sejak ditulis.'
-              : 'Event pada indeks ' + integrity.broken_index + ' tidak cocok dengan hash pendahulunya. Isi berkas audit kemungkinan disunting atau dihapus.') +
+              : integrity.malformed_at !== null
+                ? 'Satu baris tidak dapat dibaca — biasanya penulisan yang terpotong. Event sebelum baris itu tetap sah dan tetap ditampilkan.'
+                : integrity.checkpoint_status === 'truncated'
+                  ? 'Jumlah event lebih sedikit daripada yang tercatat di checkpoint. Isi berkas audit kemungkinan dipotong.'
+                  : 'Event pada indeks ' + integrity.broken_index + ' tidak cocok dengan hash pendahulunya.') +
           '</div></div>' +
           '<dl class="def-list" style="margin-top:12px">' +
             '<dt>Event terverifikasi</dt><dd>' + integrity.verified + '</dd>' +
             '<dt>Event lama tanpa hash</dt><dd>' + integrity.unchained + (integrity.unchained ? ' <span class="tiny muted">(ditulis sebelum rantai ada — tidak terverifikasi, bukan berarti rusak)</span>' : '') + '</dd>' +
-            '<dt>Status</dt><dd>' + (integrity.ok ? '<span class="badge badge--success">utuh</span>' : '<span class="badge badge--danger">terputus</span>') + '</dd>' +
-          '</dl>',
+            '<dt>Checkpoint</dt><dd>' + (integrity.checkpoint
+              ? '<span class="mono tiny">' + integrity.checkpoint.event_count + ' event · ' + esc(integrity.checkpoint.head_hash.slice(0, 12)) + '…</span>'
+              : '<span class="faint">belum ada</span>') + '</dd>' +
+            '<dt>Status</dt><dd>' + (integrity.ok ? '<span class="badge badge--success">utuh</span>' : '<span class="badge badge--danger">perlu diperiksa</span>') + '</dd>' +
+          '</dl>' +
+          '<p class="tiny muted" style="margin-top:10px">' + esc(ckptText) + '</p>',
         foot: '<span class="tiny muted">Diperiksa server atas seluruh isi log, bukan hanya halaman ini.</span>'
       });
     }

@@ -455,7 +455,7 @@ async function main() {
         var text = root ? root.textContent.replace(/\\s+/g, ' ') : '';
         return {
           integrity: window.DEXTRA.store.auditIntegrity,
-          hasVerdict: /Rantai utuh|Rantai terputus/.test(text),
+          hasVerdict: /Rantai utuh|Rantai terputus|Log lebih pendek|Berkas audit rusak/.test(text),
           deniesRealtime: /Bukan pemantauan real-time/.test(text)
         };
       })()`);
@@ -468,6 +468,9 @@ async function main() {
         if (security.integrity.verified < 1) {
           failures.push('/security: tidak ada satu pun event audit yang terverifikasi');
         }
+        if (security.integrity.checkpoint_status !== 'matches') {
+          failures.push(`/security: checkpoint ${security.integrity.checkpoint_status}, bukan matches — pemotongan ekor tidak akan terdeteksi`);
+        }
       }
       if (!security.hasVerdict) {
         failures.push('/security: tidak menampilkan verdict integritas');
@@ -475,7 +478,7 @@ async function main() {
       if (!security.deniesRealtime) {
         failures.push('/security: tidak menyatakan bahwa ini bukan pemantauan real-time');
       }
-      console.log(`ok     /security: integritas ok=${security.integrity ? security.integrity.ok : '?'}, terverifikasi ${security.integrity ? security.integrity.verified : '?'}, unchained ${security.integrity ? security.integrity.unchained : '?'}`);
+      console.log(`ok     /security: integritas ok=${security.integrity ? security.integrity.ok : '?'}, terverifikasi ${security.integrity ? security.integrity.verified : '?'}, unchained ${security.integrity ? security.integrity.unchained : '?'}, checkpoint ${security.integrity ? security.integrity.checkpoint_status : '?'}`);
     }
 
     /*
