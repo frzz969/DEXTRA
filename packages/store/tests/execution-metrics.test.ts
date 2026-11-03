@@ -44,7 +44,7 @@ describe('summarizeExecutions', () => {
   test('tanpa data: tidak ada angka yang dikarang', () => {
     const s = summarizeExecutions([]);
     assert.equal(s.total, 0);
-    assert.equal(s.success_rate, null, 'pembagian nol tidak boleh jadi 0%');
+    assert.equal(s.dispatch_rate, null, 'pembagian nol tidak boleh jadi 0%');
     assert.equal(s.latency.measured, 0);
     assert.equal(s.latency.p50_ms, null);
     assert.equal(s.latency.p95_ms, null);
@@ -59,7 +59,7 @@ describe('summarizeExecutions', () => {
     const s = summarizeExecutions([measuredRow('sent', 12, null), measuredRow('sent', 30, null)]);
 
     assert.equal(s.total, 2);
-    assert.equal(s.success_rate, 1);
+    assert.equal(s.dispatch_rate, 1);
     assert.equal(s.latency.measured, 2);
     assert.equal(s.latency.p50_ms, 12);
     assert.equal(s.latency.max_ms, 30);
@@ -119,13 +119,13 @@ describe('summarizeExecutions', () => {
     assert.equal(s.latency.measured, 1, 'latensinya tetap sah');
   });
 
-  test('success_rate menghitung hasil apa adanya', () => {
+  test('dispatch_rate menghitung penerimaan adapter apa adanya', () => {
     const s = summarizeExecutions([legacyRow('sent'), legacyRow('blocked'), legacyRow('failed'), legacyRow('queued')]);
     assert.equal(s.total, 4);
     assert.equal(s.by_result.sent, 1);
     assert.equal(s.by_result.blocked, 1);
     assert.equal(s.by_result.failed, 1);
     assert.equal(s.by_result.queued, 1);
-    assert.equal(s.success_rate, 0.25);
+    assert.equal(s.dispatch_rate, 0.25);
   });
 });

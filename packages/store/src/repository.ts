@@ -1,4 +1,5 @@
-﻿import { z } from 'zod';
+﻿import { createHash } from 'node:crypto';
+import { z } from 'zod';
 
 import {
   ActionResultSchema,
@@ -387,11 +388,32 @@ export async function listExecutions(): Promise<ActionResult[]> {
 export interface ExecutionSummary {
   total: number;
   by_result: Record<'sent' | 'blocked' | 'failed' | 'queued', number>;
-  /** `sent / total`; null when there is nothing to divide by. */
-  success_rate: number | null;
-  latency: { measured: number; p50_ms: number | null; p95_ms: number | null; max_ms: number | null };
+  /**
+   * Fraction of attempts the adapter accepted. NOT the fraction of jobs that
+   * achieved their business outcome.
+   *
+   * `result: 'sent'` means the adapter took the request and returned an id.
+   * With the mock adapters nothing leaves the process at all. Calling this
+   * "success rate" would let a dashboard claim work was done when only a
+   * dispatch was acknowledged. The rename is the fix: the metric now says what
+   * it measures.
+   */
+  dispatch_rate: number | null;
+  latency: {
+    /** What the measurement covers. Only the adapter call is timed today. */
+    scope: 'adapter_call';
+    measured: number;
+    p50_ms: number | null;
+    p95_ms: number | null;
+    max_ms: number | null;
+  };
   tokens: { measured: number; input: number; output: number; total: number };
-  cost_usd: { measured: number; total: number };
+  cost_usd: {
+    measured: number;
+    total: number;
+    /** How many records got their cost from each source. */
+    by_source: { provider_reported: number; rate_card: number; unknown: number };
+  };
 }
 
 function percentile(sorted: number[], p: number): number | null {
@@ -409,6 +431,7 @@ export function summarizeExecutions(rows: ActionResult[]): ExecutionSummary {
   let tokensOut = 0;
   let costRows = 0;
   let costTotal = 0;
+  const costBySource = { provider_reported: 0, rate_card: 0, unknown: 0 };
 
   for (const row of rows) {
     if (row.result in by_result) by_result[row.result as keyof typeof by_result] += 1;
@@ -430,6 +453,9 @@ export function summarizeExecutions(rows: ActionResult[]): ExecutionSummary {
     if (usage.cost_usd !== null) {
       costRows += 1;
       costTotal += usage.cost_usd;
+      const source = usage.cost_source;
+      if (source === 'provider_reported' || source === 'rate_card') costBySource[source] += 1;
+      else costBySource.unknown += 1;
     }
   }
 
@@ -439,8 +465,9 @@ export function summarizeExecutions(rows: ActionResult[]): ExecutionSummary {
   return {
     total,
     by_result,
-    success_rate: total === 0 ? null : by_result.sent / total,
+    dispatch_rate: total === 0 ? null : by_result.sent / total,
     latency: {
+      scope: 'adapter_call',
       measured: sorted.length,
       p50_ms: percentile(sorted, 50),
       p95_ms: percentile(sorted, 95),
@@ -452,7 +479,7 @@ export function summarizeExecutions(rows: ActionResult[]): ExecutionSummary {
       output: tokensOut,
       total: tokensIn + tokensOut,
     },
-    cost_usd: { measured: costRows, total: costTotal },
+    cost_usd: { measured: costRows, total: costTotal, by_source: costBySource },
   };
 }
 
@@ -524,18 +551,106 @@ function assertNoSensitiveDetail(detail: Record<string, string>): void {
 }
 
 /** Appends one contract-validated audit event. Never rewrites the log. */
+/**
+ * Canonical form of an audit event for hashing.
+ *
+ * The field list is explicit and ordered. `JSON.stringify(event)` would depend
+ * on property insertion order, so the same event rebuilt by a different code
+ * path would hash differently and the chain would "break" for no reason.
+ */
+function canonicalAuditPayload(event: AuditEvent, prevHash: string | null): string {
+  return JSON.stringify([
+    prevHash,
+    event.event_id,
+    event.at,
+    event.type,
+    event.actor,
+    event.plan_id ?? null,
+    event.mandate_id ?? null,
+    event.action_id ?? null,
+    event.plan_hash ?? null,
+    event.reason_code ?? null,
+    Object.keys(event.detail)
+      .sort()
+      .map((key) => [key, event.detail[key]]),
+  ]);
+}
+
+export function auditHash(event: AuditEvent, prevHash: string | null): string {
+  return createHash('sha256').update(canonicalAuditPayload(event, prevHash)).digest('hex');
+}
+
+export interface AuditIntegrity {
+  /** Events that carried a hash and matched their predecessor. */
+  verified: number;
+  /** Events written before the chain existed. Not verified — merely old. */
+  unchained: number;
+  /** null when the chain is intact. */
+  broken_at: string | null;
+  broken_index: number | null;
+  ok: boolean;
+}
+
+/**
+ * Recomputes the hash chain over the events as they are stored now.
+ *
+ * This is the difference between "append-only" as a promise and append-only as
+ * a property: editing one line in `data/audit.jsonl` invalidates every hash
+ * after it, and the first bad link is reported by event id.
+ */
+export function verifyAuditChain(events: AuditEvent[]): AuditIntegrity {
+  let expectedPrev: string | null = null;
+  let verified = 0;
+  let unchained = 0;
+
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index]!;
+    if (!event.hash) {
+      unchained += 1;
+      expectedPrev = null;
+      continue;
+    }
+    if ((event.prev_hash ?? null) !== expectedPrev) {
+      return { verified, unchained, broken_at: event.event_id, broken_index: index, ok: false };
+    }
+    if (auditHash(event, expectedPrev) !== event.hash) {
+      return { verified, unchained, broken_at: event.event_id, broken_index: index, ok: false };
+    }
+    verified += 1;
+    expectedPrev = event.hash;
+  }
+
+  return { verified, unchained, broken_at: null, broken_index: null, ok: true };
+}
+
 export async function appendAudit(event: AuditEvent): Promise<void> {
   const parsed = AuditEventSchema.parse(event);
   assertNoSensitiveDetail(parsed.detail);
   const store = await prepare();
-  await appendJsonLine(store.audit, parsed);
+  /*
+   * Read-last-then-append must be one critical section. Two concurrent appends
+   * that both read the same predecessor would chain to the same `prev_hash` and
+   * fork the chain — producing a "tampered" verdict later for events nobody
+   * touched.
+   */
+  await withFileLock(store.audit, async () => {
+    const existing = await readAuditEvents(store.audit);
+    const last = existing[existing.length - 1];
+    const prevHash = last?.hash ?? null;
+    const chained: AuditEvent = { ...parsed, prev_hash: prevHash, hash: auditHash(parsed, prevHash) };
+    await appendJsonLine(store.audit, chained);
+  });
+}
+
+async function readAuditEvents(file: string): Promise<AuditEvent[]> {
+  const raw = await readJsonLines<unknown>(file);
+  return raw.map((entry, index) => parseRecord(file, AuditEventSchema, entry, index));
 }
 
 /** Returns audit events in append order (oldest first), optionally last N. */
 export async function listAudit(limit?: number): Promise<AuditEvent[]> {
   const store = await prepare();
-  const raw = await readJsonLines<unknown>(store.audit);
-  const events = raw.map((entry, index) => parseRecord(store.audit, AuditEventSchema, entry, index));
+  const events = await readAuditEvents(store.audit);
   if (limit !== undefined && limit >= 0) {
     return events.slice(-limit);
   }

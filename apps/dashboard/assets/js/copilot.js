@@ -338,7 +338,7 @@
           { label: 'Latensi p50', value: s.latency.p50_ms === null ? 'tidak diukur' : s.latency.p50_ms + ' ms' }
         ],
         body: [
-          s.success_rate === null ? 'Belum ada eksekusi untuk dihitung.' : 'Tingkat keberhasilan ' + (s.success_rate * 100).toFixed(1) + '%.',
+          s.dispatch_rate === null ? 'Belum ada eksekusi untuk dihitung.' : 'Diterima adapter: ' + (s.dispatch_rate * 100).toFixed(1) + '% (bukan penyelesaian tugas).',
           s.tokens.measured === 0 ? 'Pemakaian token belum terukur: adapter yang berjalan tidak memanggil model.' : s.tokens.measured + ' eksekusi melaporkan token.'
         ]
       });

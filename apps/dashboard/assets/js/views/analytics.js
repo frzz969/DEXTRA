@@ -60,14 +60,19 @@
         desc: 'Dihitung server dari ' + s.total + ' rekaman eksekusi. Tidak ada angka yang diperkirakan: yang tidak terukur ditandai, bukan diisi nol.',
         actions: '<a class="btn btn--secondary" href="#/execution"><span class="material-symbols-outlined">play_circle</span>Rekaman eksekusi</a>'
       }) +
+      '<div class="banner banner--info" style="margin-bottom:16px"><span class="material-symbols-outlined">help</span><div>' +
+        '<b>"Diterima adapter" bukan "pekerjaan selesai".</b> Status <span class="mono">sent</span> berarti adapter menerima permintaan dan mengembalikan id. ' +
+        'Adapter sekarang tiruan, jadi tidak ada pesan yang benar-benar keluar dari sistem. Angka ini mengukur penerimaan, bukan hasil akhir pekerjaan — ' +
+        'DEXTRA belum punya sinyal yang membuktikan sebuah tugas mencapai tujuannya.' +
+      '</div></div>' +
       '<div class="grid grid--4" style="margin-bottom:16px">' +
         ui.kpi({ label: 'Total eksekusi', value: num(s.total), icon: 'bolt', foot: '<span class="tiny muted">seluruh rekaman tersimpan</span>' }) +
         ui.kpi({
-          label: 'Tingkat keberhasilan',
-          value: s.success_rate === null ? '—' : pct(s.success_rate),
+          label: 'Diterima adapter',
+          value: s.dispatch_rate === null ? '—' : pct(s.dispatch_rate),
           icon: 'check_circle',
-          tone: s.success_rate === null ? '' : (s.success_rate >= 0.9 ? 'success' : s.success_rate >= 0.6 ? 'warning' : 'danger'),
-          foot: '<span class="tiny muted">' + s.by_result.sent + ' berhasil dari ' + s.total + '</span>'
+          tone: s.dispatch_rate === null ? '' : (s.dispatch_rate >= 0.9 ? 'success' : s.dispatch_rate >= 0.6 ? 'warning' : 'danger'),
+          foot: '<span class="tiny muted">' + s.by_result.sent + ' dari ' + s.total + ' · bukan penyelesaian tugas</span>'
         }) +
         ui.kpi({ label: 'Latensi p50', value: ms(s.latency.p50_ms), icon: 'speed', foot: '<span class="tiny muted">' + esc(latencyFoot) + '</span>' }) +
         ui.kpi({ label: 'Latensi p95', value: ms(s.latency.p95_ms), icon: 'timer', foot: '<span class="tiny muted">maks ' + ms(s.latency.max_ms) + '</span>' }) +
@@ -88,10 +93,15 @@
           title: 'Apa yang benar-benar terukur',
           desc: 'Kolom tengah menyebut berapa rekaman yang mendukung tiap angka.',
           body: '<dl class="def-list">' +
-            '<dt>Latensi</dt><dd>' + measured(s.latency.measured, s.latency.p50_ms, 'ms (p50)') + '</dd>' +
+            '<dt>Latensi</dt><dd>' + measured(s.latency.measured, s.latency.p50_ms, 'ms (p50)') + ' <span class="tiny muted">· hanya pemanggilan adapter</span></dd>' +
             '<dt>Token masuk</dt><dd>' + measured(s.tokens.measured, num(s.tokens.input), 'token') + '</dd>' +
             '<dt>Token keluar</dt><dd>' + measured(s.tokens.measured, num(s.tokens.output), 'token') + '</dd>' +
             '<dt>Biaya</dt><dd>' + measured(s.cost_usd.measured, '$' + s.cost_usd.total.toFixed(4), 'USD') + '</dd>' +
+            '<dt>Asal biaya</dt><dd>' +
+              (s.cost_usd.measured
+                ? s.cost_usd.by_source.provider_reported + ' dilaporkan provider · ' + s.cost_usd.by_source.rate_card + ' dari tarif · ' + s.cost_usd.by_source.unknown + ' tanpa sumber'
+                : '<span class="faint">belum ada biaya untuk dilacak asalnya</span>') +
+            '</dd>' +
             '</dl>' +
             '<div class="banner banner--info" style="margin-top:14px"><span class="material-symbols-outlined">science</span><div>' +
               '<b>Kenapa token dan biaya kosong.</b> Adapter yang berjalan sekarang adalah tiruan: tidak ada model yang dipanggil, jadi tidak ada token yang dipakai. ' +

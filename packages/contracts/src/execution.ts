@@ -38,6 +38,15 @@ export const ExecutionUsageSchema = z
     tokens_in: z.number().int().nonnegative().nullable(),
     tokens_out: z.number().int().nonnegative().nullable(),
     cost_usd: z.number().nonnegative().nullable(),
+    /**
+     * Where `cost_usd` came from. Not every provider returns a price, and a
+     * number derived from a rate card is a different kind of fact than one the
+     * provider reported. Keeping the origin means a later audit can ask "was
+     * this billed or estimated?" without guessing.
+     */
+    cost_source: z.enum(['provider_reported', 'rate_card']).nullable().optional(),
+    /** Which rate card produced `cost_usd`, e.g. a model/price version. */
+    rate_card_version: z.string().nullable().optional(),
     latency_ms: z.number().nonnegative(),
   })
   .strict();
