@@ -4,7 +4,8 @@ Dokumen ini memetakan struktur repo **yang benar-benar ada** terhadap target di 
 Tujuannya mencegah dua kesalahan: mengira fitur sudah ada karena tertulis di target, dan
 membuat folder kosong supaya struktur "terlihat" sesuai spesifikasi.
 
-Diperiksa pada: 2 November 2026, worktree `main-dce9c1a5`.
+Diperiksa pada: 3 November 2026, commit `fe4f8ef` (branch `main`). Angka di dokumen ini
+dihitung dari kode, bukan disalin dari dokumen lain.
 
 ---
 
@@ -14,7 +15,7 @@ Diperiksa pada: 2 November 2026, worktree `main-dce9c1a5`.
 |---|---|---|
 | TypeScript monorepo (npm workspaces) | ADA | `package.json` → `workspaces: ["packages/*", "apps/*"]` |
 | Domain packages (7) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay |
-| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 15 tool |
+| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 16 tool |
 | Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 23 rute) |
 | WorkBuddy config | ADA | `workbuddy/` — manifest, 4 agen, 5 knowledge |
 | Channel adapter | SEBAGIAN | `apps/telegram-adapter` — post-MVP, satu file `index.ts` |
@@ -51,6 +52,8 @@ dextra/
 ├── docs/                   PRD + audit + verifikasi
 ├── stitch-ref/             referensi visual
 ├── scripts/                (belum ada)
+├── package-lock.json       lockfile npm workspaces
+├── tsconfig.base.json      basis TypeScript untuk semua workspace
 └── package.json            npm workspaces, script typecheck/test/demo
 ```
 
@@ -90,19 +93,24 @@ yang dipakai, dan modul yang menopangnya. Dokumen ini hanya ringkasannya.
 
 | Status | Arti | Jumlah |
 |---|---|---|
-| `live` | Bisa menampilkan data server nyata saat MCP hidup | 11 |
-| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 5 |
+| `live` | Bisa menampilkan data server nyata saat MCP hidup | 10 |
+| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 6 |
 | `demo` | Belum ada permukaan backend; data contoh | 4 |
 | `none` | Bukan rute data (login, forbidden, not-found) | 3 |
 
 Tool MCP yang dipakai dashboard (15): `create_plan`, `execute_action`, `find_precedent`,
-`get_audit_log`, `get_mandate`, `get_org_rules`, `get_plan`, `get_status`, `issue_mandate`,
-`list_executions`, `list_mandates`, `list_plans`, `revoke_mandate`, `submit_approval`,
-`validate_plan`.
+`get_audit_log`, `get_caller_context`, `get_mandate`, `get_org_rules`, `get_plan`,
+`get_status`, `list_executions`, `list_mandates`, `list_plans`, `revoke_mandate`,
+`submit_approval`, `validate_plan`.
 
-Dari 15 tool itu, **14 dipakai** oleh rute dashboard. Satu sisanya hanya dipanggil server:
+Dari 16 tool yang ada, **15 dipakai** oleh rute dashboard. Satu sisanya hanya dipanggil server:
 `issue_mandate` diterbitkan setelah approval, bukan oleh tombol. Ini tercatat sebagai
 kesenjangan, bukan disembunyikan.
+
+`get_caller_context` dipakai tiga rute yang sebelumnya tidak punya sumber data:
+`/permissions`, `/integrations`, dan `/login`. Efeknya `/permissions` pindah dari `live` ke
+`demo` — karena yang bisa ditampilkan hanyalah kapabilitas scope token, sedangkan matriks
+peran per pengguna tetap model demo.
 
 Eksekusi kini dipicu dari drawer mandat (`execute_action`), dan AI Assistant memakai
 `find_precedent` untuk mencari penerima — termasuk berhenti dan bertanya saat hasilnya seri,
@@ -114,9 +122,13 @@ Kesenjangan yang terlihat dari pemetaan itu, dan tidak disembunyikan:
 - **Kepemilikan & pemakaian tidak dilaporkan.** `list_plans` tidak menyimpan pemilik per
   pengguna, dan mandat tidak melaporkan berapa kali dipakai. Rute yang butuh data itu tetap
   `partial`, dan kolomnya menampilkan `—` alih-alih angka karangan.
-- **Workforce & Specialist Directory** tidak punya API; isinya dari `workbuddy/agents/*.md`.
+- **Workforce & Specialist Directory** tidak punya API. Isinya data demo di `data.js`, dan
+  keduanya menampilkan banner demo. Registri agen **tidak** dibangun dari `workbuddy/agents/*.md`:
+  SPA statis tidak bisa membaca berkas Markdown, dan mem-parse prosa menjadi "registri" berarti
+  mengarang field yang tidak pernah ada di server.
 - **Board** mengelompokkan kolom di klien; server tidak menyimpan status papan.
-- **Users/Permissions** belum punya tool identitas sama sekali.
+- **Users/Permissions** belum punya tool identitas. `/permissions` hanya bisa menampilkan
+  kapabilitas scope token lewat `get_caller_context`; matriks peran per pengguna tetap demo.
 
 Halaman **Administration → Integrations** menampilkan tabel ini secara langsung, sehingga
 klaim "terhubung" bisa diperiksa di UI, bukan hanya di README.
@@ -151,15 +163,16 @@ Sampai langkah 2 lulus, menambah stack baru hanya menambah risiko, bukan kemampu
 ```bash
 # struktur & paket
 ls apps packages
-node -e "console.log(Object.keys(require('./package.json').workspaces))"
+node -e "console.log(require('./package.json').workspaces.join(', '))"
 
-# 15 tool MCP yang diklaim
-grep -o "case '[a-z_]*'" apps/mcp-server/src/handlers.ts
+# 16 tool MCP yang diklaim
+grep -o "case '[a-z_]*'" apps/mcp-server/src/handlers.ts | sort -u | wc -l
 
-# rute dan statusnya
+# rute dan sebaran statusnya (23 rute)
 grep -c "route: '" apps/dashboard/assets/js/sources.js
+grep -o "state: '[a-z]*'" apps/dashboard/assets/js/sources.js | sort | uniq -c
 
-# legacy benar-benar diabaikan Git
+# legacy benar-benar diabaikan Git (harus mengembalikan sebuah baris ignore, bukan kosong)
 git check-ignore -v apps/dashboard-legacy/README.md
 ```
 
