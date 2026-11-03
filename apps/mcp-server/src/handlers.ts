@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, verifyAuditChain } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -349,7 +349,13 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'get_audit_log': {
       const limit = typeof args?.limit === 'number' ? args.limit : 50;
       const events = await listAudit(limit);
-      return { ok: true, data: { events } };
+      /*
+       * Integrity is computed over the WHOLE log, not the page returned: a chain
+       * that verifies only the last 50 events says nothing about the 51st from
+       * the end. The caller gets the verdict; the page stays small.
+       */
+      const all = await listAudit();
+      return { ok: true, data: { events, integrity: verifyAuditChain(all) } };
     }
     case 'list_specialists': {
       /* Read straight from workbuddy/agents/*.md. Nothing is added here: no

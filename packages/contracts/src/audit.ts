@@ -38,6 +38,18 @@ export const AuditEventSchema = z
     plan_hash: z.string().optional(),
     reason_code: ERROR_CODES.optional(),
     detail: z.record(z.string(), z.string()),
+    /*
+     * Tamper-evidence. Each event carries the hash of the event before it, and
+     * its own hash over (previous hash + this event's content). Editing or
+     * deleting a line breaks every hash after it, so "append-only" stops being
+     * a promise and becomes something a reader can check.
+     *
+     * Optional because events written before the chain existed have no hashes.
+     * The verifier reports that prefix as `unchained` instead of pretending it
+     * is valid — an unhashed event is not a verified event.
+     */
+    prev_hash: z.string().nullable().optional(),
+    hash: z.string().optional(),
   })
   .strict();
 export type AuditEvent = z.infer<typeof AuditEventSchema>;
