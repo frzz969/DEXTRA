@@ -795,6 +795,15 @@ a.statstrip__item:hover { background: var(--surface-2); }
 .kcard.is-dragging { opacity: .45; }
 .kcard__title { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.4; }
 .kcard__meta { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+/*
+ * The card head holds a plan id and a status badge. The id is a long unbroken
+ * token, so without a shrinkable flex item the badge is pushed past the card
+ * edge and gets clipped by the column. Truncate the id instead of the badge:
+ * the status is the part that must stay readable.
+ */
+.kcard > .row { min-width: 0; }
+.kcard > .row > .mono { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kcard > .row > .badge { flex: 0 0 auto; }
 
 /* ---------- 18. Charts ---------- */
 .chart-box { position: relative; width: 100%; }

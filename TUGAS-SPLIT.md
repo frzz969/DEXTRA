@@ -97,18 +97,27 @@ memverifikasinya. Kalau memilih menunda, tulis "ditunda" — bukan "selesai".
 
 # Bagian WorkBuddy
 
-## A1 — `/board`: kolom dan urutan kartu bertahan
+## A1 — `/board`: atribusi kartu · **SELESAI**
 
-Sekarang `liveMove` hanya di memori (`views/board.js:17`); begitu halaman
-dimuat ulang, kartu kembali ke kolom menurut status. Pindahkan fakta itu ke
-server, atau nyatakan terang-terangan bahwa papan tidak menyimpan urutan.
+Rencana awal: simpan kolom/urutan kartu ke server. **Tidak dikerjakan, dan
+sebaiknya jangan.** Kolom papan = status tata kelola, dan status tata kelola
+diputuskan mesin kebijakan + persetujuan manusia, bukan seret-lepas. Menyimpan
+posisi kartu ke server akan membuat UI bisa *mengaku* sebuah plan sudah
+disetujui hanya karena seseorang menariknya. Papan sudah menyatakan batas ini
+di banner-nya; itu jawaban yang benar.
 
-Berkas: `packages/contracts/src/plan.ts` (field baru, mis. `board_rank`),
-`packages/store/**`, `apps/mcp-server/src/{handlers,server}.ts`,
-`apps/dashboard/assets/js/views/board.js`, tes terkait.
+Yang ternyata rusak justru lain, dan sudah diperbaiki:
 
-Selesai bila: memindahkan kartu bertahan setelah reload; ada tes yang gagal
-bila persistensi dilepas; plan lama tanpa field tetap valid.
+- Setiap kartu live diberi label **"Workforce Dispatcher"** — nama yang tidak
+  ada di data mana pun, ditampilkan seolah agen itu menangani plan tersebut.
+  Sekarang kartu menampilkan `assignee_id` / `requester_id` yang benar-benar
+  dicatat server, atau "tanpa penugasan".
+- Filter spesialis menyembunyikan **semua** kartu begitu dipakai (logikanya
+  membandingkan `p.specialist` yang selalu kosong). Diganti filter berdasarkan
+  `assignee_id` yang nyata.
+- Badge status meluap 12–30 px melewati tepi kartu karena id plan yang panjang
+  tidak bisa menyusut. Diperbaiki di `packages/design-system/src/dashboard.css`
+  (id dipotong elipsis, badge `flex: 0 0 auto`).
 
 ## A2 — `/assistant`: putuskan, jangan menggantung
 
