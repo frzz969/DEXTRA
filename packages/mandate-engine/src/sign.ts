@@ -27,6 +27,15 @@ export function signMandate(mandate: Omit<Mandate, 'signature'>): string {
     allowed_action_types: [...mandate.allowed_action_types].sort(),
     max_risk: mandate.max_risk,
     status: mandate.status,
+    /*
+     * Ownership and issuer are part of the signed payload on purpose. They were
+     * left out before, which made them advisory: anyone who could write
+     * `data/mandates.json` could reassign a mandate to themselves and the
+     * signature would still verify. Enforcing resource scope on an unsigned
+     * field would have been decoration.
+     */
+    issued_by: mandate.issued_by,
+    owner_principal_id: mandate.owner_principal_id ?? null,
   };
   return createHmac('sha256', getMandateSecret()).update(canonical(payload)).digest('hex');
 }

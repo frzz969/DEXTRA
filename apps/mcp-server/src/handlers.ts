@@ -7,6 +7,59 @@ import { OrgSchema } from '../../../packages/contracts/src/index.ts';
 import type { Plan, Approval, Mandate } from '../../../packages/contracts/src/index.ts';
 import { isAllowed, callerContext, resolvePrincipal, type Scope } from './auth.ts';
 
+/**
+ * Resource scope: a scope grants a *kind* of action, never a *record*.
+ *
+ * Before this, `execute_action` and `revoke_mandate` looked the mandate up by id
+ * and acted on it. Any holder of the `ops` token could therefore execute or
+ * revoke every mandate in the workspace — including mandates belonging to a
+ * different principal. Authorization answered "may this token execute?" and
+ * never "may it execute *this*?".
+ *
+ * The rule, deliberately narrow:
+ *   - no principal bound to the token  -> refused (nothing is anonymous)
+ *   - mandate has an owner             -> execute: owner only
+ *                                         revoke : owner or issuer
+ *   - mandate predates the field       -> issuer only
+ *
+ * Revocation is wider than execution on purpose: withdrawing authority is the
+ * grantor's right, using it is not.
+ */
+async function mandateAccess(
+  mandate: Mandate,
+  scope: Scope,
+  mode: 'execute' | 'revoke',
+): Promise<{ ok: true; principalId: string } | { ok: false; error: { code: string; message: string } }> {
+  const principal = await resolvePrincipal(scope);
+  if (!principal) {
+    return {
+      ok: false,
+      error: {
+        code: 'MANDATE_NOT_OWNED',
+        message: 'No principal is bound to this token. A mandate cannot be used anonymously.',
+      },
+    };
+  }
+
+  const owner = mandate.owner_principal_id;
+  const isOwner = owner !== undefined && owner === principal.principal_id;
+  const isIssuer = mandate.issued_by === principal.principal_id;
+  const allowed = owner === undefined ? isIssuer : mode === 'revoke' ? isOwner || isIssuer : isOwner;
+
+  if (!allowed) {
+    return {
+      ok: false,
+      error: {
+        code: 'MANDATE_NOT_OWNED',
+        message:
+          `Mandate ${mandate.mandate_id} belongs to ${owner ?? 'its issuer'}, ` +
+          `not to ${principal.principal_id}. Scope "${scope}" does not grant access to another principal's record.`,
+      },
+    };
+  }
+  return { ok: true, principalId: principal.principal_id };
+}
+
 export async function handleTool(name: string, args: any, scope: string): Promise<any> {
   /*
    * Defense in depth. handleRpc already refuses a disallowed tool, but this
@@ -112,7 +165,20 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       }
       const decision = args.decision;
       const principal = await resolvePrincipal(scope as Scope);
-      const approverId = principal?.principal_id ?? args.approver_id;
+      /*
+       * An approval is a human decision. Until now the fallback was
+       * `args.approver_id`, which meant the audit trail recorded whatever the
+       * client claimed. If the token binds no principal there is nobody to hold
+       * responsible, so the approval is refused rather than attributed to a
+       * string.
+       */
+      if (!principal) {
+        return {
+          ok: false,
+          error: { code: 'UNAUTHORIZED', message: 'No principal is bound to this token; an approval must be attributable.' },
+        };
+      }
+      const approverId = principal.principal_id;
       const approval: Approval = {
         approval_id: `appr_${Date.now()}` as any,
         plan_id: plan.plan_id,
@@ -127,7 +193,18 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       await saveApproval(approval);
 
       if (decision === 'approve') {
-        const mandate = issueMandate({ plan, approval, approver_id: args.approver_id, now: new Date().toISOString() });
+        /* The mandate belongs to the plan's requester: it is authority to act on
+           *their* request. `approver_id` is the server-resolved principal, not
+           the client's claim — the previous version signed the client value into
+           `issued_by` while recording the server value on the approval, so the
+           two disagreed. */
+        const mandate = issueMandate({
+          plan,
+          approval,
+          approver_id: approverId,
+          owner_principal_id: plan.requester_id,
+          now: new Date().toISOString(),
+        });
         await saveMandate(mandate);
         await appendAudit({
           event_id: `evt_${Date.now()}`,
@@ -137,7 +214,7 @@ export async function handleTool(name: string, args: any, scope: string): Promis
           plan_id: plan.plan_id,
           mandate_id: mandate.mandate_id,
           plan_hash: plan.plan_hash,
-          detail: { approver: args.approver_id },
+          detail: { approver: approverId },
         } as any);
         return { ok: true, data: { approval_id: approval.approval_id, status: 'granted', mandate_id: mandate.mandate_id } };
       }
@@ -190,12 +267,47 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { mandate } };
     }
     case 'execute_action': {
+      const mandate = await getMandate(args.mandate_id);
+      if (!mandate) return { ok: false, error: { code: 'MANDATE_NOT_FOUND', message: 'Mandate not found.' } };
+
+      const access = await mandateAccess(mandate, scope as Scope, 'execute');
+      if (!access.ok) {
+        /* A refused attempt is a fact about the system, so it is recorded. An
+           access denial that leaves no trace is indistinguishable from an
+           attempt that never happened. */
+        await appendAudit({
+          event_id: `evt_${Date.now()}`,
+          at: new Date().toISOString(),
+          type: 'mandate_rejected',
+          actor: 'executor',
+          plan_id: mandate.plan_id,
+          mandate_id: mandate.mandate_id,
+          detail: { reason: 'not_owner', principal: (await resolvePrincipal(scope as Scope))?.principal_id ?? 'unbound' },
+        } as any);
+        return access;
+      }
+
       const result = await executeAction({ mandate_id: args.mandate_id, action_id: args.action_id, execution_key: args.execution_key, now: new Date().toISOString() });
       return { ok: true, data: { result } };
     }
     case 'revoke_mandate': {
       const mandate = await getMandate(args.mandate_id);
       if (!mandate) return { ok: false, error: { code: 'MANDATE_NOT_FOUND', message: 'Mandate not found.' } };
+
+      const access = await mandateAccess(mandate, scope as Scope, 'revoke');
+      if (!access.ok) {
+        await appendAudit({
+          event_id: `evt_${Date.now()}`,
+          at: new Date().toISOString(),
+          type: 'mandate_rejected',
+          actor: 'dashboard',
+          plan_id: mandate.plan_id,
+          mandate_id: mandate.mandate_id,
+          detail: { reason: 'not_owner_or_issuer', principal: (await resolvePrincipal(scope as Scope))?.principal_id ?? 'unbound' },
+        } as any);
+        return access;
+      }
+
       const revoked = revokeMandate(mandate, new Date().toISOString());
       await saveMandate(revoked);
       await appendAudit({
@@ -204,7 +316,7 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         type: 'mandate_revoked',
         actor: 'dashboard',
         mandate_id: mandate.mandate_id,
-        detail: { by: 'dashboard' },
+        detail: { by: access.principalId },
       } as any);
       return { ok: true, data: { mandate: revoked } };
     }

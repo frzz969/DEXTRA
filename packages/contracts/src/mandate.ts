@@ -23,6 +23,17 @@ export const MandateSchema = z
     max_risk: RiskLevelSchema,
     status: MandateStatusSchema,
     issued_by: z.string().min(1),
+    /*
+     * Whose mandate this is. `issued_by` records who granted it; this records
+     * who may use it. Scope answers "what kind of action is allowed", never
+     * "whose record" — without this field any holder of the `ops` token could
+     * execute or revoke every mandate in the workspace.
+     *
+     * Optional because mandates written before the field existed are still
+     * valid; the handler treats a missing owner as "only the issuer may act",
+     * which is the narrowest reading rather than a permissive default.
+     */
+    owner_principal_id: z.string().min(1).optional(),
     signature: z.string().min(1),
   })
   .strict()

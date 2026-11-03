@@ -7,6 +7,8 @@ export interface IssueMandateInput {
   plan: Plan;
   approval: Approval;
   approver_id: string;
+  /** Principal who may execute or revoke this mandate. */
+  owner_principal_id?: string;
   ttl_seconds?: number;
   now?: string;
 }
@@ -45,6 +47,7 @@ export function issueMandate(input: IssueMandateInput): Mandate {
     max_risk: maxRisk as 'low' | 'medium' | 'high',
     status: 'active',
     issued_by: input.approver_id,
+    ...(input.owner_principal_id ? { owner_principal_id: input.owner_principal_id } : {}),
   };
   const signature = signMandate(base);
   return { ...base, signature } as Mandate;
