@@ -17,6 +17,8 @@
     "test:inproc": "node --test --experimental-strip-types \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
     "test:http": "node --test --experimental-strip-types \"apps/mcp-server/tests/http-verification.verify.ts\"",
     "test:contracts": "npm run test --workspace @dextra/contracts",
+    "sync:packages": "node scripts/sync-packages.mjs",
+    "verify:packages": "node scripts/verify-packages.mjs",
     "demo:seed": "node --experimental-strip-types packages/store/src/seed.ts",
     "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset"
   }

@@ -254,42 +254,14 @@
     return String(d);
   }
 
-  /* ---------------- API bridge ---------------- */
-  var api = {
-    mode: 'demo',
-    API: API,
-    token: function () {
-      try { return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || ''; }
-      catch (e) { return ''; }
-    },
-    setToken: function (t, remember) {
-      try { sessionStorage.setItem(TOKEN_KEY, t); if (remember) localStorage.setItem(TOKEN_KEY, t); } catch (e) {}
-    },
-    clearToken: function () { try { sessionStorage.removeItem(TOKEN_KEY); localStorage.removeItem(TOKEN_KEY); } catch (e) {} },
-    health: function () {
-      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 1800);
-      return fetch(API + '/health', ctrl ? { signal: ctrl.signal } : {})
-        .then(function (r) { clearTimeout(timer); return r.ok; })
-        .catch(function () { clearTimeout(timer); return false; });
-    },
-    call: function (tool, args) {
-      return fetch(API + '/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + api.token() },
-        body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method: 'tools/call', params: { name: tool, arguments: args || {} } })
-      }).then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      }).then(function (json) {
-        if (json.error) throw new Error(json.error.message || 'Panggilan tool gagal');
-        var text = json.result && json.result.content && json.result.content[0] && json.result.content[0].text;
-        var parsed = text ? JSON.parse(text) : {};
-        if (parsed && parsed.ok === false) throw new Error((parsed.error && parsed.error.message) || 'Tool menolak permintaan');
-        return parsed ? parsed.data : {};
-      });
-    }
-  };
+  /* ---------------- API bridge ----------------
+     Transport tinggal di packages/api-client/src/api-client.js. Berkas ini hanya
+     merakitnya; kalau bridge tidak dimuat, gagal keras alih-alih diam-diam
+     mengarang perilaku lain. */
+  if (!window.DEXTRA_API || typeof window.DEXTRA_API.create !== 'function') {
+    throw new Error('packages/api-client tidak dimuat sebelum core.js');
+  }
+  var api = window.DEXTRA_API.create({ baseUrl: API, tokenKey: TOKEN_KEY });
 
   /* ---------------- store (demo + live overlay) ---------------- */
   var store = {
