@@ -41,6 +41,7 @@
             '<button class="btn btn--primary btn--lg btn--block" id="signin">Masuk</button>' +
             '<div class="row" style="margin:18px 0;gap:10px"><span style="flex:1;height:1px;background:var(--border)"></span>' +
               '<span class="tiny faint">atau</span><span style="flex:1;height:1px;background:var(--border)"></span></div>' +
+            '<button class="btn btn--secondary btn--lg btn--block" id="google"><span class="material-symbols-outlined">login</span>Masuk dengan Google (fondasi)</button>' +
             '<button class="btn btn--secondary btn--lg btn--block" id="demo"><span class="material-symbols-outlined">science</span>Jelajahi mode demo</button>' +
             '<p class="tiny faint" style="margin-top:10px;text-align:center;line-height:1.5">Mode demo memakai dataset contoh di peramban. Tidak ada koneksi server, tidak ada tindakan nyata.</p>' +
             '<div class="banner banner--info" style="margin-top:20px"><span class="material-symbols-outlined">info</span>' +
@@ -103,6 +104,18 @@
       D.api.clearToken();
       ui.toast('Masuk dalam mode demo. Data contoh, bukan operasi nyata.', 'info', 4200);
       D.router.go('/overview');
+    });
+
+    root.querySelector('#google').addEventListener('click', function () {
+      var apiBase = (D.api && D.api.API) || 'http://127.0.0.1:8765';
+      var backendBase = apiBase.replace(/:8765$/, ':8000').replace(/\/$/, '');
+      fetch(backendBase + '/api/v1/auth/google', { method: 'GET' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (j) {
+          if (j.authorization_url) { window.location.href = j.authorization_url; }
+          else { showError(j.detail || 'Google OAuth belum dikonfigurasi di backend.'); }
+        })
+        .catch(function (e) { showError('Backend tidak merespons: ' + (e.message || e)); });
     });
   };
 

@@ -21,6 +21,9 @@ class Settings:
     ops_token: str
     allowed_origins: tuple[str, ...]
     environment: str
+    google_client_id: str
+    google_client_secret: str
+    google_redirect_uri: str
 
     @property
     def is_sqlite(self) -> bool:
@@ -39,4 +42,7 @@ def get_settings() -> Settings:
         ops_token=_env("DEXTRA_OPS_TOKEN", "ops-dev-token"),
         allowed_origins=origins,
         environment=_env("DEXTRA_ENV", "development"),
+        google_client_id=_env("GOOGLE_CLIENT_ID", ""),
+        google_client_secret=_env("GOOGLE_CLIENT_SECRET", ""),
+        google_redirect_uri=_env("GOOGLE_REDIRECT_URI", "http://127.0.0.1:8000/api/v1/auth/google/callback"),
     )
