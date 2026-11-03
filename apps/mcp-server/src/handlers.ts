@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -327,7 +327,20 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       const filtered = (mandateId ? all.filter((row) => row.mandate_id === mandateId) : all)
         .slice()
         .sort((a, b) => Date.parse(b.executed_at) - Date.parse(a.executed_at));
-      return { ok: true, data: { executions: filtered.slice(0, limit), total: filtered.length } };
+      /*
+       * `summary` is computed over the whole filtered set, before `limit`.
+       * Computing it over the page would make the totals depend on how many rows
+       * the caller asked for — the classic dashboard bug where "success rate"
+       * silently changes when you resize a table.
+       */
+      return {
+        ok: true,
+        data: {
+          executions: filtered.slice(0, limit),
+          total: filtered.length,
+          summary: summarizeExecutions(filtered),
+        },
+      };
     }
     case 'get_status': {
       const ex = await getExecution(args.mandate_id, args.action_id);

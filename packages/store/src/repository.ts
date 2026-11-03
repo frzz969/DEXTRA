@@ -373,6 +373,90 @@ export async function listExecutions(): Promise<ActionResult[]> {
 }
 
 /**
+ * Aggregate execution records into the numbers a dashboard is allowed to show.
+ *
+ * Two rules keep this honest:
+ *
+ * 1. Every field says how many records it was computed from (`measured`).
+ *    A total of zero over zero measurements is not "0 ms"; it is "not measured",
+ *    and the caller must render it that way.
+ * 2. Nothing is estimated, extrapolated, or priced from a table. Cost is the sum
+ *    of what adapters actually reported. The mock adapters report `null`, so
+ *    cost stays `measured: 0` until a real provider adapter fills it in.
+ */
+export interface ExecutionSummary {
+  total: number;
+  by_result: Record<'sent' | 'blocked' | 'failed' | 'queued', number>;
+  /** `sent / total`; null when there is nothing to divide by. */
+  success_rate: number | null;
+  latency: { measured: number; p50_ms: number | null; p95_ms: number | null; max_ms: number | null };
+  tokens: { measured: number; input: number; output: number; total: number };
+  cost_usd: { measured: number; total: number };
+}
+
+function percentile(sorted: number[], p: number): number | null {
+  if (sorted.length === 0) return null;
+  // Nearest-rank: the smallest value at or above the p-th percentile position.
+  const rank = Math.ceil((p / 100) * sorted.length) - 1;
+  return sorted[Math.min(Math.max(rank, 0), sorted.length - 1)] ?? null;
+}
+
+export function summarizeExecutions(rows: ActionResult[]): ExecutionSummary {
+  const by_result = { sent: 0, blocked: 0, failed: 0, queued: 0 };
+  const latencies: number[] = [];
+  let tokenRows = 0;
+  let tokensIn = 0;
+  let tokensOut = 0;
+  let costRows = 0;
+  let costTotal = 0;
+
+  for (const row of rows) {
+    if (row.result in by_result) by_result[row.result as keyof typeof by_result] += 1;
+
+    const usage = row.usage;
+    if (!usage) continue;
+    if (typeof usage.latency_ms === 'number') latencies.push(usage.latency_ms);
+
+    /*
+     * Tokens are counted as a pair: a row that reported input but not output is
+     * not a complete measurement, and folding half of it into the total would
+     * understate cost while looking precise.
+     */
+    if (usage.tokens_in !== null && usage.tokens_out !== null) {
+      tokenRows += 1;
+      tokensIn += usage.tokens_in;
+      tokensOut += usage.tokens_out;
+    }
+    if (usage.cost_usd !== null) {
+      costRows += 1;
+      costTotal += usage.cost_usd;
+    }
+  }
+
+  const sorted = latencies.slice().sort((a, b) => a - b);
+  const total = rows.length;
+
+  return {
+    total,
+    by_result,
+    success_rate: total === 0 ? null : by_result.sent / total,
+    latency: {
+      measured: sorted.length,
+      p50_ms: percentile(sorted, 50),
+      p95_ms: percentile(sorted, 95),
+      max_ms: sorted.length ? sorted[sorted.length - 1] ?? null : null,
+    },
+    tokens: {
+      measured: tokenRows,
+      input: tokensIn,
+      output: tokensOut,
+      total: tokensIn + tokensOut,
+    },
+    cost_usd: { measured: costRows, total: costTotal },
+  };
+}
+
+/**
  * Dedup lookup keyed strictly on `(mandate_id, action_id)`. `execution_key`
  * is ignored, so a client cannot bypass dedup by changing its attempt id.
  */

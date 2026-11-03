@@ -1,6 +1,6 @@
 ﻿import { createHash, randomUUID } from 'node:crypto';
 import type { ActionId, ActionType, MandateId, ExecutionId, ErrorCode } from '../../contracts/src/index.ts';
-import type { ActionResult, Mandate, Plan, AuditEvent } from '../../contracts/src/index.ts';
+import type { ActionResult, Mandate, Plan, AuditEvent, ExecutionUsage } from '../../contracts/src/index.ts';
 import { validateMandate } from '../../mandate-engine/src/index.ts';
 import { verifyPlanHash } from '../../plan/src/index.ts';
 import { getMandate, getPlan, getExecution, saveExecution, appendAudit, DuplicateExecutionError } from '../../store/src/index.ts';
@@ -145,6 +145,25 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
   let failed = false;
   let failureReason: ErrorCode = 'EXECUTOR_FAILURE';
   let mockId = '';
+  /*
+   * Measured around the adapter call, not around the whole function: the
+   * interesting number is how long the provider took, not how long the mandate
+   * was looked up. `Date.now()` is enough here because the granularity we
+   * report is milliseconds and this is a local mock.
+   */
+  const startedAt = Date.now();
+  let latencyMs = 0;
+  /* The adapters below are mocks: no model is called, so tokens and cost are
+   * reported as null rather than zero. Zero is a measurement; null is the
+   * truth. A real provider adapter replaces this object. */
+  let usage: ExecutionUsage = {
+    provider: 'mock',
+    model: null,
+    tokens_in: null,
+    tokens_out: null,
+    cost_usd: null,
+    latency_ms: 0,
+  };
 
   try {
     const t = action.action_type;
@@ -168,6 +187,8 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     failed = true;
     failureReason = 'EXECUTOR_FAILURE';
   }
+  latencyMs = Date.now() - startedAt;
+  usage = { ...usage, latency_ms: latencyMs };
 
   if (failed) {
     const failedRes: ActionResult = {
@@ -179,6 +200,7 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
       reason_code: failureReason,
       executed_at: now,
       evidence: {},
+      usage,
     };
     await saveExecution(failedRes);
     await appendAudit(audit({
@@ -203,6 +225,7 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     reason_code: null,
     executed_at: now,
     evidence,
+    usage,
   };
   await saveExecution(sent);
   await appendAudit(audit({

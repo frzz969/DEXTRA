@@ -18,6 +18,32 @@ export const ActionEvidenceSchema = z
 export type ActionEvidence = z.infer<typeof ActionEvidenceSchema>;
 
 /**
+ * What an execution actually cost, measured or absent.
+ *
+ * `latency_ms` is always real: any execution takes time and the executor can
+ * measure it. The token and cost fields are `nullable` on purpose. The current
+ * adapters are mocks — they call no model — so they report `provider: 'mock'`
+ * with `null` tokens and `null` cost. Writing `0` there would be a measurement
+ * that never happened, and any analytics screen built on it would report a
+ * saving that is really an absence of data.
+ *
+ * When a real provider adapter lands, it fills these in. Until then `null`
+ * survives all the way to the UI, which must render "tidak diukur" rather than
+ * a number.
+ */
+export const ExecutionUsageSchema = z
+  .object({
+    provider: z.string().min(1),
+    model: z.string().nullable(),
+    tokens_in: z.number().int().nonnegative().nullable(),
+    tokens_out: z.number().int().nonnegative().nullable(),
+    cost_usd: z.number().nonnegative().nullable(),
+    latency_ms: z.number().nonnegative(),
+  })
+  .strict();
+export type ExecutionUsage = z.infer<typeof ExecutionUsageSchema>;
+
+/**
  * Result of an execution attempt for one action under one mandate.
  *
  * `execution_key` is an attempt id used for correlation and audit only. It is
@@ -39,6 +65,8 @@ export const ActionResultSchema = z
     reason_code: ERROR_CODES.nullable(),
     executed_at: IsoDateTimeSchema,
     evidence: ActionEvidenceSchema,
+    /** Optional so records written before telemetry existed still validate. */
+    usage: ExecutionUsageSchema.optional(),
   })
   .strict();
 export type ActionResult = z.infer<typeof ActionResultSchema>;
