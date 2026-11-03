@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, insertPlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -24,22 +24,81 @@ import { isAllowed, callerContext, resolvePrincipal, type Scope } from './auth.t
  */
 const MAX_PAGE_LIMIT = 500;
 
+/**
+ * Batas panjang kata kunci.
+ *
+ * Bukan angka keramat — 200 karakter jauh melebihi id, nama, atau potongan
+ * pesan yang masuk akal untuk dicari. Yang dicegah adalah satu permintaan yang
+ * membawa string sepanjang beberapa megabyte lalu di-`toLowerCase()` dan
+ * dicocokkan ke setiap baris: biayanya tumbuh sebanding dengan panjang kueri
+ * dikali jumlah baris, dan tidak ada yang membatasinya sebelum ini.
+ *
+ * Dilebihkan berarti DITOLAK, bukan dipotong. Memotong kueri diam-diam
+ * mengubah arti pencarian dan mengembalikan hasil yang bukan hasil.
+ */
+const MAX_QUERY_LENGTH = 200;
+
 interface PageArgs {
   limit: number;
   offset: number;
   q: string | null;
-  /** `limit < 0` berarti "semua", dipakai hanya oleh pemanggil lama. */
-  unbounded: boolean;
+}
+
+interface ToolError {
+  ok: false;
+  error: { code: string; message: string };
+}
+
+function invalidArgument(message: string): ToolError {
+  return { ok: false, error: { code: 'INVALID_ARGUMENT', message } };
+}
+
+/**
+ * Validasi argumen baca sebelum satu baris pun disentuh.
+ *
+ * Sebelumnya argumen bertipe salah diabaikan diam-diam: `q: 123` menjadi "tanpa
+ * filter", sehingga pemanggil menerima seluruh isi dan membacanya sebagai
+ * "semuanya cocok". `limit: -1` bahkan berarti "semua baris" — jalan pintas
+ * yang membatalkan batas halaman yang justru ditambahkan untuk mencegahnya.
+ * Jawaban yang salah lebih berbahaya daripada galat yang jelas.
+ */
+function pageArgsError(args: any): ToolError | null {
+  const q = args?.q;
+  if (q !== undefined && q !== null) {
+    if (typeof q !== 'string') return invalidArgument('q must be a string.');
+    if (q.length > MAX_QUERY_LENGTH) {
+      return invalidArgument(`q must be at most ${MAX_QUERY_LENGTH} characters (received ${q.length}).`);
+    }
+  }
+
+  const limit = args?.limit;
+  if (limit !== undefined && limit !== null) {
+    if (typeof limit !== 'number' || !Number.isFinite(limit)) {
+      return invalidArgument('limit must be a finite number.');
+    }
+    /* `limit: -1` used to mean "everything". It no longer does: an unbounded
+       read is the exact failure the page cap exists to prevent. */
+    if (limit < 1) return invalidArgument('limit must be at least 1.');
+  }
+
+  const offset = args?.offset;
+  if (offset !== undefined && offset !== null) {
+    if (typeof offset !== 'number' || !Number.isFinite(offset)) {
+      return invalidArgument('offset must be a finite number.');
+    }
+    if (offset < 0) return invalidArgument('offset must not be negative.');
+  }
+
+  return null;
 }
 
 function readPageArgs(args: any, defaultLimit: number): PageArgs {
   const rawLimit = typeof args?.limit === 'number' ? Math.floor(args.limit) : defaultLimit;
-  const unbounded = rawLimit < 0;
-  const limit = unbounded ? defaultLimit : Math.min(Math.max(rawLimit, 1), MAX_PAGE_LIMIT);
+  const limit = Math.min(Math.max(rawLimit, 1), MAX_PAGE_LIMIT);
   const rawOffset = typeof args?.offset === 'number' ? Math.floor(args.offset) : 0;
   const offset = Math.max(rawOffset, 0);
   const rawQ = typeof args?.q === 'string' ? args.q.trim().toLowerCase() : '';
-  return { limit, offset, q: rawQ === '' ? null : rawQ, unbounded };
+  return { limit, offset, q: rawQ === '' ? null : rawQ };
 }
 
 /** Pencocokan substring, case-insensitive, atas nilai yang benar-benar ada. */
@@ -104,6 +163,20 @@ async function mandateAccess(
   return { ok: true, principalId: principal.principal_id };
 }
 
+/**
+ * Id event audit yang unik di dalam satu proses.
+ *
+ * `evt_${Date.now()}` saja bertabrakan bila dua event ditulis pada milidetik
+ * yang sama — dan pembuatan plan beruntun memang melakukannya. `event_id`
+ * adalah cara menemukan satu event; dua event berid sama membuat "temukan event
+ * ini" tidak punya jawaban tunggal.
+ */
+let eventSequence = 0;
+function nextEventId(): string {
+  eventSequence += 1;
+  return `evt_${Date.now()}_${eventSequence}`;
+}
+
 export async function handleTool(name: string, args: any, scope: string): Promise<any> {
   /*
    * Defense in depth. handleRpc already refuses a disallowed tool, but this
@@ -161,7 +234,91 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         assignee_id: assigneeId ?? principal?.principal_id,
       });
       const validated = runValidate(plan, org, contactIds);
-      await savePlan(validated);
+      /*
+       * Insert-only, bukan save. `plan_id` diturunkan dari `request_id`
+       * (`req_x` -> `plan_x`), jadi dua panggilan dengan request_id yang sama
+       * menunjuk plan yang sama. `savePlan` akan menimpanya; di sini itu berarti
+       * pemanggil kedua bisa mengganti plan yang mungkin sudah disetujui, dan
+       * `plan_hash`-nya berubah sementara mandate masih menunjuk hash lama.
+       */
+      const inserted = await insertPlan(validated);
+
+      if (!inserted.created) {
+        /*
+         * `request_id` adalah kunci idempotensi, dan itu memang artinya: satu
+         * permintaan, satu plan. Retry dengan permintaan yang sama mengembalikan
+         * plan yang sudah ada — bukan membuat plan kedua, dan bukan menimpanya.
+         *
+         * Perbandingannya memakai `intent` + `actions`, BUKAN `plan_hash`:
+         * `created_at` dibuat server dan ikut masuk ke hash, jadi dua percobaan
+         * atas permintaan yang sama selalu menghasilkan hash berbeda. Membandingkan
+         * hash akan menolak setiap retry yang jujur.
+         */
+        const sameRequest =
+          inserted.existing !== null &&
+          inserted.existing.intent === validated.intent &&
+          JSON.stringify(inserted.existing.actions) === JSON.stringify(validated.actions);
+
+        if (sameRequest) {
+          return { ok: true, data: { plan: inserted.existing, idempotent_replay: true } };
+        }
+
+        return {
+          ok: false,
+          error: {
+            code: 'PLAN_ALREADY_EXISTS',
+            message:
+              `Plan ${validated.plan_id} already exists for request_id "${validated.request_id}" with different content. ` +
+              'A request_id is an idempotency key, not an update channel; send a new request_id instead.',
+          },
+        };
+      }
+
+      /*
+       * Ditulis SETELAH insert berhasil, dan hanya bila insert terjadi. Event
+       * yang mendahului penulisan akan menyatakan plan ada padahal penulisannya
+       * bisa gagal — jejak yang lebih buruk daripada tidak ada jejak, karena
+       * terbaca sebagai bukti.
+       *
+       * Kegagalan menulis audit TIDAK boleh dilaporkan sebagai sukses. Plan-nya
+       * sudah tersimpan dan tidak bisa dibatalkan, jadi jawabannya jujur:
+       * gagal, dan sebutkan bahwa plan-nya ada. Mengembalikan `ok: true` di sini
+       * akan menjadi "berhasil tanpa bukti" — persis yang dihindari di seluruh
+       * sistem ini.
+       */
+      try {
+        await appendAudit({
+          event_id: nextEventId(),
+          at: new Date().toISOString(),
+          type: 'plan_created',
+          /*
+           * `actor` adalah kelas pemanggil yang diturunkan dari token, bukan orang.
+           * Orangnya ada di `detail.requester`, yang berasal dari principal yang
+           * terikat pada token — bukan dari argumen pemanggil.
+           */
+          actor: scope === 'agent' ? 'agent' : 'dashboard',
+          plan_id: validated.plan_id,
+          plan_hash: validated.plan_hash,
+          detail: {
+            request_id: validated.request_id,
+            status: validated.status,
+            actions: String(validated.actions.length),
+            requester: validated.requester_id ?? 'unbound',
+            assignee: validated.assignee_id ?? 'unassigned',
+          },
+        } as any);
+      } catch (error) {
+        return {
+          ok: false,
+          error: {
+            code: 'AUDIT_WRITE_FAILED',
+            message:
+              `Plan ${validated.plan_id} was persisted, but its audit event could not be written: ` +
+              `${error instanceof Error ? error.message : 'unknown error'}. The plan exists without a record of its creation.`,
+          },
+        };
+      }
+
       return { ok: true, data: { plan: validated } };
     }
     case 'validate_plan': {
@@ -177,6 +334,8 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { plan } };
     }
     case 'list_plans': {
+      const bad = pageArgsError(args);
+      if (bad) return bad;
       const all = await listPlans();
       const status = typeof args?.status === 'string' ? args.status : null;
       const requesterId = typeof args?.requester_id === 'string' ? args.requester_id : null;
@@ -307,6 +466,8 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { mandate } };
     }
     case 'list_mandates': {
+      const bad = pageArgsError(args);
+      if (bad) return bad;
       const all = await listMandates();
       const status = typeof args?.status === 'string' ? args.status : null;
       const page = readPageArgs(args, 100);
@@ -410,6 +571,8 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { mandate: revoked } };
     }
     case 'list_executions': {
+      const bad = pageArgsError(args);
+      if (bad) return bad;
       const all = await listExecutions();
       const mandateId = typeof args?.mandate_id === 'string' ? args.mandate_id : null;
       const page = readPageArgs(args, 100);
@@ -450,6 +613,8 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       return { ok: true, data: { execution: ex } };
     }
     case 'get_audit_log': {
+      const bad = pageArgsError(args);
+      if (bad) return bad;
       const page = readPageArgs(args, 50);
       /*
        * One read pass returns the page, the verdict, and the checkpoint
@@ -485,10 +650,12 @@ export async function handleTool(name: string, args: any, scope: string): Promis
               ]),
             );
 
-      if (page.unbounded) {
-        return { ok: true, data: { events: filtered, total: filtered.length, scanned: all.length, integrity } };
-      }
-
+      /*
+       * `limit: -1` dulu berarti "seluruh log". Jalur itu dihapus: satu
+       * permintaan yang memuat seluruh berkas adalah persis kegagalan yang
+       * batas halaman ada untuk mencegah, dan pemanggil lama tetap mendapat
+       * halaman terakhir yang lebih dari cukup.
+       */
       const end = Math.max(0, filtered.length - page.offset);
       const start = Math.max(0, end - page.limit);
       return {
@@ -512,7 +679,12 @@ export async function handleTool(name: string, args: any, scope: string): Promis
        * action a caller can request. A tool that sends arbitrary text to a chat
        * is a spam primitive with an audit trail attached.
        */
-      const limit = typeof args?.limit === 'number' ? args.limit : 50;
+      const bad = pageArgsError(args);
+      if (bad) return bad;
+      /* Sama seperti daftar lain: batas halaman ditegakkan di sini, bukan
+         diserahkan pada angka yang dikirim pemanggil. `limit: -1` sebelumnya
+         mengembalikan seluruh berkas. */
+      const page = readPageArgs(args, 50);
       const { deliveries, invalid } = await listAlertDeliveries();
       const filtered = deliveries.filter((d) => {
         if (typeof args?.kind === 'string' && d.alert.kind !== args.kind) return false;
@@ -523,8 +695,22 @@ export async function handleTool(name: string, args: any, scope: string): Promis
          the page would make the counts change with page size, which reads as
          the system changing when only the query did. */
       const summary = summarizeAlertDeliveries(filtered);
-      const page = limit >= 0 ? filtered.slice(-limit) : filtered;
-      return { ok: true, data: { alerts: page, total: filtered.length, summary, invalid } };
+      /* Halaman dihitung dari ekor dan urutannya dipertahankan seperti dulu:
+         `offset: 0` mengembalikan `limit` pengiriman terakhir dalam urutan
+         aslinya, sama seperti `slice(-limit)` sebelumnya. */
+      const end = Math.max(0, filtered.length - page.offset);
+      const start = Math.max(0, end - page.limit);
+      return {
+        ok: true,
+        data: {
+          alerts: filtered.slice(start, end),
+          total: filtered.length,
+          offset: page.offset,
+          limit: page.limit,
+          summary,
+          invalid,
+        },
+      };
     }
     case 'list_specialists': {
       /* Read straight from workbuddy/agents/*.md. Nothing is added here: no

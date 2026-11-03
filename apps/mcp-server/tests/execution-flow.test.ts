@@ -30,9 +30,22 @@ const PLAN_ARGS = {
   ],
 };
 
+let planSequence = 0;
+
 async function approvedPlan() {
-  const created = await handleTool('create_plan', PLAN_ARGS, 'ops');
-  assert.equal(created.ok, true);
+  /*
+   * `request_id` unik per pemanggilan. Sebelumnya semua tes memakai
+   * `req_exec01` dan mengandalkan `create_plan` menimpa plan sebelumnya —
+   * perilaku yang kini ditolak: satu request_id adalah satu plan, dan
+   * menimpanya akan mengubah hash yang mungkin sudah dipegang sebuah mandate.
+   */
+  planSequence += 1;
+  const created = await handleTool(
+    'create_plan',
+    { ...PLAN_ARGS, request_id: `req_exec${String(planSequence).padStart(2, '0')}` },
+    'ops',
+  );
+  assert.equal(created.ok, true, JSON.stringify(created));
   const plan = created.data.plan;
 
   const approved = await handleTool(

@@ -150,10 +150,15 @@ test('offset melewati akhir data menghasilkan halaman kosong, bukan galat', asyn
   assert.equal(page.total, TOTAL_PLANS, 'total tetap benar');
 });
 
-test('offset negatif diperlakukan sebagai nol', async () => {
-  const page = await listPlans({ offset: -50, limit: 3 });
-  assert.equal(page.offset, 0);
-  assert.equal(page.plans.length, 3);
+test('offset negatif ditolak, bukan diam-diam dianggap nol', async () => {
+  /*
+   * Sebelumnya nilai ini dijepit ke 0. Menjepit berarti pemanggil yang salah
+   * menerima halaman pertama dan tidak pernah tahu offset-nya diabaikan — pada
+   * halaman kedua itu berarti baris yang sama muncul lagi. Sekarang galat.
+   */
+  const page = await handleTool('list_plans', { offset: -50, limit: 3 }, 'ops');
+  assert.equal(page.ok, false);
+  assert.equal(page.error.code, 'INVALID_ARGUMENT');
 });
 
 test('audit log: pencarian mencakup tipe event dan isi detail', async () => {
@@ -226,4 +231,69 @@ test('mandat dan eksekusi menerima offset tanpa mengubah bentuk respons', async 
     summary: { total: number };
   };
   assert.equal(executionData.summary.total, executionData.total, 'ringkasan tetap atas seluruh hasil');
+});
+
+/*
+ * P6.1 — validasi argumen.
+ *
+ * Sebelum ini argumen bertipe salah diabaikan diam-diam, dan `limit: -1` berarti
+ * "seluruh berkas". Keduanya menghasilkan jawaban yang terlihat sah: seluruh isi
+ * dikembalikan, dan pemanggil membacanya sebagai "semuanya cocok" atau sebagai
+ * halaman yang kebetulan penuh.
+ */
+test('q yang terlalu panjang ditolak, bukan dipotong', async () => {
+  const long = 'a'.repeat(201);
+  for (const tool of ['list_plans', 'list_mandates', 'list_executions', 'get_audit_log']) {
+    const result = await handleTool(tool, { q: long }, 'ops');
+    assert.equal(result.ok, false, `${tool} harus menolak q sepanjang 201 karakter`);
+    assert.equal(result.error.code, 'INVALID_ARGUMENT');
+    assert.ok(result.error.message.includes('200'), 'pesan harus menyebut batasnya');
+  }
+});
+
+test('q tepat pada batas masih diterima', async () => {
+  const atLimit = 'a'.repeat(200);
+  const result = await handleTool('list_plans', { q: atLimit }, 'ops');
+  assert.equal(result.ok, true, 'batas adalah 200, bukan 199');
+  assert.equal(result.data.total, 0, 'tidak ada plan yang cocok, dan itu jawaban yang benar');
+});
+
+test('q bertipe salah ditolak, bukan diabaikan', async () => {
+  const result = await handleTool('list_plans', { q: 123 }, 'ops');
+  assert.equal(result.ok, false, 'q bukan string tidak boleh berarti "tanpa filter"');
+  assert.equal(result.error.code, 'INVALID_ARGUMENT');
+});
+
+test('limit negatif tidak lagi berarti "semua"', async () => {
+  const result = await handleTool('get_audit_log', { limit: -1 }, 'ops');
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'INVALID_ARGUMENT');
+});
+
+test('limit nol dan limit bukan angka ditolak', async () => {
+  for (const limit of [0, Number.POSITIVE_INFINITY, Number.NaN]) {
+    const result = await handleTool('list_plans', { limit }, 'ops');
+    assert.equal(result.ok, false, `limit ${String(limit)} harus ditolak`);
+    assert.equal(result.error.code, 'INVALID_ARGUMENT');
+  }
+});
+
+test('limit di atas batas dijepit, tidak ditolak', async () => {
+  /* Menolak `limit: 100000` akan mematahkan klien yang hanya ingin "sebanyak
+     mungkin". Menjepitnya menjawab permintaan itu tanpa memuat seluruh berkas. */
+  const result = await handleTool('list_plans', { limit: 100000 }, 'ops');
+  assert.equal(result.ok, true);
+  assert.equal(result.data.limit, 500);
+});
+
+test('penolakan argumen tidak memotong otorisasi', async () => {
+  /* Token agent tidak memegang `view_audit`. Penolakan harus datang dari
+     otorisasi dan terjadi SEBELUM argumen diperiksa: kalau urutannya terbalik,
+     pemanggil tanpa izin bisa membedakan "tool tidak ada untuk saya" dari
+     "argumen Anda salah" — dan perbedaan itu sendiri sudah membocorkan bahwa
+     tool-nya ada. */
+  const result = await handleTool('get_audit_log', { limit: -1 }, 'agent');
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'ACTION_NOT_ALLOWED');
+  assert.ok(result.error.message.includes('not available'), 'penolakan otorisasi, bukan validasi argumen');
 });

@@ -17,6 +17,20 @@ export const ERROR_CODES = z.enum([
   'EXECUTOR_FAILURE',
   'AUDIT_WRITE_FAILED',
   'MCP_UNAVAILABLE',
+  /*
+   * `PLAN_ALREADY_EXISTS` is a conflict, not a validation failure: the request
+   * is well-formed, but the id it resolves to is already taken by a plan with
+   * different content. Silently replacing that plan would rewrite history that
+   * an approval or a mandate may already point at.
+   */
+  'PLAN_ALREADY_EXISTS',
+  /*
+   * `INVALID_ARGUMENT` covers a request that is malformed at the transport
+   * level — a query string that is not a string, a page size that is not a
+   * finite number. These used to be ignored, which returned a full page as if
+   * the filter had matched everything.
+   */
+  'INVALID_ARGUMENT',
 ]);
 
 export type ErrorCode = z.infer<typeof ERROR_CODES>;
@@ -41,4 +55,9 @@ export const ERROR_META: Record<ErrorCode, { retryable: boolean; message: string
   EXECUTOR_FAILURE: { retryable: false, message: 'Executor failed internally and must be escalated.' },
   AUDIT_WRITE_FAILED: { retryable: false, message: 'Audit event could not be written.' },
   MCP_UNAVAILABLE: { retryable: true, message: 'MCP service is unavailable; retry after recovery.' },
+  PLAN_ALREADY_EXISTS: {
+    retryable: false,
+    message: 'A different plan already exists for this request_id.',
+  },
+  INVALID_ARGUMENT: { retryable: false, message: 'Request argument is malformed.' },
 };

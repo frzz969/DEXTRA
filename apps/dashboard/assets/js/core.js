@@ -120,6 +120,11 @@
     mandate_issued: 'Mandat terbit',
     mandate_revoked: 'Mandat dicabut',
     action_executed: 'Tindakan dieksekusi',
+    plan_created: 'Plan dibuat',
+    /* "diakui adapter", bukan "diterima manusia": transport palsu juga menjawab
+       ok, dan dashboard tidak boleh menyiratkan lebih dari itu. */
+    alert_dispatched: 'Notifikasi diakui adapter',
+    alert_failed: 'Notifikasi gagal',
     audit_recorded: 'Dicatat di audit'
   };
   function eventLabel(type) {

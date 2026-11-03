@@ -188,3 +188,88 @@ mengubah isi audit log yang dilihat halaman lain; dicatat supaya tidak hilang.
 - E2E: `/explorer` memuat plan hasil rantai create→approve→execute, `total` dari
   server, dan kata kunci tanpa hasil menghasilkan keadaan kosong — bukan halaman
   penuh berisi baris yang tidak relevan.
+
+## 10. P6.1 — penutupan temuan dan pengerasan
+
+Tiga hal dikerjakan setelah review: menutup `plan_created`, memverifikasi A-07, dan
+menguji ulang batas-batas Explorer. Tidak ada fitur baru dan tidak ada perubahan
+bentuk respons yang sudah ada.
+
+### 10.1 `plan_created` kini punya produsen
+
+Sebelumnya `plan_created` ada di `AuditEventTypeSchema` tetapi tidak ada kode yang
+menghasilkannya — kontrak tanpa produsen. Plan bisa lahir tanpa satu baris pun di
+audit trail.
+
+Sekarang `create_plan` menulis satu event **setelah** insert berhasil, dan hanya bila
+insert benar-benar terjadi:
+
+| Aturan | Kenapa |
+|---|---|
+| Ditulis setelah `insertPlan` | Event sebelum penulisan akan menyatakan plan ada padahal penulisannya bisa gagal — jejak yang lebih buruk daripada tidak ada jejak, karena terbaca sebagai bukti. |
+| Hanya saat `created === true` | `validate_plan` dan retry tidak boleh menambah event kedua untuk plan yang sama. |
+| `actor` diturunkan dari token | `agent` untuk token agent, `dashboard` untuk ops. Ini kelas pemanggil, bukan orang; orangnya ada di `detail.requester`, yang berasal dari principal terikat token. |
+| `event_id` memakai urutan proses | `evt_${Date.now()}` saja bertabrakan bila dua plan dibuat pada milidetik yang sama, dan `event_id` adalah cara menemukan satu event. |
+
+**Idempotensi.** `plan_id` diturunkan dari `request_id` (`req_x` → `plan_x`), jadi
+`request_id` **adalah** kunci idempotensi. Perbandingan retry memakai `intent` +
+`actions`, bukan `plan_hash`: `created_at` dibuat server dan ikut masuk ke hash, sehingga
+dua percobaan atas permintaan yang sama selalu menghasilkan hash berbeda — membandingkan
+hash akan menolak setiap retry yang jujur.
+
+- `request_id` sama + isi sama → plan yang sudah ada dikembalikan, `idempotent_replay: true`, tanpa event baru.
+- `request_id` sama + isi berbeda → `PLAN_ALREADY_EXISTS`, plan lama tidak disentuh.
+
+Ini juga menutup temuan yang muncul saat memeriksa A-07: `savePlan` mengganti
+berdasarkan id, sehingga pemanggil mana pun dengan `create_request` bisa menimpa plan
+yang mungkin sudah disetujui. Lihat `docs/AUTHORIZATION_AUDIT.md`.
+
+**Belum ditutup, dan sengaja:** `plan_blocked` dan `plan_validated` juga ada di enum
+tanpa produsen. Menghasilkannya berarti memutuskan kapan sebuah plan "masuk" keadaan
+blocked (setiap validasi? hanya transisi?) — keputusan produk yang belum diambil, dan
+menebaknya sekarang akan mengisi audit dengan event yang artinya berubah-ubah.
+
+### 10.2 Batas argumen
+
+| Sebelum | Sesudah |
+|---|---|
+| `q` bertipe salah → diabaikan, seluruh isi dikembalikan | `INVALID_ARGUMENT` |
+| `q` sepanjang apa pun → di-`toLowerCase()` lalu dicocokkan ke setiap baris | maksimum 200 karakter, lebih dari itu ditolak |
+| `limit: -1` → seluruh berkas | `INVALID_ARGUMENT` |
+| `offset` negatif → dijepit ke 0 | `INVALID_ARGUMENT` |
+| `list_alerts` tanpa batas halaman | batas 500, `offset` didukung |
+
+Menjepit `offset` negatif ke nol terlihat ramah, tetapi pada halaman kedua artinya
+baris yang sama muncul lagi sementara pemanggil mengira sudah maju. Menolak lebih jujur
+daripada menebak maksud.
+
+Validasi terjadi **setelah** pemeriksaan kapabilitas. Urutannya penting: kalau terbalik,
+pemanggil tanpa izin bisa membedakan "tool ini tidak untuk saya" dari "argumen Anda
+salah", dan perbedaan itu sendiri membocorkan bahwa tool-nya ada.
+
+### 10.3 Biaya membaca audit log
+
+`get_audit_log` memverifikasi **seluruh** rantai pada setiap permintaan — itu harga dari
+keputusan bahwa verdict tidak boleh hanya mencakup halaman yang ditampilkan. Biayanya
+diukur, bukan dikira-kira (`scripts/bench-audit-read.mjs`, Node 22, satu inti):
+
+| Event | Ukuran | Baca + verifikasi | Dengan `q` |
+|---:|---:|---:|---:|
+| 1.000 | 0,4 MB | 95 ms | 74 ms |
+| 5.000 | 1,9 MB | 139 ms | 135 ms |
+| 20.000 | 7,7 MB | 413 ms | 447 ms |
+
+Linear, sekitar 20 µs per event. Pada ukuran sekarang ini tidak terasa. Pada ratusan
+ribu event, satu permintaan dashboard akan memakan detik — dan solusinya bukan
+memperkecil halaman, melainkan verifikasi inkremental (menyimpan prefix yang sudah
+terverifikasi beserta checkpoint-nya). Itu perubahan arsitektur, bukan pengerasan, dan
+belum dikerjakan.
+
+### 10.4 Yang tidak diklaim
+
+- **Bukan snapshot konsisten.** Paginasi berbasis offset; plan yang masuk di antara dua
+  permintaan menggeser posisi. Tidak ada janji sebaliknya di dokumen ini maupun di UI.
+- **Bukan otorisasi per-record.** `get_plan`/`get_mandate` dijaga kapabilitas `view_all`,
+  yang memang berlaku seluruh workspace. Pemeriksaan per pemilik menunggu A-09.
+- **Bukan real-time.** Audit dibaca dari berkas pada setiap permintaan; tidak ada
+  stream, tidak ada cache yang bisa basi.

@@ -171,6 +171,37 @@ mandate yang bukan milik pemanggil (resource-scope pada level mandate). `list_pl
 per pemilik belum diterapkan. Pemeriksaan penuh lintas resource menunggu prinsipal di
 jalur Python (A-09) dan atribut ownership pada Mandate.
 
+**Verifikasi ulang (P6.1, 2026-11-03).** Status PARTIAL dipertahankan, dan alasannya
+diperiksa terhadap kode, bukan terhadap laporan sebelumnya:
+
+| Jalur | Diperiksa | Hasil |
+|---|---|---|
+| `execute_action` | `mandateAccess(mandate, scope, 'execute')` | pemilik saja; penolakan menulis `mandate_rejected` |
+| `revoke_mandate` | `mandateAccess(..., 'revoke')` | pemilik atau penerbit |
+| `list_plans` / `list_mandates` / `list_executions` | tidak ada filter kepemilikan | seluruh workspace, sesuai keterangan di atas |
+| `get_plan` / `get_mandate` / `get_status` | hanya kapabilitas `view_all` | tidak ada pemeriksaan per-record |
+| `create_plan` | **baru diperiksa** | lihat di bawah |
+
+Bukti: `apps/mcp-server/tests/resource-scope.test.ts` menegakkan tiga jalur pertama —
+pemanggil yang bukan pemilik ditolak, dan penolakan itu tercatat.
+
+**Temuan baru saat verifikasi: `create_plan` bisa menimpa plan milik orang lain.**
+`plan_id` diturunkan dari `request_id` (`req_x` → `plan_x`) dan `savePlan` mengganti
+berdasarkan id. Siapa pun yang memegang `create_request` — kapabilitas yang dimiliki
+**agent** maupun **ops** — bisa mengirim ulang `request_id` yang sudah ada dan mengganti
+plan yang mungkin sudah disetujui; `plan_hash` berubah sementara mandate masih menunjuk
+hash lama. Ini kelas yang sama dengan A-07: scope menjawab "boleh membuat plan", bukan
+"boleh membuat plan *ini*".
+
+Ditutup sebagian di P6.1: `create_plan` kini memakai `insertPlan` (insert-only) dan
+menolak `request_id` yang sudah dipakai dengan isi berbeda (`PLAN_ALREADY_EXISTS`).
+Yang belum tertutup: penolakan itu berlaku untuk **semua** pemanggil, termasuk pemilik
+plan itu sendiri — karena belum ada cara mengetahui siapa pemiliknya. Dengan kata lain
+penulisan ulang tidak lagi *diam-diam*, tetapi belum bisa *diotorisasi per pemilik*.
+
+A-07 tetap **PARTIAL** sampai A-09 memberi identitas pemanggil yang bisa dibandingkan
+dengan atribut kepemilikan pada Plan dan Mandate.
+
 ---
 
 ## A-08 — No token expiry or revocation (OPEN, documented)

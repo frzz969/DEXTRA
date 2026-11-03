@@ -308,6 +308,41 @@ export async function savePlan(plan: Plan): Promise<void> {
   });
 }
 
+/**
+ * Insert-only counterpart to `savePlan`.
+ *
+ * `savePlan` replaces by id, which is correct for `validate_plan` — re-validating
+ * a plan is supposed to overwrite it. It is wrong for `create_plan`: two callers
+ * who send the same `request_id` derive the same `plan_id` (the builder strips
+ * `req_` and prefixes `plan_`), so a plain save lets the second caller silently
+ * replace the first caller's plan. If that plan was already approved, the
+ * replacement changes its hash while a mandate still points at the old one.
+ *
+ * The check and the write happen inside the same lock, so "does it exist" and
+ * "insert it" cannot be separated by another writer in this process. That is the
+ * whole point: a check in the handler followed by a save would be a race.
+ *
+ * `existing` is returned rather than thrown so the caller can decide whether an
+ * identical retry is idempotent or a genuine conflict.
+ */
+export async function insertPlan(plan: Plan): Promise<{ created: boolean; existing: Plan | null }> {
+  const parsed = PlanSchema.parse(plan);
+  const store = await prepare();
+  let outcome: { created: boolean; existing: Plan | null } = { created: false, existing: null };
+  await withFileLock(store.plans, async () => {
+    const plans = await readArray(store.plans, PlanSchema);
+    const existing = plans.find((entry) => entry.plan_id === parsed.plan_id) ?? null;
+    if (existing) {
+      outcome = { created: false, existing };
+      return;
+    }
+    plans.push(parsed);
+    await writeJsonAtomic(store.plans, plans);
+    outcome = { created: true, existing: null };
+  });
+  return outcome;
+}
+
 export async function getMandate(id: MandateId): Promise<Mandate | null> {
   const store = await prepare();
   const mandates = await readArray(store.mandates, MandateSchema);
