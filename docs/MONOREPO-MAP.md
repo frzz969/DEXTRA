@@ -4,8 +4,26 @@ Dokumen ini memetakan struktur repo **yang benar-benar ada** terhadap target di 
 Tujuannya mencegah dua kesalahan: mengira fitur sudah ada karena tertulis di target, dan
 membuat folder kosong supaya struktur "terlihat" sesuai spesifikasi.
 
-Diperiksa pada: 3 November 2026, commit `097c122` (branch `main`). Angka di dokumen ini
+Diperiksa pada: 3 November 2026, commit `beba8ec` (branch `main`). Angka di dokumen ini
 dihitung dari kode, bukan disalin dari dokumen lain.
+
+## 0. Mana yang benar-benar berjalan (jawaban singkat)
+
+**Jalur produksi — yang melayani dashboard hari ini:**
+- `apps/dashboard` (SPA, 23 rute) → `apps/mcp-server` (JSON-RPC 127.0.0.1:8765, 16 tool) →
+  `packages/{contracts,store,policy-engine,plan,mandate-engine,executor,replay,ui,design-system,api-client}`.
+- State disimpan di `data/*.json` (JSON file store). Tidak ada PostgreSQL, tidak ada Docker.
+
+**Referensi / fondasi v2 — ada, lulus tes, tapi TIDAK dipakai produk:**
+- `backend/dextra/**` (FastAPI) + `apps/api` + `database/` (Alembic, 21 tabel) + `tests/` (pytest, 38 lulus).
+- `apps/web` (Next.js 16, hanya 2 dari 23 rute).
+- `apps/worker` (pemeliharaan).
+
+Dashboard **tidak** memanggil Python. Python adalah target migrasi, bukan backend produksi saat ini.
+Dua jalur berbagi *kontrak* (`packages/contracts`), bukan implementasi — lihat §5.
+
+Yang **belum terbukti**: PostgreSQL (belum pernah dijalankan di mesin ini), Docker (tidak terpasang),
+migrasi data `data/*.json` → PostgreSQL, 21/23 rute `apps/web` yang belum ada, LangGraph (belum dipakai).
 
 ---
 

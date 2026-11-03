@@ -189,9 +189,12 @@ Tidak ada jalur dari agen ke executor.
 
 Ini didokumentasikan, bukan disembunyikan:
 
-- **Tidak ada identitas per pengguna.** Token = himpunan kemampuan, bukan orang. `approver_id`
-  adalah string dari klien dan tidak diverifikasi. Karena itu plan tidak punya field pemohon —
-  menambahkannya hanya akan mencatat klaim yang tak bisa dibuktikan.
+- **Identitas per pengguna baru sebagian.** Token kini terikat ke principal server-side
+  (`data/principals.json` → `DEXTRA_OPS_PRINCIPAL`/`DEXTRA_AGENT_PRINCIPAL`), dan `create_plan`
+  merekam `requester_id`/`assignee_id` dari principal itu (bukan dari klien). Tetapi token
+  masih tidak punya expiry/revocation, dan resource-scope (mandat milik siapa) belum ditegakkan
+  — `execute_action`/`revoke_mandate` menerima mandate apa pun. Satu token = satu orang,
+  tapi pencabutan rotasi masih manual (ganti env var).
 - **Resource scope belum ada.** Satu scope `ops` berlaku global: `execute_action` dan
   `revoke_mandate` menerima mandate apa pun tanpa memeriksa kepemilikan.
 - **Token belum punya expiry/revocation.** Rotasi = ganti environment variable.
