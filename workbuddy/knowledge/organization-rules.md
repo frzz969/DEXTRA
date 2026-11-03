@@ -10,4 +10,5 @@
 
 ## Sumber
 - packages/policy-engine/src/rules.ts
-- docs/PRD.md §15 (Business Rules)
+- docs/PRD.md v1.4.0 §15 (Business Rules). PRD v2.0.0 tidak lagi memuat ID BR-xxx;
+  sumber aturan yang berlaku tetap packages/policy-engine/src/rules.ts

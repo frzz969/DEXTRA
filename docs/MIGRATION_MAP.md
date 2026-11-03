@@ -27,7 +27,7 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 | Path | `apps/dashboard/` |
 | Perilaku sekarang | 23 rute, 10 live / 6 partial / 4 demo / 3 none. Tanpa build step. |
 | Perilaku target | `apps/web` Next.js + Tailwind + shadcn, data dari `/api/v1` |
-| Strategi | Halaman per halaman, mulai dari Overview dan Workforce. Dashboard lama **tidak dihapus** sampai parity tercapai (§33.10). |
+| Strategi | Halaman per halaman, mulai dari Overview dan Workforce. Dashboard lama **tidak dihapus** sampai parity tercapai (PRD v2.0.0 §22). |
 | Dependensi | `packages/design-system` (token), `packages/ui` (komponen), `packages/api-client` |
 | Risiko | Dua UI paralel membingungkan penguji. Mitigasi: README menyatakan mana yang produksi. |
 | Verifikasi | `next build` lulus; halaman menampilkan data API nyata; tanpa API menampilkan "tidak tersedia", bukan data contoh. |

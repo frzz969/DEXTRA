@@ -2,7 +2,14 @@
 
 **Versi:** 1.0.0
 **Fungsi:** satu tabel yang menentukan apa dikerjakan lebih dulu. Jika ragu, buka tabel ini, bukan PRD dari awal.
-**Sumber requirement:** `docs/PRD.md` (Â§20 test matrix, Â§27 prioritas, Â§33.6 privasi)
+**Sumber requirement:** `docs/PRD.md` (§20 test matrix, §27 prioritas, §33.6 privasi)
+
+> **Catatan rujukan (3 November 2026):** nomor bagian PRD di dokumen ini mengacu pada
+> **PRD v1.4.0**, yang sudah digantikan `docs/PRD.md` versi 2.0.0. Penomoran v2 berbeda,
+> jadi rujukan seperti §20/§27/§33/§34/§35 tidak lagi menunjuk ke isi yang sama.
+> Dokumen ini **tidak** ditulis ulang agar catatan historisnya tidak berubah; versi PRD
+> v1.4.0 tetap bisa diambil dari riwayat git.
+
 **Aturan:** nomor besar tidak dikerjakan sebelum nomor kecil lulus test-nya.
 
 ---

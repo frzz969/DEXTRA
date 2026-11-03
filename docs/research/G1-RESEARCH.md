@@ -1,5 +1,10 @@
 # Riset G1 — 2026-11-01
 
+> Catatan rujukan (3 November 2026): nomor bagian PRD di dokumen ini mengacu pada PRD v1.4.0
+> (§12.6, §34.3). PRD sudah diganti dengan v2.0.0 yang memakai penomoran berbeda, sehingga
+> §-nya tidak lagi bisa dicari langsung. Dokumen ini dibiarkan apa adanya sebagai catatan riset
+> pada tanggal tersebut, bukan diperbarui ke penomoran baru.
+
 ## Ringkasan
 
 - **Klaim "tool eksekusi tidak terlihat LLM" tidak ditegakkan oleh MCP.** Tidak ada identitas pemanggil terautentikasi; `tools/list` hanya kosmetik. Harus di-enforce di server. Dampak: satu test tambahan menyelamatkan klaim demo.

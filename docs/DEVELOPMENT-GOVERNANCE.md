@@ -5,6 +5,12 @@
 **Sumber kebenaran produk:** `docs/PRD.md`
 **Hubungan dengan PRD:** PRD menjawab *produk bekerja bagaimana*. Dokumen ini menjawab *kita membangunnya bagaimana*.
 
+> **Catatan rujukan (3 November 2026):** nomor bagian PRD di dokumen ini mengacu pada
+> **PRD v1.4.0**, yang sudah digantikan `docs/PRD.md` versi 2.0.0. Penomoran v2 berbeda,
+> jadi rujukan seperti §20/§27/§33/§34/§35 tidak lagi menunjuk ke isi yang sama.
+> Dokumen ini **tidak** ditulis ulang agar catatan historisnya tidak berubah; versi PRD
+> v1.4.0 tetap bisa diambil dari riwayat git.
+
 ---
 
 

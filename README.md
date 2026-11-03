@@ -207,7 +207,7 @@ Ini didokumentasikan, bukan disembunyikan:
 
 | Dokumen | Isi |
 | --- | --- |
-| `docs/PRD.md` | Spesifikasi produk lengkap |
+| `docs/PRD.md` | PRD v2.0.0 — spesifikasi produk lengkap (dokumen target) |
 | `docs/IDENTITY_AUTHORIZATION_MODEL.md` | Model identitas & otorisasi yang berlaku hari ini |
 | `docs/AUTHORIZATION_AUDIT.md` | Temuan audit otorisasi, akar masalah, status perbaikan |
 | `docs/AUTHORIZATION_TEST_MATRIX.md` | Kasus uji otorisasi: mana yang teruji, mana yang belum |

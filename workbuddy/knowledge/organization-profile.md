@@ -9,4 +9,4 @@
 
 ## Sumber
 - data/org.json (OrgSchema)
-- docs/PRD.md §17, §22.4
+- docs/PRD.md v1.4.0 §17, §22.4 (PRD v2.0.0 memakai penomoran berbeda)

@@ -3,7 +3,7 @@
 Diperiksa: 3 November 2026, branch `main`, dari berkas yang benar-benar ada —
 bukan dari laporan sebelumnya.
 
-## 1. Struktur target §28 vs kenyataan
+## 1. Struktur target §11 vs kenyataan
 
 | Path target | Status | Isi nyata |
 |---|---|---|
