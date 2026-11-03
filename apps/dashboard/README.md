@@ -106,10 +106,46 @@ domain, its MCP tool(s), the repo modules that support it, and a state:
 | `demo` | No backend surface exists yet — demo data only, and the UI says so |
 | `none` | Not a data route (login, forbidden, not-found) |
 
-Current split across 23 routes: **11 live · 5 partial · 4 demo · 3 non-data**.
+Current split across 23 routes: **10 live · 6 partial · 4 demo · 3 non-data**.
+
+Each route also declares its `intents` — what the Copilot may offer while the operator is
+standing on that screen. The same rule applies: an intent may only name a tool that exists, a
+compute that is implemented, and a route that is registered. `npm run test:dashboard` fails the
+build if any of those stops being true, so a chip can never be dead.
 
 `/integrations` renders this table in the UI, so the claim can be checked rather than trusted.
 Adding a route means adding an entry there; adding a tool to the MCP server means updating it.
+
+## Copilot — one assistant, every route
+
+The assistant is not a page you have to visit. It is a panel (`Ctrl/⌘ + J`, or the **Copilot**
+button in the topbar) that stays mounted while you navigate, so a question asked on `/mandates`
+is still there when you land on `/audit`. When the route changes, the suggestions change with
+it — the conversation does not.
+
+Two rules decide what it may do, and they are the product's rules:
+
+1. **It answers with what the server said.** `tool` intents call the same MCP bridge the page
+   uses. When the server is not live it refuses and says so; it never substitutes a plausible
+   number. A governance product cannot ship an assistant that guesses.
+2. **It never decides.** `submit_approval`, `issue_mandate`, `execute_action` and
+   `revoke_mandate` are unreachable from the assistant. Those intents are `handoff`: they open
+   the right screen and explain why the human has to press the button. `copilot.js` contains no
+   call to any of them, and the contract test enforces that.
+
+Intent kinds, as declared per route in `sources.js`:
+
+| Kind | Behaviour |
+|---|---|
+| `answer` | Computed from the store the page already hydrated. No write. |
+| `tool` | Calls one MCP tool. Refuses when the server is not live. |
+| `go` | Navigates. |
+| `handoff` | Deliberately does not act; explains why a human must. |
+
+Free text is matched against the route's intents by keyword — not a language model — so the same
+question gives the same answer twice. When nothing matches confidently, it says so and lists the
+options instead of picking one. `susun rencana …` routes to the same planner the `/assistant`
+page uses, which is why the two surfaces can never disagree.
 
 ## Data honesty
 
@@ -148,8 +184,11 @@ apps/dashboard/
   assets/js/data.js        demo dataset (org, plans, mandates, policies, audit)
   assets/js/ui.js          component library
   assets/js/shell.js       sidebar, topbar, breadcrumbs, tabs, command palette
+  assets/js/copilot.js     assistant engine: route context, intents, computes, planner
+  assets/js/copilot-panel.js  the panel itself (mounted once, survives navigation)
   assets/js/views/*.js     one file per screen group
   assets/vendor/           self-hosted fonts and icon font
+  tests/                   contract test: no intent may point at a missing tool/compute/route
 ```
 
 ## Known gaps

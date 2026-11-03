@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:inproc": "node --test --experimental-strip-types \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
+    "test:dashboard": "node --test --experimental-strip-types apps/dashboard/tests/copilot-contract.test.ts",
     "test:http": "node --test --experimental-strip-types \"apps/mcp-server/tests/http-verification.verify.ts\"",
     "test:contracts": "npm run test --workspace @dextra/contracts",
     "sync:packages": "node scripts/sync-packages.mjs",

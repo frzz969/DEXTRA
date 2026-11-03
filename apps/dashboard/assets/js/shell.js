@@ -222,6 +222,8 @@
         '<span class="env-pill" id="env-pill" data-state="' + (mode === 'live' ? 'live' : 'demo') + '"><i class="dot"></i>' + envLabel + '</span>' +
       '</div>' +
       '<div class="topbar__right">' +
+        '<button class="copilot-trigger" id="copilot-trigger" title="Copilot (Ctrl+J)" aria-label="Buka Copilot">' +
+          '<span class="material-symbols-outlined">auto_awesome</span><span class="label">Copilot</span><kbd>⌘J</kbd></button>' +
         '<button class="search-trigger" id="search-trigger" aria-label="Pencarian global"><span class="material-symbols-outlined">search</span><span class="label">Cari work package, mandat, kebijakan…</span><kbd>⌘K</kbd></button>' +
         '<button class="icon-btn" id="theme-toggle" aria-label="Ganti tema" title="Ganti tema"><span class="material-symbols-outlined">' + (D.theme.get() === 'dark' ? 'light_mode' : 'dark_mode') + '</span></button>' +
         '<button class="icon-btn" id="notif-btn" aria-label="Notifikasi" title="Notifikasi"><span class="material-symbols-outlined">notifications</span>' +
@@ -238,6 +240,8 @@
     document.getElementById('notif-btn').addEventListener('click', notifMenu);
     document.getElementById('topbar-user').addEventListener('click', userMenu);
     document.getElementById('search-trigger').addEventListener('click', openSearch);
+    var cp = document.getElementById('copilot-trigger');
+    if (cp) cp.addEventListener('click', function () { if (D.copilotPanel) D.copilotPanel.toggle(); });
     var mb = document.getElementById('mobile-menu');
     if (mb) mb.addEventListener('click', function () { document.body.classList.add('is-mobile-open'); paintScrim(); });
     paintCrumbs();
@@ -392,6 +396,12 @@
       var bare = !!(route && route.bare);
       document.body.classList.toggle('is-bare', bare);
       if (!bare) paintActive();
+      /* The panel is mounted once and survives navigation; sync() only re-scopes
+         it to the new route and closes it on bare pages (login, errors). */
+      if (D.copilotPanel) {
+        if (!D._copilotMounted) { D.copilotPanel.mount(); D._copilotMounted = true; }
+        D.copilotPanel.sync();
+      }
     },
     paintAll: paintAll,
     refresh: function () { paintSidebar(); paintTopbar(); }

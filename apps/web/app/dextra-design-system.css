@@ -1015,3 +1015,112 @@ body.is-bare .page { max-width: none; }
   .content { padding: 0; }
   .card { box-shadow: none; break-inside: avoid; }
 }
+
+/* ---------------- Copilot (global assistant) ----------------
+   The panel is an overlay, not a layout column: opening it must never reflow
+   the page underneath, because the operator is usually mid-task on that page. */
+.copilot-trigger {
+  display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 9px 0 10px;
+  border: 1px solid var(--brand-300); border-radius: var(--r-md);
+  background: var(--brand-050); color: var(--brand-700);
+  font-size: 12.5px; font-weight: 600; transition: background .13s, border-color .13s;
+}
+.copilot-trigger:hover { background: var(--brand-100); border-color: var(--brand-500); }
+.copilot-trigger .material-symbols-outlined { font-size: 17px; }
+.copilot-trigger kbd {
+  font-family: var(--font-sans); font-size: 10px; font-weight: 600; color: var(--brand-700);
+  background: var(--surface); border: 1px solid var(--brand-300);
+  border-radius: 5px; padding: 1px 4px;
+}
+
+.copilot {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 100vw;
+  display: flex; flex-direction: column; z-index: 250;
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(102%); transition: transform .18s ease;
+  visibility: hidden;
+}
+.copilot[data-open="true"] { transform: none; visibility: visible; }
+
+.cp__head {
+  display: flex; align-items: center; gap: 6px; padding: 11px 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface-2);
+}
+.cp__brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cp__brand > .material-symbols-outlined {
+  font-size: 18px; color: var(--brand-600);
+  background: var(--brand-050); border: 1px solid var(--brand-100);
+  border-radius: 7px; padding: 4px;
+}
+.cp__name { font-size: 13px; font-weight: 700; letter-spacing: -.01em; }
+.cp__ctx { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+
+.cp__pill {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: var(--r-full); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); white-space: nowrap;
+}
+.cp__pill--live { color: var(--success-600); border-color: var(--success-100); background: var(--success-100); }
+.cp__pill--demo { color: var(--warning-600); border-color: var(--warning-100); background: var(--warning-100); }
+.cp__pill--partial { color: var(--info-600); border-color: var(--info-100); background: var(--info-100); }
+.cp__pill--none { color: var(--faint); }
+
+.cp__log { flex: 1 1 auto; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+.cp__empty { margin: auto; text-align: center; padding: 24px 14px; max-width: 300px; }
+.cp__empty .material-symbols-outlined { font-size: 26px; color: var(--brand-500); margin-bottom: 6px; }
+
+.cp__msg { display: flex; }
+.cp__msg--user { justify-content: flex-end; }
+.cp__bubble {
+  max-width: 92%; padding: 9px 11px; border-radius: var(--r-lg);
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 12.5px; line-height: 1.5; color: var(--text-2); min-width: 0;
+}
+.cp__msg--user .cp__bubble { background: var(--brand-600); border-color: var(--brand-600); color: #fff; }
+
+.cp__title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.cp__title--warn { color: var(--warning-600); }
+.cp__title--danger { color: var(--danger-600); }
+.cp__title--ok { color: var(--success-600); }
+.cp__p { margin: 0 0 6px; }
+.cp__p:last-child { margin-bottom: 0; }
+
+.cp__rows { margin: 6px 0; display: grid; grid-template-columns: minmax(70px, auto) 1fr; gap: 3px 10px; }
+.cp__rows dt { font-size: 10.5px; color: var(--faint); font-weight: 600; }
+.cp__rows dd { font-size: 11.5px; margin: 0; color: var(--text-2); word-break: break-word; }
+
+.cp__list { margin: 6px 0 0; padding-left: 16px; }
+.cp__list li { font-size: 11.5px; line-height: 1.5; color: var(--text-2); margin-bottom: 3px; }
+
+.cp__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.cp__note {
+  margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--border);
+  font-size: 10.5px; color: var(--faint); line-height: 1.45;
+}
+
+.cp__chips {
+  display: flex; gap: 5px; flex-wrap: wrap; padding: 9px 12px 0;
+  max-height: 128px; overflow-y: auto; border-top: 1px solid var(--border);
+}
+.chip--sm { font-size: 10.5px; padding: 3px 8px; gap: 4px; }
+.chip--sm .material-symbols-outlined { font-size: 12px; }
+
+.cp__composer { display: flex; gap: 7px; align-items: flex-end; padding: 9px 12px 11px; }
+.cp__composer .textarea { min-height: 38px; max-height: 110px; font-size: 12.5px; }
+.cp__composer .btn { height: 38px; padding: 0 11px; }
+
+.cp__foot {
+  display: flex; gap: 6px; align-items: flex-start; padding: 8px 12px 11px;
+  border-top: 1px solid var(--border); background: var(--surface-2);
+  font-size: 10px; line-height: 1.45; color: var(--faint);
+}
+.cp__foot .material-symbols-outlined { font-size: 13px; margin-top: 1px; }
+
+@media (max-width: 720px) {
+  .copilot { width: 100%; }
+  .copilot-trigger .label, .copilot-trigger kbd { display: none; }
+  .copilot-trigger { padding: 0 9px; }
+}
+
+@media print { .copilot, .copilot-trigger { display: none !important; } }

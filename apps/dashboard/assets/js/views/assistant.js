@@ -1,4 +1,10 @@
-/* View — AI Assistant (prototype composer). */
+/* View — AI Assistant (workspace for composing plans).
+ *
+ * The planning rules live in copilot.js, not here, because the same assistant is
+ * also available as a panel on every other route. Two copies of "who is the
+ * recipient?" would drift, and then the assistant would give two answers to the
+ * same question depending on where you opened it.
+ */
 (function () {
   'use strict';
   var D = window.DEXTRA, U = D.util, ui = D.ui, esc = U.esc;
@@ -55,159 +61,6 @@
       '<div style="min-width:0">' + inner + '<div class="tiny faint" style="margin-top:4px">' + esc(U.rel(m.at)) + '</div></div></div>';
   }
 
-  /* ---------------- recipient lookup ----------------
-     Live: find_precedent on the MCP server. Demo: same rules over the local
-     contact list. Both must be able to say "ambiguous" — guessing a recipient
-     is exactly what the governance model forbids. */
-
-  function guessHint(text) {
-    var t = text.toLowerCase(), best = null;
-    store.contacts.forEach(function (c) {
-      var full = (c.display_name || '').toLowerCase();
-      if (full.length > 3 && t.indexOf(full) >= 0 && (!best || full.length > best.length)) best = full;
-      (c.tags || []).forEach(function (tag) {
-        if (tag.length < 3 || t.indexOf(tag) < 0) return;
-        if (!best || tag.length > best.length) best = tag;
-      });
-    });
-    return best;
-  }
-
-  function decorate(candidate) {
-    var contact = store.contacts.filter(function (c) { return c.contact_id === candidate.contact_id; })[0];
-    return {
-      contact_id: candidate.contact_id,
-      display_name: contact ? contact.display_name : candidate.contact_id,
-      department: contact ? contact.department : '',
-      masked: contact ? contact.masked_address : '—',
-      score: candidate.score,
-      evidence: candidate.evidence || [],
-      disputed: !!candidate.disputed,
-      known: !!contact
-    };
-  }
-
-  function demoLookup(text) {
-    var t = text.toLowerCase();
-    var hits = [];
-    store.contacts.forEach(function (c) {
-      var matched = (c.tags || []).filter(function (tag) { return tag.length >= 3 && t.indexOf(tag) >= 0; });
-      var full = (c.display_name || '').toLowerCase();
-      var fullHit = full.length > 3 && t.indexOf(full) >= 0;
-      if (!matched.length && !fullHit) return;
-      var firstName = full.split(' ')[0];
-      /* an explicit full name settles the question; a bare first name does not */
-      var score = fullHit ? 1 : 0.4 + (matched.indexOf(firstName) >= 0 ? 0.4 : 0.2);
-      if (c.department && t.indexOf(c.department.toLowerCase()) >= 0) score += 0.2;
-      hits.push(decorate({
-        contact_id: c.contact_id,
-        score: Math.min(1, score),
-        evidence: [fullHit ? 'nama lengkap disebut' : 'cocok pada tag: ' + matched.join(', ')],
-        disputed: false
-      }));
-    });
-    hits.sort(function (a, b) { return b.score - a.score; });
-    var resolution = 'none';
-    if (hits.length === 1) resolution = 'unique';
-    else if (hits.length > 1) resolution = Math.abs(hits[0].score - hits[1].score) < 1e-9 ? 'ambiguous' : 'unique';
-    return { candidates: hits, resolution: resolution };
-  }
-
-  function liveLookup(text) {
-    var hint = guessHint(text);
-    if (!hint) return Promise.resolve({ candidates: [], resolution: 'none' });
-    return D.api.call('find_precedent', { subject: hint, context: text }).then(function (d) {
-      var cands = (d.candidates || []).map(decorate);
-      return { candidates: cands, resolution: d.resolution || 'none' };
-    }).catch(function (e) {
-      return { candidates: [], resolution: 'error', error: e.message };
-    });
-  }
-
-  function lookupRecipient(text) {
-    if (store.mode === 'live') return liveLookup(text);
-    return Promise.resolve(demoLookup(text));
-  }
-
-  /* deterministic local planner — prototype, no model call */
-  function plan(text, lookup) {
-    var t = text.toLowerCase();
-    var isSchedule = /jadwal|jadwalkan|rapat|agenda|undang/.test(t);
-    var isDelete = /hapus|delete|bersihkan/.test(t);
-    var isFridayBlocked = /jumat|friday/.test(t) && /11[:.]?(3|4)\d/.test(t);
-
-    lookup = lookup || { candidates: [], resolution: 'none' };
-    var recipient = lookup.candidates[0] || null;
-
-    /* an ambiguous lookup is a stop, not a tie-break */
-    if (lookup.resolution === 'ambiguous') {
-      return {
-        text: 'Ada ' + lookup.candidates.length + ' kandidat penerima dengan kecocokan setara. Saya tidak memilih salah satunya — penerima harus ditentukan manusia.',
-        steps: ['Mencari preseden penerima', 'Membandingkan skor kecocokan'],
-        recipient: lookup,
-        blocked: {
-          code: 'AMBIGUOUS_RECIPIENT',
-          message: 'Kandidat: ' + lookup.candidates.map(function (c) { return c.display_name + ' (' + c.department + ')'; }).join(', ') + '. Sebutkan departemennya.'
-        }
-      };
-    }
-    if (lookup.resolution === 'error') {
-      return {
-        text: 'Pencarian penerima gagal di server, jadi saya tidak menyusun rencana.',
-        steps: ['Memanggil find_precedent'],
-        recipient: lookup,
-        blocked: { code: 'LOOKUP_FAILED', message: lookup.error }
-      };
-    }
-    if (!recipient) {
-      return {
-        text: 'Saya tidak menemukan penerima pada permintaan ini. Sebutkan nama atau departemennya, lalu saya susun rencananya.',
-        steps: ['Mencari preseden penerima'],
-        recipient: lookup
-      };
-    }
-
-    var actions = [{
-      action_type: isSchedule ? 'schedule_event' : 'send_email',
-      target: { display_name: recipient.display_name, masked_address: recipient.masked, channel: isSchedule ? 'calendar' : 'email' },
-      schedule: { start_at: new Date(Date.now() + 86400000).toISOString() },
-      risk: isDelete ? 'critical' : /eksternal|vendor|kontrak/.test(t) ? 'high' : 'medium'
-    }];
-
-    if (isDelete) {
-      return {
-        text: 'Permintaan ini menyentuh operasi destruktif. Saya dapat menyusunnya, tetapi tidak dapat menjalankannya tanpa dua approver.',
-        steps: ['Mengidentifikasi objek yang akan dihapus', 'Memeriksa kebijakan retensi SAFE-05'],
-        recipient: lookup,
-        blocked: { code: 'SAFE-05', message: 'Operasi destruktif memerlukan dual approval dan tidak tercakup dalam mandat aktif.' }
-      };
-    }
-    if (isFridayBlocked) {
-      return {
-        text: 'Jadwal yang Anda minta berada di dalam jendela Salat Jumat. Kebijakan TIME-03 memblokir penjadwalan pada 11:30–13:00 WIB. Saya dapat mengusulkan 09:00 atau 13:15.',
-        steps: ['Membaca aturan organisasi org_kenari', 'Mengevaluasi slot yang diminta'],
-        recipient: lookup,
-        blocked: { code: 'TIME-03', message: 'Jendela 11:30–13:00 pada hari Jumat dilindungi dan tidak dapat dijadwalkan.' }
-      };
-    }
-    return {
-      text: 'Saya menyusun satu work package. Ini masih rencana — belum ada pesan terkirim dan belum ada data yang diubah.',
-      steps: [
-        'Workforce Dispatcher memecah permintaan menjadi 1 tindakan',
-        'Executive Assistant menyusun draf',
-        'Adversarial Reviewer menguji lingkup',
-        'Policy Validator mengevaluasi 7 aturan aktif'
-      ],
-      recipient: lookup,
-      plan: {
-        plan_id: 'DRAFT-' + String(Math.floor(Math.random() * 900 + 100)),
-        status: 'READY',
-        intent: text.length > 110 ? text.slice(0, 110) + '…' : text,
-        actions: actions
-      }
-    };
-  }
-
   D.views.assistant = function (root) {
     thread = store.assistantThread.map(function (m) {
       return {
@@ -222,8 +75,8 @@
         eyebrow: 'Workspace · AI Assistant',
         title: 'AI Assistant',
         desc: 'Menyusun rencana dari permintaan bebas. Asisten tidak pernah mengeksekusi; setiap tindakan berhenti di persetujuan manusia.',
-        actions: '<a class="btn btn--secondary" href="#/requests"><span class="material-symbols-outlined">send</span>Permintaan saya</a>' +
-          '<a class="btn btn--secondary" href="#/policies"><span class="material-symbols-outlined">policy</span>Kebijakan aktif</a>'
+        actions: '<button class="btn btn--secondary" id="open-copilot"><span class="material-symbols-outlined">auto_awesome</span>Copilot di halaman ini</button>' +
+          '<a class="btn btn--secondary" href="#/requests"><span class="material-symbols-outlined">send</span>Permintaan saya</a>'
       }) +
       ui.prototypeBanner('Balasan disusun oleh aturan lokal di peramban, bukan model AI. Pencarian penerima memakai <b>find_precedent</b> saat server MCP aktif; tanpa server, daftar kontak contoh yang dipakai. Tidak ada pesan, jadwal, atau data yang benar-benar dibuat.') +
       '<div class="grid chat-grid" style="grid-template-columns:minmax(0,1fr) 320px">' +
@@ -283,6 +136,7 @@
         b.addEventListener('click', function () { input.focus(); input.value = ''; });
       });
     }
+
     function send(text) {
       if (!text.trim()) return;
       thread.push({ role: 'user', text: text.trim(), at: new Date().toISOString() });
@@ -293,16 +147,15 @@
         '<div class="msg__bubble"><span class="tiny muted">Menyusun rencana…</span></div>';
       chat.appendChild(typing);
       chat.scrollTop = chat.scrollHeight;
-      var pending = lookupRecipient(text.trim());
+      var pending = D.copilot.compose(text.trim());
       setTimeout(function () {
         typing.remove();
-        pending.then(function (lookup) {
-          var r = plan(text, lookup);
+        pending.then(function (r) {
           r.role = 'assistant'; r.at = new Date().toISOString();
           thread.push(r);
           paint();
         });
-      }, 620);
+      }, 420);
     }
 
     root.querySelector('#send').addEventListener('click', function () { send(input.value); });
@@ -312,6 +165,8 @@
     root.querySelectorAll('[data-suggest]').forEach(function (b) {
       b.addEventListener('click', function () { send(b.getAttribute('data-suggest')); });
     });
+    var cpBtn = root.querySelector('#open-copilot');
+    if (cpBtn) cpBtn.addEventListener('click', function () { if (D.copilotPanel) D.copilotPanel.open(); });
     paint();
   };
 })();

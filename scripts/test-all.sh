@@ -10,6 +10,9 @@ node scripts/verify-packages.mjs
 echo "== tes Node =="
 npm test
 
+echo "== kontrak dashboard (tidak ada tombol mati) =="
+npm run test:dashboard
+
 echo "== tes HTTP gateway =="
 npm run test:http
 
