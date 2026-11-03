@@ -109,6 +109,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   list_executions: 'List execution results, newest first. Optional mandate filter and limit.',
   get_status: 'Read execution status for a mandate+action.',
   get_audit_log: 'Read the audit log (dashboard only).',
+  list_specialists: 'Read the specialist roster from workbuddy/agents/*.md: name, role, limits, tools.',
 };
 
 const TOOL_SCHEMAS: Record<string, any> = {
@@ -128,6 +129,7 @@ const TOOL_SCHEMAS: Record<string, any> = {
   list_executions: { type: 'object', properties: { mandate_id: { type: 'string' }, limit: { type: 'number' } } },
   get_status: { type: 'object', properties: { mandate_id: { type: 'string' }, action_id: { type: 'string' } }, required: ['mandate_id', 'action_id'] },
   get_audit_log: { type: 'object', properties: { limit: { type: 'number' } } },
+  list_specialists: { type: 'object', properties: {} },
 };
 
 const TOOL_ANNOTATIONS: Record<string, any> = {
@@ -147,6 +149,7 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
   list_executions: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_status: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_audit_log: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  list_specialists: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };
 
 export interface ServerOptions {

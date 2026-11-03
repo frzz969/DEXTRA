@@ -1,4 +1,4 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -204,6 +204,13 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       const limit = typeof args?.limit === 'number' ? args.limit : 50;
       const events = await listAudit(limit);
       return { ok: true, data: { events } };
+    }
+    case 'list_specialists': {
+      /* Read straight from workbuddy/agents/*.md. Nothing is added here: no
+       * status, no version, no workload. Those were demo-data fields, and a
+       * roster that reports them without a source is a roster that lies. */
+      const specialists = await listSpecialists();
+      return { ok: true, data: { specialists, total: specialists.length } };
     }
     default:
       return { ok: false, error: { code: 'INVALID_PLAN', message: `Unknown tool: ${name}` } };

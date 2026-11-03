@@ -23,7 +23,7 @@ import {
   type PrecedentResult,
 } from '../../contracts/src/index.ts';
 
-import { ensureStoreFiles, appendJsonLine, readJsonFile, readJsonLines, writeJsonAtomic } from './json-file.ts';
+import { ensureStoreFiles, appendJsonLine, readJsonFile, readJsonLines, withFileLock, writeJsonAtomic } from './json-file.ts';
 import { maskEmail } from './mask.ts';
 import { getStorePaths } from './paths.ts';
 import {
@@ -278,14 +278,16 @@ export async function listPlans(): Promise<Plan[]> {
 export async function savePlan(plan: Plan): Promise<void> {
   const parsed = PlanSchema.parse(plan);
   const store = await prepare();
-  const plans = await readArray(store.plans, PlanSchema);
-  const index = plans.findIndex((entry) => entry.plan_id === parsed.plan_id);
-  if (index === -1) {
-    plans.push(parsed);
-  } else {
-    plans[index] = parsed;
-  }
-  await writeJsonAtomic(store.plans, plans);
+  await withFileLock(store.plans, async () => {
+    const plans = await readArray(store.plans, PlanSchema);
+    const index = plans.findIndex((entry) => entry.plan_id === parsed.plan_id);
+    if (index === -1) {
+      plans.push(parsed);
+    } else {
+      plans[index] = parsed;
+    }
+    await writeJsonAtomic(store.plans, plans);
+  });
 }
 
 export async function getMandate(id: MandateId): Promise<Mandate | null> {
@@ -302,14 +304,16 @@ export async function listMandates(): Promise<Mandate[]> {
 export async function saveMandate(mandate: Mandate): Promise<void> {
   const parsed = MandateSchema.parse(mandate);
   const store = await prepare();
-  const mandates = await readArray(store.mandates, MandateSchema);
-  const index = mandates.findIndex((entry) => entry.mandate_id === parsed.mandate_id);
-  if (index === -1) {
-    mandates.push(parsed);
-  } else {
-    mandates[index] = parsed;
-  }
-  await writeJsonAtomic(store.mandates, mandates);
+  await withFileLock(store.mandates, async () => {
+    const mandates = await readArray(store.mandates, MandateSchema);
+    const index = mandates.findIndex((entry) => entry.mandate_id === parsed.mandate_id);
+    if (index === -1) {
+      mandates.push(parsed);
+    } else {
+      mandates[index] = parsed;
+    }
+    await writeJsonAtomic(store.mandates, mandates);
+  });
 }
 
 export async function listApprovals(): Promise<Approval[]> {
@@ -326,14 +330,16 @@ export async function getApproval(id: ApprovalId): Promise<Approval | null> {
 export async function saveApproval(approval: Approval): Promise<void> {
   const parsed = ApprovalSchema.parse(approval);
   const store = await prepare();
-  const approvals = await readArray(store.approvals, ApprovalSchema);
-  const index = approvals.findIndex((entry) => entry.approval_id === parsed.approval_id);
-  if (index === -1) {
-    approvals.push(parsed);
-  } else {
-    approvals[index] = parsed;
-  }
-  await writeJsonAtomic(store.approvals, approvals);
+  await withFileLock(store.approvals, async () => {
+    const approvals = await readArray(store.approvals, ApprovalSchema);
+    const index = approvals.findIndex((entry) => entry.approval_id === parsed.approval_id);
+    if (index === -1) {
+      approvals.push(parsed);
+    } else {
+      approvals[index] = parsed;
+    }
+    await writeJsonAtomic(store.approvals, approvals);
+  });
 }
 
 function executionPair(mandateId: MandateId, actionId: ActionId): string {
@@ -370,28 +376,37 @@ export async function getExecution(mandateId: MandateId, actionId: ActionId): Pr
  */
 export async function saveExecution(result: ActionResult): Promise<void> {
   const parsed = ActionResultSchema.parse(result);
-  const executions = await readExecutions();
-  const needle = executionPair(parsed.mandate_id, parsed.action_id);
-
-  const existing = executions.find(
-    (execution) => executionPair(execution.mandate_id, execution.action_id) === needle,
-  );
-  if (existing !== undefined) {
-    // Allow the queued -> terminal transition; reject any other duplicate.
-    if (existing.result === 'queued' && parsed.result !== 'queued') {
-      const idx = executions.indexOf(existing);
-      executions[idx] = parsed;
-      const store = paths();
-      await writeJsonAtomic(store.executions, executions);
-      return;
-    }
-    const code = existing.result === 'queued' ? 'EXECUTION_IN_PROGRESS' : 'DUPLICATE_EXECUTION';
-    throw new DuplicateExecutionError(existing, code);
-  }
-
-  executions.push(parsed);
   const store = paths();
-  await writeJsonAtomic(store.executions, executions);
+  /*
+   * The duplicate check and the write must happen inside one critical section.
+   * When they did not, two concurrent executions of the same action could both
+   * find no existing record, both write, and the second write would overwrite
+   * the first — producing two real sends and one surviving record. The
+   * invariant this function exists to enforce cannot be enforced by a check
+   * that another caller can slip past between the check and the write.
+   */
+  await withFileLock(store.executions, async () => {
+    const executions = await readExecutions();
+    const needle = executionPair(parsed.mandate_id, parsed.action_id);
+
+    const existing = executions.find(
+      (execution) => executionPair(execution.mandate_id, execution.action_id) === needle,
+    );
+    if (existing !== undefined) {
+      // Allow the queued -> terminal transition; reject any other duplicate.
+      if (existing.result === 'queued' && parsed.result !== 'queued') {
+        const idx = executions.indexOf(existing);
+        executions[idx] = parsed;
+        await writeJsonAtomic(store.executions, executions);
+        return;
+      }
+      const code = existing.result === 'queued' ? 'EXECUTION_IN_PROGRESS' : 'DUPLICATE_EXECUTION';
+      throw new DuplicateExecutionError(existing, code);
+    }
+
+    executions.push(parsed);
+    await writeJsonAtomic(store.executions, executions);
+  });
 }
 
 function assertNoSensitiveDetail(detail: Record<string, string>): void {

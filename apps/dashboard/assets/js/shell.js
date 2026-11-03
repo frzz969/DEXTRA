@@ -18,8 +18,7 @@
       { path: '/execution', title: 'Execution History', icon: 'play_circle', view: 'execution', cap: 'view_all', desc: 'Rekaman eksekusi' }
     ]},
     { group: 'Workforce', items: [
-      { path: '/workforce', title: 'Workforce', icon: 'groups', view: 'workforce', cap: 'view_all', desc: 'Status dan beban spesialis' },
-      { path: '/specialists', title: 'Specialist Directory', icon: 'badge', view: 'specialists', cap: 'view_all', desc: 'Empat spesialis dan satu mesin kebijakan' }
+      { path: '/workforce', title: 'Workforce', icon: 'groups', view: 'workforce', cap: 'view_all', desc: 'Roster spesialis dari berkas definisi agen' }
     ]},
     { group: 'Governance', items: [
       { path: '/approvals', title: 'Approval Inbox', icon: 'assignment_turned_in', view: 'approvals', cap: 'approve', desc: 'Menunggu keputusan manusia', count: 'awaiting' },
@@ -29,8 +28,7 @@
       { path: '/policies', title: 'Policies', icon: 'policy', view: 'policies', cap: 'view_all', desc: 'Aturan operasional dan batasannya' }
     ]},
     { group: 'Administration', items: [
-      { path: '/users', title: 'Users & Roles', icon: 'manage_accounts', view: 'users', cap: 'manage_users', desc: 'Pengguna dan peran organisasi' },
-      { path: '/permissions', title: 'Permissions', icon: 'key', view: 'permissions', cap: 'manage_users', desc: 'Matriks kemampuan per peran' },
+      { path: '/permissions', title: 'Permissions', icon: 'key', view: 'permissions', cap: 'view_own', desc: 'Kapabilitas yang benar-benar dipegang token ini' },
       { path: '/integrations', title: 'Integrations', icon: 'extension', view: 'integrations', cap: 'manage_integrations', desc: 'Koneksi sistem eksternal' },
       { path: '/settings', title: 'Settings', icon: 'settings', view: 'settings', cap: 'view_all', desc: 'Konfigurasi organisasi' }
     ]}
@@ -174,8 +172,8 @@
 
   function userChip() {
     return '<button class="user-chip" data-user-menu>' +
-      '<span class="avatar">' + esc(U.initials(session.user.name)) + '</span>' +
-      '<span class="user-chip__meta"><b>' + esc(session.user.name) + '</b><span>' + esc(session.roleLabel()) + '</span></span>' +
+      '<span class="avatar">' + esc(U.initials(session.displayName())) + '</span>' +
+      '<span class="user-chip__meta"><b>' + esc(session.displayName()) + '</b><span>' + esc(session.subtitle()) + '</span></span>' +
       '<span class="material-symbols-outlined" style="font-size:16px;color:var(--faint);margin-left:auto">unfold_more</span>' +
       '</button>';
   }
@@ -197,7 +195,7 @@
       { text: 'Organization Admin' + (session.user.role === 'org_admin' ? ' ✓' : ''), icon: 'admin_panel_settings', onClick: function () { switchRole('org_admin'); } },
       { sep: true },
       { text: 'Keluar', icon: 'logout', danger: true, onClick: function () { D.router.go('/login'); } }
-    ], { head: '<div class="menu__head"><div class="small strong">' + esc(session.user.name) + '</div><div class="tiny muted">' + esc(session.user.email || '') + ' · ' + esc(session.roleLabel()) + '</div></div>' });
+    ], { head: '<div class="menu__head"><div class="small strong">' + esc(session.displayName()) + '</div><div class="tiny muted">' + esc(session.contactLine()) + ' · ' + esc(session.roleLabel()) + '</div></div>' });
     void roles;
   }
 
@@ -229,8 +227,8 @@
         '<button class="icon-btn" id="notif-btn" aria-label="Notifikasi" title="Notifikasi"><span class="material-symbols-outlined">notifications</span>' +
           (store.unreadCount() ? '<span class="icon-btn__dot"></span>' : '') + '</button>' +
         '<div class="vdivider" style="height:24px;margin:0 4px"></div>' +
-        '<button class="user-chip" id="topbar-user" style="padding-right:2px"><span class="avatar">' + esc(U.initials(session.user.name)) + '</span>' +
-          '<span class="user-chip__meta hide-sm"><b>' + esc(session.user.name.split(' ')[0]) + '</b><span>' + esc(session.roleLabel()) + '</span></span>' +
+        '<button class="user-chip" id="topbar-user" style="padding-right:2px"><span class="avatar">' + esc(U.initials(session.displayName())) + '</span>' +
+          '<span class="user-chip__meta hide-sm"><b>' + esc(session.displayName()) + '</b><span>' + esc(session.subtitle()) + '</span></span>' +
           '<span class="material-symbols-outlined" style="font-size:16px;color:var(--faint)">expand_more</span></button>' +
       '</div>';
 

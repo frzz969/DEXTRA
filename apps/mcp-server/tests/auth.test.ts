@@ -37,8 +37,8 @@ describe('auth scoping', () => {
     // If these ever diverge, someone has re-introduced a second source of truth.
     assert.deepEqual([...AGENT_TOOLS].sort(), [...toolsForScope('agent')].sort());
     assert.deepEqual([...OPS_TOOLS].sort(), [...toolsForScope('ops')].sort());
-    assert.equal(OPS_TOOLS.size, 16);
-    assert.equal(AGENT_TOOLS.size, 11);
+    assert.equal(OPS_TOOLS.size, 17);
+    assert.equal(AGENT_TOOLS.size, 12);
   });
 
   test('every tool in the contract appears in at least one scope', () => {

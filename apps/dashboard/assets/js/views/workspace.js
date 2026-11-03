@@ -26,10 +26,13 @@
       ? attributed.filter(function (p) { return p.requester === D.session.user.name; })
       : store.plans;
 
-    var specOpts = [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; }));
+    var specOpts = store.hasAttribution() ? [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })) : null;
 
     function count(statuses) {
-      return scope.filter(function (p) { return statuses.indexOf(p.status) !== -1; }).length;
+      /* Count by the derived state, not raw `status`: an approved or executed
+         plan is no longer "awaiting a decision" even though the contract keeps
+         its status at READY. */
+      return scope.filter(function (p) { return statuses.indexOf(store.displayStatus(p)) !== -1; }).length;
     }
 
     root.innerHTML =
@@ -45,7 +48,7 @@
       ui.demoBanner() +
       (ownershipKnown ? '' : ui.partialBanner(
         'Server tidak mencatat siapa pemohon tiap rencana — autentikasi MCP memakai scope (<span class="mono">agent</span>/<span class="mono">ops</span>), bukan identitas orang. ' +
-        'Daftar ini menampilkan <b>semua</b> permintaan di workspace, bukan hanya milik <b>' + esc(D.session.user.name) + '</b>.')) +
+        'Daftar ini menampilkan <b>semua</b> permintaan di workspace, bukan hanya milik satu orang.')) +
       '<div style="margin-bottom:16px">' + ui.statstrip([
         { label: 'Menunggu keputusan', value: count(['READY', 'NEEDS_REVIEW']), tone: 'warning', hint: 'Butuh persetujuan manusia' },
         { label: 'Diblokir kebijakan', value: count(['BLOCKED']), tone: 'danger', hint: 'Tidak dapat disetujui apa adanya' },
@@ -58,7 +61,7 @@
           '<div class="input-wrap" style="flex:1 1 260px;max-width:340px"><span class="material-symbols-outlined">search</span>' +
             '<input class="input input--icon" id="q" placeholder="Cari ID atau isi permintaan…"></div>' +
           ui.select('status', STATUS_OPTS, 'all', 'style="width:auto;min-width:150px"') +
-          ui.select('specialist', specOpts, 'all', 'style="width:auto;min-width:170px"') +
+          (specOpts ? ui.select('specialist', specOpts, 'all', 'style="width:auto;min-width:170px"') : '') +
           '<button class="btn btn--ghost btn--sm" id="reset"><span class="material-symbols-outlined">restart_alt</span>Reset</button>' +
           '<div class="spacer"></div>' +
           '<span class="tiny muted" id="count"></span>' +
@@ -94,7 +97,8 @@
     /* requests of mine that are waiting on me specifically */
     function attentionCard() {
       var items = scope.filter(function (p) {
-        return p.status === 'READY' || p.status === 'NEEDS_REVIEW' || p.status === 'BLOCKED';
+        var st = store.displayStatus(p);
+        return st === 'READY' || st === 'NEEDS_REVIEW' || st === 'BLOCKED';
       }).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }).slice(0, 4);
 
       return ui.card({
@@ -119,7 +123,7 @@
 
     function paint() {
       var rows = scope.filter(function (p) {
-        if (filter.status !== 'all' && p.status !== filter.status) return false;
+        if (filter.status !== 'all' && store.displayStatus(p) !== filter.status) return false;
         if (filter.specialist !== 'all' && p.specialist !== filter.specialist) return false;
         if (filter.q && (p.plan_id + ' ' + p.intent).toLowerCase().indexOf(filter.q.toLowerCase()) < 0) return false;
         return true;
@@ -134,7 +138,7 @@
               '<div class="cell-sub">' + esc((store.specialist(p.specialist) || {}).name || '—') + ' · ' + (p.actions || []).length + ' tindakan</div>';
           }},
           { key: 'risk', label: 'Risiko', width: '120px', render: function (p) { return D.riskBadge(p.risk); } },
-          { key: 'status', label: 'Status', width: '136px', render: function (p) { return D.statusBadge(p.status); } },
+          { key: 'status', label: 'Status', width: '136px', render: function (p) { return D.planStatusBadge(p); } },
           { key: 'mandate_id', label: 'Mandat', width: '104px', render: function (p) {
             return p.mandate_id ? '<span class="mono tiny">' + esc(p.mandate_id) + '</span>' : '<span class="faint tiny">belum ada</span>';
           }},
@@ -153,17 +157,30 @@
       }));
     }
 
-    root.querySelector('#q').addEventListener('input', U.debounce(function (e) { filter.q = e.target.value; paint(); }, 180));
-    root.querySelector('#status').addEventListener('change', function (e) { filter.status = e.target.value; paint(); });
-    root.querySelector('#specialist').addEventListener('change', function (e) { filter.specialist = e.target.value; paint(); });
+    /*
+     * The specialist filter only exists when the store can attribute a plan to a
+     * specialist. In live mode it cannot — the Plan contract carries no such
+     * field — so the select is not rendered at all. Attaching its listener
+     * unconditionally threw on every live visit to this page and took the whole
+     * route down with it. Resolve each control once and skip the ones that are
+     * genuinely absent, rather than assuming the markup is fixed.
+     */
+    var qEl = root.querySelector('#q');
+    var statusEl = root.querySelector('#status');
+    var specEl = root.querySelector('#specialist');
+    var exportEl = root.querySelector('#export');
+
+    qEl.addEventListener('input', U.debounce(function (e) { filter.q = e.target.value; paint(); }, 180));
+    statusEl.addEventListener('change', function (e) { filter.status = e.target.value; paint(); });
+    if (specEl) specEl.addEventListener('change', function (e) { filter.specialist = e.target.value; paint(); });
     root.querySelector('#reset').addEventListener('click', function () {
       filter = { q: '', status: 'all', specialist: 'all' };
-      root.querySelector('#q').value = '';
-      root.querySelector('#status').value = 'all';
-      root.querySelector('#specialist').value = 'all';
+      qEl.value = '';
+      statusEl.value = 'all';
+      if (specEl) specEl.value = 'all';
       paint();
     });
-    root.querySelector('#export').addEventListener('click', function () {
+    if (exportEl) exportEl.addEventListener('click', function () {
       var rows = [['ID', 'Permintaan', 'Spesialis', 'Risiko', 'Status', 'Mandat', 'Dikirim']];
       scope.forEach(function (p) {
         rows.push([p.plan_id, p.intent, (store.specialist(p.specialist) || {}).name || '', p.risk, p.status, p.mandate_id || '', p.created_at]);
@@ -182,10 +199,10 @@
      * workspace. Say that plainly rather than implying it is personal. */
     var ownershipKnown = store.plans.some(function (p) { return p.requester; });
 
-    var awaiting = store.plans.filter(function (p) { return p.status === 'READY'; });
-    var needs = store.plans.filter(function (p) { return p.status === 'NEEDS_REVIEW'; });
-    var blocked = store.plans.filter(function (p) { return p.status === 'BLOCKED'; });
-    var drafts = store.plans.filter(function (p) { return p.status === 'DRAFT'; });
+    var awaiting = store.plans.filter(function (p) { return store.displayStatus(p) === 'READY'; });
+    var needs = store.plans.filter(function (p) { return store.displayStatus(p) === 'NEEDS_REVIEW'; });
+    var blocked = store.plans.filter(function (p) { return store.displayStatus(p) === 'BLOCKED'; });
+    var drafts = store.plans.filter(function (p) { return store.displayStatus(p) === 'DRAFT'; });
 
     function group(title, desc, items, icon, tone, cta) {
       return ui.card({
@@ -275,7 +292,7 @@
                   '<span class="small ' + (st === 'granted' ? '' : 'muted') + '">' + esc(c.label) + suffix + '</span></div>';
               }).join('') +
               '<div class="tiny faint" style="line-height:1.5;margin-top:2px">' + esc(D.session.identityLine()) + '</div>' +
-              '<a class="btn btn--ghost btn--sm" href="#/permissions" style="justify-content:flex-start;padding-left:0">Matriks izin<span class="material-symbols-outlined">arrow_forward</span></a>' +
+              '<a class="btn btn--ghost btn--sm" href="#/permissions" style="justify-content:flex-start;padding-left:0">Lihat izin<span class="material-symbols-outlined">arrow_forward</span></a>' +
             '</div>'
           }) +
           ui.card({

@@ -15,7 +15,7 @@
   function bubble(m) {
     if (m.role === 'user') {
       return '<div class="msg msg--user"><div class="msg__bubble">' + esc(m.text).replace(/\n/g, '<br>') + '</div>' +
-        '<span class="avatar avatar--sm">' + esc(U.initials(D.session.user.name)) + '</span></div>';
+        '<span class="avatar avatar--sm">' + esc(U.initials(D.session.displayName())) + '</span></div>';
     }
     var inner = '<div class="msg__bubble">' + esc(m.text).replace(/\n/g, '<br>') + '</div>';
     if (m.steps && m.steps.length) {
@@ -37,18 +37,24 @@
         }).join('') + '</div>';
     }
     if (m.plan) {
+      var findings = (m.plan.findings || []);
       inner += '<div class="msg__plan"><div class="row" style="gap:8px;margin-bottom:6px">' +
-        '<span class="mono tiny faint">' + esc(m.plan.plan_id) + '</span>' + D.statusBadge(m.plan.status) + '</div>' +
+        '<span class="mono tiny faint">' + esc(m.plan.plan_id) + '</span>' + D.planStatusBadge(m.plan) + '</div>' +
         '<div class="small strong" style="margin-bottom:8px">' + esc(m.plan.intent) + '</div>' +
         (m.plan.actions || []).map(function (a) {
+          var isEvent = a.action_type === 'create_calendar_event';
           return '<div class="tiny" style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface)">' +
             '<div class="row" style="gap:6px;margin-bottom:2px"><span class="material-symbols-outlined" style="font-size:13px;color:var(--brand-600)">' +
-            (a.action_type === 'schedule_event' ? 'event' : 'mail') + '</span><b>' + esc(a.action_type.replace(/_/g, ' ')) + '</b>' +
+            (isEvent ? 'event' : 'mail') + '</span><b>' + esc(String(a.action_type).replace(/_/g, ' ')) + '</b>' +
             '<span class="spacer"></span>' + D.riskBadge(a.risk) + '</div>' +
             '<div class="muted">' + esc(a.target.display_name) + ' · ' + esc(a.target.masked_address) + ' · ' + esc(a.target.channel) + '</div>' +
-            '<div class="muted">' + esc(a.schedule.start_at ? U.fmtDate(a.schedule.start_at) : '—') + '</div>' +
+            '<div class="muted">' + esc(a.schedule && a.schedule.start_at ? U.fmtDate(a.schedule.start_at) : '—') + '</div>' +
           '</div>';
         }).join('') +
+        (findings.length
+          ? '<div class="banner banner--danger" style="margin-top:4px"><span class="material-symbols-outlined">policy</span><div>' +
+            findings.map(function (f) { return '<div><b>' + esc(f.code) + '</b> — ' + esc(f.message) + '</div>'; }).join('') + '</div></div>'
+          : '') +
         '<div class="row" style="gap:6px;margin-top:8px"><a class="btn btn--primary btn--sm" href="#/review/' + encodeURIComponent(m.plan.plan_id) + '">Tinjau rencana' +
         '<span class="material-symbols-outlined">arrow_forward</span></a>' +
         '<button class="btn btn--secondary btn--sm" data-ask-more>Ubah instruksi</button></div></div>';
@@ -62,11 +68,22 @@
   }
 
   D.views.assistant = function (root) {
-    thread = store.assistantThread.map(function (m) {
+    /*
+     * The demo thread is a scripted conversation, not a record. Against a live
+     * server it would render a policy block ("TIME-03") that no server ever
+     * produced, on a page whose banner already says the answers are local rules.
+     * Start empty in live mode: the thread is this session's conversation, and
+     * this session has not had one yet.
+     *
+     * The block's code and message travel with the message that carries them
+     * instead of being written into the view, so the text shown is the text the
+     * data states.
+     */
+    thread = (store.mode === 'live' ? [] : store.assistantThread).map(function (m) {
       return {
         role: m.role, text: m.text, at: m.at, steps: m.steps,
         plan: m.plan_id ? store.plan(m.plan_id) : null,
-        blocked: m.blocked ? { code: 'TIME-03', message: 'Jendela 11:30–13:00 pada hari Jumat dilindungi.' } : null
+        blocked: m.blocked || null
       };
     });
 

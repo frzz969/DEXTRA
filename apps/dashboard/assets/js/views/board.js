@@ -38,7 +38,7 @@
         '<div class="row row--wrap" style="gap:10px">' +
           '<div class="input-wrap" style="flex:1 1 220px;max-width:300px"><span class="material-symbols-outlined">search</span>' +
             '<input class="input input--icon" id="q" placeholder="Cari kartu…" style="height:32px"></div>' +
-          ui.select('spec', [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })), 'all', 'style="width:auto;height:32px;font-size:12px"') +
+          (store.hasAttribution() ? ui.select('spec', [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })), 'all', 'style="width:auto;height:32px;font-size:12px"') : '') +
           '<div class="spacer"></div>' +
           '<span class="tiny muted">Seret kartu antar kolom · ' + cards().length + ' kartu</span>' +
         '</div>' +
@@ -55,7 +55,7 @@
         return {
           id: p.plan_id,
           title: p.intent,
-          col: liveMove[p.plan_id] || STATUS_COL[p.status] || 'draft',
+          col: liveMove[p.plan_id] || STATUS_COL[store.displayStatus(p)] || 'draft',
           spec: specialist ? specialist.name : 'Workforce Dispatcher',
           risk: p.risk || 'medium',
           due: '—'
@@ -80,7 +80,7 @@
               var plan = store.plan(c.id);
               return '<article class="kcard" draggable="true" data-id="' + esc(c.id) + '" tabindex="0">' +
                 '<div class="row" style="gap:6px;margin-bottom:5px"><span class="mono tiny faint">' + esc(c.id) + '</span>' +
-                  '<span class="spacer"></span>' + (plan ? D.statusBadge(plan.status) : '') + '</div>' +
+                  '<span class="spacer"></span>' + (plan ? D.planStatusBadge(plan) : '') + '</div>' +
                 '<div class="kcard__title">' + esc(c.title) + '</div>' +
                 '<div class="kcard__meta">' + D.riskBadge(c.risk) +
                   '<span class="tag">' + esc(c.spec.split(' ').map(function (w) { return w[0]; }).join('')) + '</span>' +
@@ -131,7 +131,8 @@
     }
 
     root.querySelector('#q').addEventListener('input', U.debounce(function (e) { q = e.target.value; paint(); }, 150));
-    root.querySelector('#spec').addEventListener('change', function (e) { spec = e.target.value; paint(); });
+    var specSel = root.querySelector('#spec');
+    if (specSel) specSel.addEventListener('change', function (e) { spec = e.target.value; paint(); });
     paint();
   };
 })();

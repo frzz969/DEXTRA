@@ -174,17 +174,20 @@
     scope: null,
     serverCapabilities: null,
     serverUnbacked: null,
+    serverTools: null,
 
     applyServerContext: function (ctx) {
       if (!ctx) {
         this.scope = null;
         this.serverCapabilities = null;
         this.serverUnbacked = null;
+        this.serverTools = null;
         return;
       }
       this.scope = typeof ctx.scope === 'string' ? ctx.scope : null;
       this.serverCapabilities = Array.isArray(ctx.capabilities) ? ctx.capabilities.slice() : [];
       this.serverUnbacked = Array.isArray(ctx.unbacked_capabilities) ? ctx.unbacked_capabilities.slice() : [];
+      this.serverTools = Array.isArray(ctx.tools) ? ctx.tools.slice() : [];
     },
 
     /* True when the browser is relying on the simulated matrix instead of the server. */
@@ -222,6 +225,43 @@
     roleLabel: function () {
       if (this.serverCapabilities) return 'Token ' + this.scope + ' · server';
       return ROLE_LABEL[this.user.role] || this.user.role;
+    },
+
+    /*
+     * What to put in the user chip. In live mode there is no person behind the
+     * token — the server authenticates a scope, and the demo persona's name is
+     * not an identity that exists anywhere. Printing "Farhan Pratama" next to a
+     * live session would attribute real authority to a fictional person, so the
+     * chip shows the scope instead.
+     */
+    displayName: function () {
+      if (this.serverCapabilities) return 'Token ' + this.scope;
+      return this.user.name;
+    },
+
+    /* Second line of the user chip: what backs this session, not who it is. */
+    subtitle: function () {
+      if (this.serverCapabilities) {
+        return 'server · ' + this.serverCapabilities.length + ' kapabilitas';
+      }
+      return ROLE_LABEL[this.user.role] || this.user.role;
+    },
+
+    /* The persona's e-mail is demo data; it must not be shown as a real account. */
+    contactLine: function () {
+      if (this.serverCapabilities) return 'tanpa identitas per orang';
+      return this.user.email || '';
+    },
+
+    /*
+     * The id to record as the approver. The server has no person behind a token,
+     * only a scope, so writing 'user_001' would put a name in the audit trail
+     * that no system can resolve and that nobody can be held to. Record the
+     * authority that actually decided instead.
+     */
+    identityId: function () {
+      if (this.serverCapabilities) return 'scope:' + this.scope;
+      return this.user.id;
     },
 
     identityLine: function () {
@@ -346,9 +386,22 @@
         });
       }).catch(function () { return null; });
 
-      return Promise.all([plansP, mandatesP, executionsP]).then(function (res) {
+      /* The roster is read from the agent definition files, not from demo data.
+       * Only the four fields the files actually contain are kept. */
+      var specialistsP = api.call('list_specialists', {}).then(function (d) {
+        return (d.specialists || []).map(function (s) {
+          return { id: s.id, name: s.name, role: s.role, limits: s.limits || [], tools: s.tools || [] };
+        });
+      }).catch(function () { return null; });
+
+      return Promise.all([plansP, mandatesP, executionsP, specialistsP]).then(function (res) {
         self.plans = res[0].map(function (p) {
-          p.specialist = p.specialist || 'dispatcher';
+          /* The Plan contract has no `specialist` field. Defaulting it to
+           * 'dispatcher' (as this used to) attributed every plan to an agent the
+           * server never mentioned — on the main list screens, which is exactly
+           * the "no fabricated state" rule this product is built on. Left null;
+           * views render '—'. */
+          p.specialist = p.specialist || null;
           p.risk = (p.actions || []).reduce(function (m, a) {
             var order = { low: 0, medium: 1, high: 2, critical: 3 };
             return (order[a.risk] || 0) > (order[m] || 0) ? a.risk : m;
@@ -405,6 +458,28 @@
           });
         }
 
+        /* Only replace the roster when the server actually answered; otherwise
+           the page shows its "needs server" state rather than stale demo rows. */
+        if (res[3]) self.specialists = res[3];
+
+        /*
+         * The Plan contract has four statuses — DRAFT, READY, NEEDS_REVIEW,
+         * BLOCKED — and none of them is "approved" or "executed". Those two are
+         * facts the server records elsewhere: a granted approval, and an
+         * execution. Deriving them here from those records keeps the screens
+         * from claiming a plan is still "awaiting a decision" after a human
+         * approved it and it ran.
+         */
+        var approvedPlans = {};
+        self.mandates.forEach(function (m) { if (m.plan_id) approvedPlans[m.plan_id] = true; });
+        var executedPlans = {};
+        self.executions.forEach(function (e) { if (e.plan_id) executedPlans[e.plan_id] = true; });
+
+        self.plans.forEach(function (p) {
+          p.approved = approvedPlans[p.plan_id] === true;
+          p.executed = executedPlans[p.plan_id] === true;
+        });
+
         return api.call('get_org_rules', { org_id: 'org_kenari' }).catch(function () { return null; });
       }).then(function (o) {
         if (o) self.org = o;
@@ -416,17 +491,46 @@
       return null;
     },
     plansBy: function (fn) { return this.plans.filter(fn); },
+    /* True only when the server actually attributed at least one plan to a
+     * specialist. Views use this to hide a filter that would always be empty,
+     * rather than offering a control that cannot do anything. */
+    hasAttribution: function () {
+      return this.plans.some(function (p) { return !!p.specialist; });
+    },
     counts: function () {
-      var c = { total: this.plans.length, awaiting: 0, blocked: 0, executed: 0, draft: 0, rejected: 0, needs: 0 };
+      var c = { total: this.plans.length, awaiting: 0, blocked: 0, executed: 0, draft: 0, rejected: 0, needs: 0, approved: 0 };
       this.plans.forEach(function (p) {
+        /* Executed and approved are derived from executions and mandates, not
+         * from `status`, which the contract never sets to either. Checking them
+         * first keeps a finished plan out of "awaiting decision". */
+        if (p.executed) { c.executed++; return; }
+        if (p.approved) { c.approved++; return; }
         if (p.status === 'READY') c.awaiting++;
         else if (p.status === 'NEEDS_REVIEW') { c.awaiting++; c.needs++; }
         else if (p.status === 'BLOCKED') c.blocked++;
-        else if (p.status === 'EXECUTED') c.executed++;
         else if (p.status === 'DRAFT') c.draft++;
-        else if (p.status === 'REJECTED') c.rejected++;
       });
       return c;
+    },
+
+    /*
+     * What to show as a plan's state. The contract's `status` describes the
+     * approval lifecycle only, so a plan that was approved and executed still
+     * reads READY. This resolves the same facts counts() uses into the label the
+     * screens show, so the badge and the KPI never disagree.
+     */
+    displayStatus: function (p) {
+      if (!p) return 'DRAFT';
+      if (p.executed) return 'EXECUTED';
+      if (p.approved) return 'APPROVED';
+      return p.status;
+    },
+
+    /* A plan still waiting on a human: not approved, not executed, and open. */
+    awaitingDecision: function () {
+      return this.plans.filter(function (p) {
+        return !p.approved && !p.executed && (p.status === 'READY' || p.status === 'NEEDS_REVIEW');
+      });
     },
     auditFor: function (planId) { return this.audit.filter(function (e) { return e.plan_id === planId; }); },
     mandateFor: function (planId) {
@@ -536,6 +640,9 @@
   /* ---------------- boot ---------------- */
   D.util = { esc: esc, attr: attr, detailText: detailText, actorName: actorName, eventLabel: eventLabel, eventTone: eventTone, fmtDate: fmtDate, fmtDay: fmtDay, fmtTime: fmtTime, rel: rel, initials: initials, debounce: debounce, qs: qs, csv: csv, download: download, h: h };
   D.badge = badge; D.statusBadge = statusBadge; D.riskBadge = riskBadge; D.mandateBadge = mandateBadge;
+  /* Badge for a plan: uses the derived state so an approved or executed plan is
+     never labelled as still awaiting a decision. */
+  D.planStatusBadge = function (p) { return statusBadge(store.displayStatus(p)); };
   D.STATUS = STATUS; D.RISK = RISK;
   D.session = session; D.api = api; D.store = store; D.router = router; D.theme = theme;
   D.views = D.views || {};

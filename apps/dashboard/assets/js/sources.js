@@ -108,20 +108,13 @@
         { id: 'ex.count', label: 'Berapa yang berhasil dan gagal?', kind: 'answer', compute: 'executionStats' }
       ] },
 
-    { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'demo',
-      tools: [], modules: ['workbuddy'],
-      note: 'Registry agen belum diekspos server. Beban kerja bersifat contoh.',
+    { route: '/workforce', label: 'Workforce', domain: 'Workforce', state: 'live',
+      tools: ['list_specialists'], modules: ['workbuddy', 'store'],
+      note: 'Roster dibaca dari workbuddy/agents/*.md lewat list_specialists. Hanya field yang benar-benar ada di berkas yang ditampilkan: nama, peran, batas, tool. Beban kerja tidak ditampilkan karena plan tidak menyimpan spesialis.',
       intents: [
-        { id: 'wf.why', label: 'Kenapa data ini contoh?', kind: 'answer', compute: 'gapWorkforce' },
-        { id: 'wf.agents', label: 'Agen apa saja yang ada?', kind: 'answer', compute: 'specialists' }
-      ] },
-
-    { route: '/specialists', label: 'Specialist Directory', domain: 'Workforce', state: 'demo',
-      tools: [], modules: ['workbuddy'],
-      note: 'Empat spesialis dibaca dari workbuddy/agents/*.md, bukan dari API.',
-      intents: [
-        { id: 'sp.list', label: 'Siapa saja spesialisnya?', kind: 'answer', compute: 'specialists' },
-        { id: 'sp.limits', label: 'Apa yang tidak boleh mereka lakukan?', kind: 'answer', compute: 'specialistLimits' }
+        { id: 'wf.list', label: 'Siapa saja spesialisnya?', kind: 'answer', compute: 'specialists' },
+        { id: 'wf.limits', label: 'Apa yang tidak boleh mereka lakukan?', kind: 'answer', compute: 'specialistLimits' },
+        { id: 'wf.source', label: 'Dari mana daftar ini dibaca?', kind: 'answer', compute: 'specialistSource' }
       ] },
 
     { route: '/approvals', label: 'Approval Inbox', domain: 'Tata kelola', state: 'live',
@@ -176,19 +169,12 @@
         { id: 'po.blocking', label: 'Aturan mana yang memblokir?', kind: 'answer', compute: 'policiesBlocking' }
       ] },
 
-    { route: '/users', label: 'Users & Roles', domain: 'Administrasi', state: 'demo',
-      tools: [], modules: ['store'],
-      note: 'Tidak ada tool identitas dan tidak ada otorisasi admin di server. Rute terkunci sebagai "belum tersedia", bukan "ditolak".',
-      intents: [
-        { id: 'us.gap', label: 'Kenapa halaman ini belum tersedia?', kind: 'answer', compute: 'gapUsers' }
-      ] },
-
-    { route: '/permissions', label: 'Permissions', domain: 'Administrasi', state: 'demo',
+    { route: '/permissions', label: 'Permissions', domain: 'Administrasi', state: 'live',
       tools: ['get_caller_context'], modules: ['contracts'],
-      note: 'Kapabilitas efektif datang dari get_caller_context (scope token). Matriks peran di halaman ini hanya model demo; manage_users dan manage_integrations tidak didukung scope mana pun.',
+      note: 'Kapabilitas dan tool dinyatakan server untuk token ini. Matriks per peran sudah dihapus: model identitas tidak punya peran per pengguna, dan matriksnya berasal dari data contoh.',
       intents: [
         { id: 'pm.scope', label: 'Kapabilitas apa yang saya punya?', kind: 'tool', tool: 'get_caller_context', args: {} },
-        { id: 'pm.matrix', label: 'Apakah matriks peran ini nyata?', kind: 'answer', compute: 'permissionGap' }
+        { id: 'pm.matrix', label: 'Mengapa tidak ada matriks per peran?', kind: 'answer', compute: 'permissionGap' }
       ] },
 
     { route: '/integrations', label: 'Integrations', domain: 'Administrasi', state: 'partial',

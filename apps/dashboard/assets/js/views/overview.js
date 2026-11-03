@@ -106,7 +106,7 @@
             '<div class="cell-sub">' + esc((store.specialist(p.specialist) || {}).name || '—') + ' · ' + esc(p.requester || '—') + '</div>';
         }},
         { key: 'risk', label: 'Risiko', width: '116px', render: function (p) { return D.riskBadge(p.risk); } },
-        { key: 'status', label: 'Status', width: '132px', render: function (p) { return D.statusBadge(p.status); } },
+        { key: 'status', label: 'Status', width: '132px', render: function (p) { return D.planStatusBadge(p); } },
         { key: 'created_at', label: 'Diperbarui', width: '108px', align: 'right', render: function (p) { return '<span class="tiny muted">' + U.rel(p.created_at) + '</span>'; } }
       ],
       rows: rows,
@@ -169,18 +169,29 @@
   }
 
   function workforceCard() {
-    var rows = store.specialists.map(function (s) {
-      var load = store.plans.filter(function (p) { return p.specialist === s.id && p.status !== 'EXECUTED' && p.status !== 'REJECTED'; }).length;
-      return '<a href="#/specialists" class="row" style="padding:9px 0;border-bottom:1px solid var(--border)">' +
-        '<span class="spec-avatar' + (s.engine ? ' spec-avatar--engine' : '') + '" style="width:30px;height:30px;border-radius:8px"><span class="material-symbols-outlined" style="font-size:16px">' + s.icon + '</span></span>' +
+    /* The roster comes from the server. No load counters here: the store records
+     * no specialist on a plan, so "3 aktif" was a number with no source. */
+    var live = store.mode === 'live';
+    var roster = live ? (store.specialists || []) : [];
+
+    var rows = roster.map(function (s) {
+      return '<a href="#/workforce" class="row" style="padding:9px 0;border-bottom:1px solid var(--border)">' +
+        '<span class="spec-avatar" style="width:30px;height:30px;border-radius:8px"><span class="material-symbols-outlined" style="font-size:16px">smart_toy</span></span>' +
         '<div style="flex:1;min-width:0"><div class="small strong truncate">' + esc(s.name) + '</div>' +
-        '<div class="tiny muted truncate">' + esc(s.engine ? 'Mesin kebijakan deterministik' : s.role) + '</div></div>' +
-        '<span class="badge badge--outline">' + load + ' aktif</span></a>';
+        '<div class="tiny muted truncate">' + esc(s.role || s.id) + '</div></div></a>';
     }).join('');
+
+    var body = live
+      ? (rows || '<p class="small muted" style="padding:8px 0">Server tidak mengembalikan roster.</p>')
+      : '<div class="row" style="gap:9px;align-items:flex-start;padding:6px 0">' +
+          '<span class="material-symbols-outlined" style="font-size:16px;color:var(--warning-600);margin-top:2px">cloud_off</span>' +
+          '<div><div class="small strong">Roster butuh server</div>' +
+          '<div class="tiny muted" style="line-height:1.5;margin-top:2px">Dibaca dari <span class="mono">workbuddy/agents/*.md</span> lewat <span class="mono">list_specialists</span>. Tidak ada daftar contoh yang ditampilkan.</div></div></div>';
+
     return ui.card({
-      title: 'Workforce', desc: 'Empat spesialis AI, satu mesin kebijakan',
+      title: 'Workforce', desc: 'Spesialis AI, dibaca dari berkas definisi agen',
       actions: '<a class="icon-btn" href="#/workforce" title="Buka workforce"><span class="material-symbols-outlined">arrow_outward</span></a>',
-      body: '<div style="margin-top:-9px">' + rows + '</div>'
+      body: '<div style="margin-top:-9px">' + body + '</div>'
     });
   }
 
@@ -244,7 +255,7 @@
       ui.pageHead({
         eyebrow: 'Workspace · Overview',
         title: 'Overview',
-        desc: greeting + ', ' + esc(D.session.user.name.split(' ')[0]) + '. ' +
+        desc: greeting + (D.session.simulated() ? ', ' + esc(D.session.user.name.split(' ')[0]) : '') + '. ' +
           (c.awaiting ? '<b>' + c.awaiting + ' work package menunggu keputusan Anda</b> dan ' + c.blocked + ' diblokir kebijakan.' : 'Tidak ada keputusan yang menunggu.'),
         actions:
           '<a class="btn btn--secondary" href="#/board"><span class="material-symbols-outlined">view_kanban</span>Task board</a>' +

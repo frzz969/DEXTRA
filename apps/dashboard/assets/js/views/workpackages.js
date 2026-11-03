@@ -41,7 +41,7 @@
         '<div class="spacer"></div>' +
         '<div class="input-wrap" style="width:240px"><span class="material-symbols-outlined">search</span>' +
           '<input class="input input--icon" id="q" placeholder="Cari work package…" style="height:32px"></div>' +
-        ui.select('spec', [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })), 'all', 'style="width:auto;height:32px;font-size:12px"') +
+        (store.hasAttribution() ? ui.select('spec', [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })), 'all', 'style="width:auto;height:32px;font-size:12px"') : '') +
       '</div><div id="host"></div></div>';
 
     var host = root.querySelector('#host');
@@ -67,7 +67,7 @@
               '<span class="small truncate">' + esc(s.name || '—') + '</span></div>';
           }},
           { key: 'risk', label: 'Risiko', width: '118px', render: function (p) { return D.riskBadge(p.risk); } },
-          { key: 'status', label: 'Status', width: '134px', render: function (p) { return D.statusBadge(p.status); } },
+          { key: 'status', label: 'Status', width: '134px', render: function (p) { return D.planStatusBadge(p); } },
           { key: 'mandate_id', label: 'Mandat', width: '100px', render: function (p) {
             return p.mandate_id ? '<span class="mono tiny">' + esc(p.mandate_id) + '</span>' : '<span class="tiny faint">—</span>';
           }},
@@ -88,7 +88,8 @@
       });
     });
     root.querySelector('#q').addEventListener('input', U.debounce(function (e) { filter.q = e.target.value; paint(); }, 180));
-    root.querySelector('#spec').addEventListener('change', function (e) { filter.specialist = e.target.value; paint(); });
+    var specSel = root.querySelector('#spec');
+    if (specSel) specSel.addEventListener('change', function (e) { filter.specialist = e.target.value; paint(); });
     root.querySelector('#export').addEventListener('click', function () {
       var rows = [['ID', 'Intent', 'Pemohon', 'Spesialis', 'Risiko', 'Status', 'Mandat', 'Dibuat']];
       store.plans.forEach(function (p) { rows.push([p.plan_id, p.intent, p.requester || '', (store.specialist(p.specialist) || {}).name || '', p.risk, p.status, p.mandate_id || '', p.created_at]); });
@@ -158,7 +159,7 @@
     root.innerHTML =
       '<div class="breadcrumbs" style="margin-bottom:10px"><a href="#/work-packages">Work Packages</a><span class="sep">/</span><span class="current mono">' + esc(p.plan_id) + '</span></div>' +
       '<div class="page-head"><div class="page-head__text">' +
-        '<div class="row" style="gap:8px;margin-bottom:6px">' + D.statusBadge(p.status) + D.riskBadge(p.risk) +
+        '<div class="row" style="gap:8px;margin-bottom:6px">' + D.planStatusBadge(p) + D.riskBadge(p.risk) +
           '<span class="badge badge--outline">' + esc((p.actions || []).length) + ' tindakan</span></div>' +
         '<h1 style="max-width:70ch">' + esc(p.intent) + '</h1>' +
         '<p class="mono tiny" style="margin-top:6px">plan_hash ' + esc(p.plan_hash) + '</p>' +

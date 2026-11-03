@@ -62,6 +62,7 @@ export const TOOL_CAPABILITY = {
   get_status: 'view_all',
   get_audit_log: 'view_audit',
   get_caller_context: 'view_own',
+  list_specialists: 'view_all',
 } as const satisfies Record<string, Capability>;
 
 export type ToolName = keyof typeof TOOL_CAPABILITY;

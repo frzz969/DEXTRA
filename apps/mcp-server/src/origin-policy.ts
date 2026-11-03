@@ -30,6 +30,17 @@
 /** Dashboard dev origin documented in PRD section 35.2. */
 export const DASHBOARD_PORT = 3000;
 
+/**
+ * Port of the static dashboard (`npm run dev:dashboard`).
+ *
+ * It has to be in the defaults, not in `DEXTRA_ALLOWED_ORIGINS`: that variable
+ * can only narrow the built-in set, so a port missing here could never be
+ * allowed. Without this entry the documented way to run the dashboard (a static
+ * server on 8899) was blocked by CORS on every call — a run-from-zero failure
+ * that only showed up when someone actually followed the README.
+ */
+export const STATIC_DASHBOARD_PORT = 8899;
+
 export interface RequestLike {
   method: string;
   origin?: string | undefined;
@@ -92,7 +103,7 @@ export function parseStrictOrigin(value: string): string | null {
 }
 
 export function defaultAllowedOrigins(port: number): string[] {
-  const ports = new Set<number>([port, DASHBOARD_PORT]);
+  const ports = new Set<number>([port, DASHBOARD_PORT, STATIC_DASHBOARD_PORT]);
   const origins: string[] = [];
   for (const p of ports) {
     origins.push(`http://127.0.0.1:${p}`, `http://localhost:${p}`);

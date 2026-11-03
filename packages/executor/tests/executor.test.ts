@@ -141,17 +141,47 @@ describe('executor', () => {
     assert.equal(res.reason_code, 'MANDATE_EXPIRED');
   });
 
-  test('parallel calls produce at most one real execution (replay allowed)', async () => {
+  /*
+   * The invariant is "one action is executed once", not "both calls return
+   * something plausible". The previous version of this test asserted only that
+   * each result was one of sent/queued/blocked, which is true even when BOTH
+   * concurrent calls perform a real send — so it could not fail for the reason
+   * it was written. Two calls that both pass the duplicate check before either
+   * writes will each execute the mock and each return `sent`.
+   *
+   * Eight callers instead of two so the window is hit reliably: with the check
+   * and the write outside one critical section, several of them observe "no
+   * existing execution" at the same time.
+   */
+  test('parallel calls execute the action exactly once', async () => {
     const { mandate, actionId } = await setup();
-    const [a, b] = await Promise.all([
-      executeAction({ mandate_id: mandate.mandate_id, action_id: actionId, execution_key: 'ka', now: '2026-11-01T10:06:00+07:00' }),
-      executeAction({ mandate_id: mandate.mandate_id, action_id: actionId, execution_key: 'kb', now: '2026-11-01T10:06:00+07:00' }),
-    ]);
-    // Both should resolve to the same stored record (no duplicate execution).
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        executeAction({
+          mandate_id: mandate.mandate_id,
+          action_id: actionId,
+          execution_key: `k${i}`,
+          now: '2026-11-01T10:06:00+07:00',
+        }),
+      ),
+    );
+
+    const executed = results.filter((r) => r.result === 'sent');
+    assert.equal(executed.length, 1, 'exactly one caller may perform the real execution');
+
+    // Every caller must observe the one stored record, not a private copy.
     const stored = await getExecution(mandate.mandate_id, actionId);
-    assert.ok(stored !== null);
-    assert.ok(a.execution_id === stored.execution_id || b.execution_id === stored.execution_id);
-    assert.ok(a.result === 'sent' || a.result === 'queued' || a.result === 'blocked');
+    assert.ok(stored !== null, 'the execution must be recorded');
+    assert.equal(stored.execution_id, executed[0]!.execution_id);
+    assert.equal(stored.result, 'sent');
+
+    // Nobody may be told the action was blocked while it actually succeeded.
+    for (const r of results) {
+      assert.ok(
+        r.result === 'sent' || r.result === 'queued',
+        `unexpected outcome ${r.result} for a valid mandate`,
+      );
+    }
   });
 
   test('create_task action -> sent with mock_task_id', async () => {

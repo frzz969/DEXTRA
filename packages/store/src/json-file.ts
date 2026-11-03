@@ -20,6 +20,44 @@ async function writeJson(file: string, value: unknown): Promise<void> {
 }
 
 /**
+ * Serializes a whole read-modify-write transaction per target file.
+ *
+ * `writeJsonAtomic` already serializes the *write*, but every repository writer
+ * reads the file, decides what the new contents should be, and only then writes.
+ * Two concurrent writers can therefore both read the pre-write state and each
+ * write a list containing only its own change — the second write silently
+ * discards the first. For plans that loses a plan; for executions it defeats
+ * duplicate detection entirely, which is how a single action can be executed
+ * twice. Serializing the transaction rather than just the write closes that
+ * window.
+ *
+ * Re-entrancy is not supported: a function holding the lock must not call
+ * another function that takes the same lock, or it will wait on itself.
+ */
+const TRANSACTIONS = new Map<string, Promise<unknown>>();
+
+export function withFileLock<T>(file: string, run: () => Promise<T>): Promise<T> {
+  const previous = TRANSACTIONS.get(file) ?? Promise.resolve();
+  // Run whether the previous transaction resolved or rejected: one failed write
+  // must not wedge every later write to the same file.
+  const result = previous.then(
+    () => run(),
+    () => run(),
+  );
+  const tail = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  TRANSACTIONS.set(file, tail);
+  void tail.then(() => {
+    if (TRANSACTIONS.get(file) === tail) {
+      TRANSACTIONS.delete(file);
+    }
+  });
+  return result;
+}
+
+/**
  * Atomic write serialized per target path. Because the temp file name is
  * fixed (`<file>.tmp`), concurrent writes to the same target are chained so
  * they cannot interleave.

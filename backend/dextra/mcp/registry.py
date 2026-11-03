@@ -26,6 +26,7 @@ TOOL_CAPABILITY: Final[dict[str, str]] = {
     "get_status": "view_all",
     "get_audit_log": "view_audit",
     "get_caller_context": "view_own",
+    "list_specialists": "view_all",
 }
 
 SCOPE_CAPABILITIES: Final[dict[str, tuple[str, ...]]] = {

@@ -1,166 +1,121 @@
-/* Views — Workforce & Specialist Directory. */
+/* View — Workforce: the specialist roster, read from workbuddy/agents/*.md.
+ *
+ * This page used to be two screens (Workforce + Specialist Directory) showing
+ * demo data with fields the server never had: version numbers, "status aktif",
+ * tag lists, workload counters. All of it was invented in data.js.
+ *
+ * Now there is one screen and it renders exactly four things per specialist —
+ * name, role, limits, tools — because those are the four things the agent files
+ * state. Workload is gone: the server records no specialist on a plan, so any
+ * "beban kerja" number would have been fiction. If the server is not running,
+ * the page says so instead of falling back to example rows.
+ */
 (function () {
   'use strict';
   var D = window.DEXTRA, U = D.util, ui = D.ui, esc = U.esc;
   var store = D.store;
 
-  function load(s) {
-    return store.plans.filter(function (p) { return p.specialist === s.id && p.status !== 'EXECUTED' && p.status !== 'REJECTED'; }).length;
-  }
-  function totalFor(s) {
-    if (s.id === 'dispatcher') return store.plans.length;
-    if (s.engine) return store.plans.length;
-    return store.plans.filter(function (p) { return p.specialist === s.id; }).length;
-  }
-  function wpLabel(s) {
-    return (s.id === 'dispatcher' || s.engine) ? 'semua WP' : totalFor(s) + ' WP';
-  }
-  function lastActive(s) {
-    var evs = store.audit.filter(function (e) { return e.actor === s.id; });
-    return evs.length ? evs[0].at : null;
-  }
-
   function openSpecialist(s) {
-    var recent = store.plans.filter(function (p) { return p.specialist === s.id; }).slice(0, 4);
     ui.drawer({
-      eyebrow: s.engine ? 'Mesin kebijakan' : 'Spesialis AI',
-      title: s.name, subtitle: s.role,
+      eyebrow: 'Spesialis AI',
+      title: s.name,
+      subtitle: 'workbuddy/agents/' + s.id + '.md',
       body:
-        '<div class="row" style="gap:10px;margin-bottom:14px">' +
-          '<span class="spec-avatar' + (s.engine ? ' spec-avatar--engine' : '') + '" style="width:44px;height:44px;border-radius:12px"><span class="material-symbols-outlined" style="font-size:22px">' + s.icon + '</span></span>' +
-          '<div><div class="small strong">' + esc(s.version) + '</div><div class="tiny muted">Status aktif</div></div>' +
-          '<div class="spacer"></div>' + (s.mandates === 'read-only' ? '<span class="badge badge--outline">read-only</span>' : s.mandates === 'evaluate only' ? '<span class="badge badge--outline">evaluate only</span>' : '<span class="badge badge--brand">via mandate</span>') +
-        '</div>' +
-        '<p class="small" style="color:var(--text-2);line-height:1.6">' + esc(s.desc) + '</p>' +
+        '<p class="small" style="color:var(--text-2);line-height:1.65">' + esc(s.role) + '</p>' +
         '<div class="divider"></div>' +
-        '<h3 style="margin-bottom:8px">Dapat melakukan</h3>' +
-        '<div class="stack" style="gap:6px;margin-bottom:14px">' + s.capabilities.map(function (c) {
-          return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:var(--success-600)">check_circle</span><span class="small">' + esc(c) + '</span></div>';
-        }).join('') + '</div>' +
-        '<h3 style="margin-bottom:8px">Tidak dapat melakukan</h3>' +
-        '<div class="stack" style="gap:6px;margin-bottom:14px">' + s.limits.map(function (c) {
-          return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:var(--danger-600)">cancel</span><span class="small">' + esc(c) + '</span></div>';
-        }).join('') + '</div>' +
+        '<h3 style="margin-bottom:8px">Batas yang dinyatakan</h3>' +
+        (s.limits.length
+          ? '<div class="stack" style="gap:6px;margin-bottom:14px">' + s.limits.map(function (c) {
+              return '<div class="row" style="gap:8px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:15px;color:var(--danger-600);margin-top:1px">cancel</span><span class="small">' + esc(c) + '</span></div>';
+            }).join('') + '</div>'
+          : '<p class="small muted">Berkas ini tidak menyatakan batas eksplisit.</p>') +
         '<div class="divider"></div>' +
-        '<h3 style="margin-bottom:8px">Work package terbaru</h3>' +
-        (recent.length ? recent.map(function (p) {
-          return '<a href="#/work-packages/' + encodeURIComponent(p.plan_id) + '" class="row" style="padding:8px 0;border-bottom:1px solid var(--border)">' +
-            '<div style="flex:1;min-width:0"><div class="tiny mono faint">' + esc(p.plan_id) + '</div>' +
-            '<div class="small truncate">' + esc(p.intent) + '</div></div>' + D.statusBadge(p.status) + '</a>';
-        }).join('') : '<p class="small muted">Belum ada work package.</p>') +
-        '<div class="tag-row" style="margin-top:14px">' + s.tags.map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>'
-      ,
+        '<h3 style="margin-bottom:8px">Tool yang boleh dipanggil</h3>' +
+        (s.tools.length
+          ? '<div class="tag-row">' + s.tools.map(function (t) { return '<span class="tag mono">' + esc(t) + '</span>'; }).join('') + '</div>'
+          : '<p class="small muted">Berkas ini tidak mencantumkan daftar tool. Wewenang tetap ditentukan token, bukan peran.</p>'),
       footer: '<button class="btn btn--secondary" data-dismiss>Tutup</button>' +
-        '<a class="btn btn--primary" href="#/specialists">Buka direktori</a>'
+        '<a class="btn btn--primary" href="#/policies">Lihat aturan aktif</a>'
     });
   }
 
   D.views.workforce = function (root) {
-    var ai = store.specialists.filter(function (s) { return !s.engine; });
-    var engine = store.specialists.filter(function (s) { return s.engine; });
-    var activeWork = store.plans.filter(function (p) { return p.status !== 'EXECUTED' && p.status !== 'REJECTED'; }).length;
+    var live = store.mode === 'live';
+    var roster = live ? (store.specialists || []) : [];
+
+    if (!live) {
+      root.innerHTML =
+        ui.pageHead({
+          eyebrow: 'Workforce',
+          title: 'Workforce',
+          desc: 'Roster spesialis dibaca dari berkas definisi agen di server.'
+        }) +
+        '<div class="card card--pad" style="max-width:640px">' +
+          '<div class="row" style="gap:10px;align-items:flex-start">' +
+            '<span class="material-symbols-outlined" style="color:var(--warning-600)">cloud_off</span>' +
+            '<div><div class="small strong">Butuh server MCP</div>' +
+            '<p class="small muted" style="margin-top:4px;line-height:1.6">Halaman ini tidak punya data contoh. Roster hanya bisa dibaca lewat tool <span class="mono">list_specialists</span>, yang membaca <span class="mono">workbuddy/agents/*.md</span> di server.</p>' +
+            '<p class="small muted" style="margin-top:8px">Jalankan <span class="mono">npm run demo:seed</span> lalu <span class="mono">npm run dev:mcp</span>, kemudian masuk lewat halaman Login.</p>' +
+            '</div></div></div>';
+      return;
+    }
+
+    if (!roster.length) {
+      root.innerHTML =
+        ui.pageHead({ eyebrow: 'Workforce', title: 'Workforce', desc: 'Roster spesialis dari berkas definisi agen.' }) +
+        '<div class="card card--pad"><div class="row" style="gap:10px;align-items:flex-start">' +
+          '<span class="material-symbols-outlined" style="color:var(--warning-600)">folder_off</span>' +
+          '<div><div class="small strong">Roster kosong</div>' +
+          '<p class="small muted" style="margin-top:4px">Server menjawab, tetapi tidak menemukan berkas di <span class="mono">workbuddy/agents/</span>. Saya tidak akan mengisi daftar ini dengan data contoh.</p></div>' +
+        '</div></div>';
+      return;
+    }
+
+    var withTools = roster.filter(function (s) { return s.tools.length; });
+    var totalLimits = roster.reduce(function (n, s) { return n + s.limits.length; }, 0);
 
     root.innerHTML =
       ui.pageHead({
-        eyebrow: 'Workforce · Workforce',
+        eyebrow: 'Workforce',
         title: 'Workforce',
-        desc: 'Empat spesialis AI dengan lingkup wewenang berbeda, ditambah satu mesin kebijakan deterministik yang tidak dapat bertindak sendiri.',
-        actions: '<a class="btn btn--secondary" href="#/specialists"><span class="material-symbols-outlined">badge</span>Direktori</a>'
+        desc: 'Empat spesialis AI. Wewenang tulis selalu berasal dari mandat, bukan dari peran spesialis — dan batas di bawah ini dikutip dari berkas definisi agennya.',
+        actions: '<a class="btn btn--secondary" href="#/policies"><span class="material-symbols-outlined">policy</span>Aturan aktif</a>'
       }) +
-      '<div class="banner banner--warning" style="margin-bottom:16px"><span class="material-symbols-outlined">science</span>' +
-        '<div><b>Angka di halaman ini dihitung dari work package dan audit log.</b> Tidak ada metrik performa model (akurasi, latensi, utilisasi) karena backend tidak menyediakannya — kolom tersebut sengaja tidak dibuat.</div></div>' +
-      ui.demoBanner() +
-      '<div class="grid grid--4" style="margin-bottom:16px">' +
-        ui.kpi({ label: 'Spesialis AI', value: ai.length, icon: 'groups', tone: 'accent', foot: '<span class="material-symbols-outlined">verified</span>Semua berstatus aktif' }) +
-        ui.kpi({ label: 'Mesin kebijakan', value: engine.length, icon: 'rule', foot: '<span class="material-symbols-outlined">functions</span>Deterministik, dapat diuji' }) +
-        ui.kpi({ label: 'Work package berjalan', value: activeWork, icon: 'layers', tone: 'warn', foot: '<span class="material-symbols-outlined">pending</span>Belum selesai' }) +
-        ui.kpi({ label: 'Spesialis read-only', value: ai.filter(function (s) { return s.mandates === 'read-only'; }).length, icon: 'visibility', tone: 'success', foot: '<span class="material-symbols-outlined">lock</span>Tidak dapat menulis' }) +
-      '</div>' +
-      '<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px;align-items:start">' +
-        '<div class="card"><div class="card__head"><div><h2>Beban kerja per spesialis</h2><p>Work package aktif yang sedang ditangani</p></div></div>' +
-          '<div class="card__body card__body--flush" id="wf-table"></div></div>' +
-        '<div class="stack">' +
-          ui.card({ title: 'Distribusi beban', body: ui.bars(store.specialists.map(function (s) { return { label: s.name.replace('Workforce ', ''), value: load(s), color: s.engine ? 'var(--faint)' : 'var(--brand-500)' }; })) }) +
-          ui.card({ title: 'Batas kepercayaan', body:
-            '<div class="stack" style="gap:10px">' +
-              ['Spesialis hanya menyusun rencana.', 'Executor memvalidasi mandat secara independen.', 'Tidak ada jalur langsung dari agen ke executor.'].map(function (t) {
-                return '<div class="row" style="align-items:flex-start;gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:var(--brand-600);margin-top:2px">check</span><span class="small muted">' + esc(t) + '</span></div>';
-              }).join('') +
-            '</div>'
-          }) +
-          ui.card({ title: 'Policy Validator', body:
-            '<p class="small muted" style="line-height:1.6">Mesin aturan deterministik, bukan spesialis AI. Keluarannya dapat diprediksi: untuk masukan yang sama, hasilnya selalu sama. Karena itu ia boleh memblokir, sementara AI tidak.</p>' +
-            '<a class="btn btn--secondary btn--sm btn--block" style="margin-top:10px" href="#/policies">Lihat aturan aktif</a>'
-          }) +
-        '</div>' +
-      '</div>';
-
-    ui.mount(root, '#wf-table', ui.table({
-      columns: [
-        { key: 'name', label: 'Spesialis', render: function (sp) {
-          return '<div class="row" style="gap:9px"><span class="spec-avatar' + (sp.engine ? ' spec-avatar--engine' : '') + '" style="width:30px;height:30px;border-radius:8px">' +
-            '<span class="material-symbols-outlined" style="font-size:16px">' + sp.icon + '</span></span>' +
-            '<div><div class="cell-title">' + esc(sp.name) + '</div><div class="cell-sub">' + esc(sp.role) + '</div></div></div>';
-        }},
-        { key: 'mandates', label: 'Wewenang tulis', width: '150px', render: function (sp) {
-          return sp.mandates === 'read-only' ? '<span class="badge badge--outline">read-only</span>'
-            : sp.mandates === 'evaluate only' ? '<span class="badge badge--outline">evaluate only</span>'
-            : '<span class="badge badge--brand">via mandate</span>';
-        }},
-        { key: 'load', label: 'Aktif', width: '72px', align: 'right', raw: load, render: function (sp) { return '<span class="strong">' + load(sp) + '</span>'; } },
-        { key: 'total', label: 'Total', width: '72px', align: 'right', raw: totalFor, render: function (sp) { return '<span class="muted">' + totalFor(sp) + '</span>'; } },
-        { key: 'last', label: 'Aktivitas terakhir', width: '150px', align: 'right', raw: function (sp) { return lastActive(sp) || ''; }, render: function (sp) {
-          var at = lastActive(sp);
-          return '<span class="tiny muted">' + (at ? U.rel(at) : 'belum ada') + '</span>';
-        }}
-      ],
-      rows: store.specialists.slice(),
-      onRowClick: function (sp) { openSpecialist(sp); }
-    }));
-
-    void ai;
-  };
-
-  D.views.specialists = function (root) {
-    root.innerHTML =
-      ui.pageHead({
-        eyebrow: 'Workforce · Specialist Directory',
-        title: 'Specialist Directory',
-        desc: 'Setiap kartu menyatakan apa yang boleh dan tidak boleh dilakukan. Wewenang tulis selalu berasal dari mandat, bukan dari peran spesialis.',
-        actions: '<a class="btn btn--secondary" href="#/workforce"><span class="material-symbols-outlined">groups</span>Workforce</a>'
-      }) +
-      ui.demoBanner() +
       '<div style="margin-bottom:16px">' + ui.statstrip([
-        { label: 'Spesialis AI', value: store.specialists.filter(function (s) { return !s.engine; }).length, hint: 'Semua berstatus aktif' },
-        { label: 'Read-only', value: store.specialists.filter(function (s) { return s.mandates === 'read-only'; }).length, tone: 'info', hint: 'Tidak pernah menulis' },
-        { label: 'Via mandate', value: store.specialists.filter(function (s) { return s.mandates === 'write via mandate'; }).length, tone: 'success', hint: 'Butuh mandat aktif' },
-        { label: 'Mesin kebijakan', value: store.specialists.filter(function (s) { return s.engine; }).length, hint: 'Deterministik, bukan AI' }
+        { label: 'Spesialis', value: roster.length, hint: 'Dibaca dari workbuddy/agents' },
+        { label: 'Batas dinyatakan', value: totalLimits, hint: 'Kutipan langsung dari berkas', tone: 'info' },
+        { label: 'Punya daftar tool', value: withTools.length, hint: 'Sisanya bergantung pada token', tone: 'success' }
       ]) + '</div>' +
-      '<div class="grid grid--3">' + store.specialists.map(function (s) {
-        return '<article class="card spec-card card--hover" data-spec="' + s.id + '" style="cursor:pointer">' +
-          '<div class="spec-card__top">' +
-            '<span class="spec-avatar' + (s.engine ? ' spec-avatar--engine' : '') + '"><span class="material-symbols-outlined">' + s.icon + '</span></span>' +
-            '<div style="flex:1;min-width:0"><h3>' + esc(s.name) + '</h3><div class="role">' + esc(s.role) + '</div></div>' +
-            (s.engine ? '<span class="badge badge--outline">engine</span>' : '<span class="badge badge--success">aktif</span>') +
-          '</div>' +
-          '<p class="spec-card__desc">' + esc(s.desc) + '</p>' +
-          '<div class="row" style="gap:8px;font-size:11.5px">' +
-            '<span class="badge badge--outline">' + esc(s.version) + '</span>' +
-            '<span class="badge ' + (s.mandates === 'read-only' || s.mandates === 'evaluate only' ? 'badge--outline' : 'badge--brand') + '">' + esc(s.mandates) + '</span>' +
-            '<span class="spacer"></span><span class="tiny muted">' + wpLabel(s) + '</span>' +
-          '</div>' +
-          '<div class="tag-row">' + s.tags.map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
-        '</article>';
-      }).join('') +
-        /* fills the sixth cell and explains the authority vocabulary used on every card */
+      '<div class="grid grid--3">' +
+        roster.map(function (s) {
+          return '<article class="card spec-card card--hover" data-spec="' + esc(s.id) + '" style="cursor:pointer">' +
+            '<div class="spec-card__top">' +
+              '<span class="spec-avatar"><span class="material-symbols-outlined">smart_toy</span></span>' +
+              '<div style="flex:1;min-width:0"><h3>' + esc(s.name) + '</h3>' +
+              '<div class="role">' + esc(s.id) + '</div></div>' +
+            '</div>' +
+            '<p class="spec-card__desc">' + esc(s.role) + '</p>' +
+            '<div class="stack" style="gap:5px;margin-top:2px">' +
+              s.limits.slice(0, 3).map(function (l) {
+                return '<div class="row" style="gap:7px;align-items:flex-start">' +
+                  '<span class="material-symbols-outlined" style="font-size:13px;color:var(--danger-600);margin-top:2px">block</span>' +
+                  '<span class="tiny muted" style="line-height:1.45">' + esc(l) + '</span></div>';
+              }).join('') +
+            '</div>' +
+            (s.tools.length
+              ? '<div class="tag-row" style="margin-top:10px">' + s.tools.slice(0, 3).map(function (t) { return '<span class="tag mono">' + esc(t) + '</span>'; }).join('') +
+                (s.tools.length > 3 ? '<span class="tag">+' + (s.tools.length - 3) + '</span>' : '') + '</div>'
+              : '') +
+          '</article>';
+        }).join('') +
         '<article class="card spec-card spec-card--legend">' +
           '<div class="spec-card__top"><span class="spec-avatar spec-avatar--engine"><span class="material-symbols-outlined">menu_book</span></span>' +
-            '<div style="flex:1;min-width:0"><h3>Cara membaca kartu</h3><div class="role">Tiga tingkat wewenang tulis</div></div></div>' +
-          '<p class="spec-card__desc">Wewenang tulis selalu berasal dari mandat, bukan dari peran spesialis itu sendiri.</p>' +
+            '<div style="flex:1;min-width:0"><h3>Cara membaca halaman ini</h3><div class="role">Sumber, bukan ringkasan</div></div></div>' +
+          '<p class="spec-card__desc">Setiap kartu adalah kutipan dari berkas agen. Tidak ada versi, status, atau beban kerja di sini — berkasnya tidak menyatakan itu, jadi halaman ini juga tidak.</p>' +
           '<div class="stack" style="gap:8px">' +
-            [['read-only', 'Membaca dan menyusun rencana saja.'],
-             ['via mandate', 'Bertindak hanya dengan mandat aktif.'],
-             ['evaluate only', 'Menilai dan memblokir, tidak mengeksekusi.']].map(function (r) {
+            [['Peran', 'Apa yang dikerjakan spesialis.'],
+             ['Batas', 'Apa yang secara eksplisit tidak boleh dilakukan.'],
+             ['Tool', 'Operasi yang boleh dipanggil, bila berkas mencantumkannya.']].map(function (r) {
               return '<div class="row" style="gap:8px;align-items:flex-start">' +
                 '<span class="badge badge--outline" style="flex:0 0 auto">' + esc(r[0]) + '</span>' +
                 '<span class="tiny muted" style="line-height:1.45">' + esc(r[1]) + '</span></div>';
@@ -170,13 +125,15 @@
       '</div>' +
       '<div class="card" style="margin-top:16px"><div class="card__body">' +
         '<div class="row" style="align-items:flex-start;gap:10px"><span class="material-symbols-outlined" style="color:var(--brand-600)">info</span>' +
-        '<div><div class="small strong">Policy Validator bukan spesialis AI</div>' +
-        '<p class="small muted" style="margin-top:2px;line-height:1.6">Ia adalah mesin aturan deterministik. Perbedaan ini penting: mesin aturan boleh memblokir eksekusi tanpa persetujuan manusia, sedangkan agen AI tidak. Karena itu blokir kebijakan selalu dapat ditelusuri ke aturan tertentu dengan reason code.</p></div></div>' +
+        '<div><div class="small strong">Policy Validator bukan bagian dari roster ini</div>' +
+        '<p class="small muted" style="margin-top:2px;line-height:1.6">Ia mesin aturan deterministik di <span class="mono">packages/policy-engine</span>, bukan agen. Perbedaannya penting: mesin aturan boleh memblokir eksekusi tanpa persetujuan manusia, sedangkan agen AI tidak. Karena itu setiap blokir dapat ditelusuri ke aturan tertentu lewat reason code.</p></div></div>' +
       '</div></div>';
 
     root.querySelectorAll('[data-spec]').forEach(function (card) {
       card.addEventListener('click', function () {
-        openSpecialist(store.specialist(card.getAttribute('data-spec')));
+        var id = card.getAttribute('data-spec');
+        var s = roster.filter(function (x) { return x.id === id; })[0];
+        if (s) openSpecialist(s);
       });
     });
   };

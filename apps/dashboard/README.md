@@ -15,10 +15,25 @@ To see the old build, check out a commit before `a1ecbd3`.
 No build step, no CDN, no dependencies.
 
 ```bash
-cd apps/dashboard
-python -m http.server 8899
-# http://127.0.0.1:8899/index.html
+# terminal 1 — MCP server on 127.0.0.1:8765
+npm run dev:mcp
+
+# terminal 2 — static dashboard on 127.0.0.1:8899
+npm run dev:dashboard
+# http://127.0.0.1:8899
 ```
+
+Without a token the dashboard runs in **demo mode** and says so on every screen. To see live data,
+paste the ops token on `/login`. The store starts empty — plans are only created through the
+assistant, never written by hand — so populate it with records the real engine produced:
+
+```bash
+npm run demo:flow    # create -> approve -> execute, plus one waiting and one policy finding
+npm run demo:reset   # empty the store again
+```
+
+`demo:flow` drives the actual MCP server, so what appears on screen is the output of the real
+policy engine and executor, traceable in the audit trail. It is not seeded JSON.
 
 Useful query parameters:
 
@@ -106,7 +121,13 @@ domain, its MCP tool(s), the repo modules that support it, and a state:
 | `demo` | No backend surface exists yet — demo data only, and the UI says so |
 | `none` | Not a data route (login, forbidden, not-found) |
 
-Current split across 23 routes: **10 live · 6 partial · 4 demo · 3 non-data**.
+Current split across 21 routes: **12 live · 6 partial · 0 demo · 3 non-data**.
+
+There is no `demo` route left. Each one was either given a real backend surface or removed:
+`/workforce` now reads the roster through `list_specialists`; `/permissions` renders the
+capabilities the server reports for the token; `/users` and `/specialists` were deleted rather
+than filled, because the identity model has no per-user roles and the roster was already covered
+by `/workforce`.
 
 Each route also declares its `intents` — what the Copilot may offer while the operator is
 standing on that screen. The same rule applies: an intent may only name a tool that exists, a

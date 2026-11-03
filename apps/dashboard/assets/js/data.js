@@ -382,7 +382,7 @@
     { role: 'user', at: iso(0, 8, 30), text: 'Siapkan notulen rapat koordinasi Q4 hari ini, kirim ke Budi Santoso, lalu jadwalkan tindak lanjut Jumat pagi.' },
     { role: 'assistant', at: iso(0, 8, 30), text: 'Saya memecah ini menjadi dua tindakan. Keduanya masih berupa rencana dan belum dijalankan.', plan_id: 'WP-2041', steps: ['Menyusun draf notulen (Executive Assistant)', 'Menjadwalkan tindak lanjut Jumat 09:00 (Executive Assistant)'] },
     { role: 'user', at: iso(0, 8, 32), text: 'Jumat jam 11:30 saja.' },
-    { role: 'assistant', at: iso(0, 8, 32), text: 'Jadwal 11:30 berada di jendela Salat Jumat (11:30–13:00). Kebijakan TIME-03 memblokir penjadwalan pada rentang itu. Saya dapat mengusulkan 09:00 atau 13:15 — mana yang Anda pilih?', blocked: true }
+    { role: 'assistant', at: iso(0, 8, 32), text: 'Jadwal 11:30 berada di jendela Salat Jumat (11:30–13:00). Kebijakan TIME-03 memblokir penjadwalan pada rentang itu. Saya dapat mengusulkan 09:00 atau 13:15 — mana yang Anda pilih?', blocked: { code: 'TIME-03', message: 'Jendela 11:30–13:00 pada hari Jumat dilindungi.' } }
   ];
 
   /* ---------------- derived helpers ---------------- */

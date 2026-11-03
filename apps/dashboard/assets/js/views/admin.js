@@ -1,207 +1,93 @@
-/* Views — Administration: Users & Roles, Permissions, Integrations, Settings. */
+/* Views — Administration: Permissions, Integrations, Settings. */
 (function () {
   'use strict';
   var D = window.DEXTRA, U = D.util, ui = D.ui, esc = U.esc;
   var store = D.store;
 
-  var STATUS_TONE = { active: 'success', invited: 'warning', disabled: 'outline' };
-  var STATUS_LABEL = { active: 'Aktif', invited: 'Diundang', disabled: 'Nonaktif' };
-
-  /* ---------------- Users & Roles ---------------- */
-  D.views.users = function (root) {
-    var canManage = D.session.can('manage_users');
-
-    root.innerHTML =
-      ui.pageHead({
-        eyebrow: 'Administration · Users & Roles',
-        title: 'Users & Roles',
-        desc: 'Peran menentukan apa yang dapat diputuskan seseorang. Tidak ada peran yang dapat menyetujui dan mengeksekusi atas namanya sendiri tanpa mandat.',
-        actions: (canManage ? '<button class="btn btn--primary" id="invite"><span class="material-symbols-outlined">person_add</span>Undang pengguna</button>' : '') +
-          '<a class="btn btn--secondary" href="#/permissions"><span class="material-symbols-outlined">key</span>Matriks izin</a>'
-      }) +
-      ui.demoBanner() +
-      '<div class="grid grid--4" style="margin-bottom:16px">' +
-        ui.kpi({ label: 'Pengguna', value: store.users.length, icon: 'group', tone: 'accent', foot: '<span class="material-symbols-outlined">apartment</span>' + esc(store.org ? store.org.name : 'Kenari Group') }) +
-        ui.kpi({ label: 'Aktif', value: store.users.filter(function (u) { return u.status === 'active'; }).length, icon: 'check_circle', tone: 'success', foot: '<span class="material-symbols-outlined">login</span>Dapat masuk' }) +
-        ui.kpi({ label: 'Diundang', value: store.users.filter(function (u) { return u.status === 'invited'; }).length, icon: 'mail', tone: 'warn', foot: '<span class="material-symbols-outlined">hourglass</span>Belum aktivasi' }) +
-        ui.kpi({ label: 'Peran', value: store.roles.length, icon: 'badge', foot: '<span class="material-symbols-outlined">policy</span>Termasuk read-only' }) +
-      '</div>' +
-      '<div class="card" style="margin-bottom:16px"><div class="card__head"><div><h2>Pengguna</h2><p>Anggota organisasi dan peran yang dipegang</p></div>' +
-        '<div class="spacer"></div><span class="badge badge--outline">' + store.users.length + ' akun</span></div><div id="users-host"></div></div>' +
-      '<div class="grid grid--3">' + store.roles.map(function (r) {
-        var count = store.users.filter(function (u) { return u.role === r.id; }).length;
-        var caps = store.capabilities.filter(function (c) { return (store.permMatrix[r.id] || {})[c.key] === 'yes'; }).length;
-        return '<article class="card card--pad card--hover" style="cursor:pointer" data-role="' + esc(r.id) + '">' +
-          '<div class="row" style="gap:9px;margin-bottom:6px">' +
-            '<span class="spec-avatar" style="width:32px;height:32px;border-radius:9px"><span class="material-symbols-outlined" style="font-size:17px">' +
-            (r.id === 'auditor' ? 'visibility' : r.id === 'org_admin' ? 'admin_panel_settings' : r.id === 'requester' ? 'send' : 'verified_user') + '</span></span>' +
-            '<div style="flex:1"><div class="small strong">' + esc(r.name) + '</div><div class="tiny muted">' + count + ' pengguna</div></div>' +
-            '<span class="badge badge--outline">' + caps + ' izin</span>' +
-          '</div>' +
-          '<p class="tiny muted" style="line-height:1.5">' + esc(r.desc) + '</p>' +
-        '</article>';
-      }).join('') + '</div>';
-
-    var host = root.querySelector('#users-host');
-    host.appendChild(ui.table({
-      columns: [
-        { key: 'name', label: 'Pengguna', render: function (u) {
-          return '<div class="row" style="gap:9px"><span class="avatar">' + esc(U.initials(u.name)) + '</span>' +
-            '<div><div class="cell-title">' + esc(u.name) + '</div><div class="cell-sub">' + esc(u.email) + '</div></div></div>';
-        }},
-        { key: 'role', label: 'Peran', width: '190px', render: function (u) {
-          var r = store.role(u.role);
-          return '<span class="badge badge--brand">' + esc(r ? r.name : u.role) + '</span>';
-        }},
-        { key: 'dept', label: 'Departemen', width: '180px', render: function (u) { return '<span class="small">' + esc(u.dept) + '</span>'; } },
-        { key: 'last_active', label: 'Aktivitas terakhir', width: '150px', render: function (u) { return '<span class="tiny muted">' + U.rel(u.last_active) + '</span>'; } },
-        { key: 'status', label: 'Status', width: '110px', render: function (u) {
-          return '<span class="badge badge--' + (STATUS_TONE[u.status] || '') + '">' + (STATUS_LABEL[u.status] || u.status) + '</span>';
-        }},
-        { key: 'act', label: '', width: '56px', align: 'right', render: function (u) {
-          return '<button class="icon-btn" data-user-menu="' + esc(u.id) + '" aria-label="Aksi pengguna"><span class="material-symbols-outlined">more_vert</span></button>';
-        }}
-      ],
-      rows: store.users.slice(), pageSize: 8,
-      empty: ui.empty({ icon: 'group', title: 'Belum ada pengguna', body: 'Undang anggota organisasi untuk mulai bekerja.' })
-    }));
-
-    host.querySelectorAll('[data-user-menu]').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var u = store.users.filter(function (x) { return x.id === btn.getAttribute('data-user-menu'); })[0];
-        ui.menu(btn, [
-          { text: 'Lihat profil', icon: 'person', onClick: function () { ui.toast('Profil pengguna belum tersedia di prototipe.', 'info'); } },
-          { text: 'Ubah peran', icon: 'badge', onClick: function () { changeRole(u); } },
-          { sep: true },
-          { text: 'Nonaktifkan akun', icon: 'block', danger: true, onClick: function () {
-            ui.confirm({ title: 'Nonaktifkan ' + u.name + '?', tone: 'danger', confirmLabel: 'Nonaktifkan',
-              body: 'Akun tidak dapat masuk, tetapi rekam jejak audit dan persetujuan yang pernah ia berikan tetap tersimpan.' })
-              .then(function (r) {
-                if (!r || !r.ok) return;
-                if (!canManage) { ui.toast('Peran Anda tidak dapat mengubah pengguna.', 'warning'); return; }
-                u.status = 'disabled';
-                ui.toast(u.name + ' dinonaktifkan (demo).', 'success');
-                D.router.render();
-              });
-          }}
-        ]);
-      });
-    });
-
-    root.querySelectorAll('[data-role]').forEach(function (card) {
-      card.addEventListener('click', function () { D.router.go('/permissions'); });
-    });
-
-    function changeRole(u) {
-      if (!canManage) { ui.toast('Peran Anda tidak dapat mengubah pengguna.', 'warning'); return; }
-      ui.modal({
-        title: 'Ubah peran — ' + u.name,
-        subtitle: 'Perubahan berlaku segera setelah disimpan',
-        body: '<div class="field"><label class="field__label">Peran</label>' +
-          '<select class="select" id="role-select">' + store.roles.map(function (r) {
-            return '<option value="' + r.id + '"' + (r.id === u.role ? ' selected' : '') + '>' + esc(r.name) + '</option>';
-          }).join('') + '</select>' +
-          '<div class="field__hint">Peran menentukan kemampuan menyetujui, menerbitkan mandat, dan membaca audit.</div></div>' +
-          '<div class="banner banner--warning" style="margin-top:12px"><span class="material-symbols-outlined">warning</span>' +
-          '<div>Menaikkan peran memberi wewenang nyata. Perubahan dicatat di audit trail.</div></div>',
-        footer: '<button class="btn btn--secondary" data-dismiss>Batal</button><button class="btn btn--primary" id="save-role">Simpan</button>',
-        onMount: function (node, ov) {
-          node.querySelector('#save-role').addEventListener('click', function () {
-            var next = node.querySelector('#role-select').value;
-            ov.close();
-            if (store.mode === 'live') { ui.toast('Perubahan peran belum tersedia di API lokal.', 'warning'); return; }
-            u.role = next;
-            store.audit.unshift({ at: new Date().toISOString(), type: 'role_changed', actor: D.session.user.name, plan_id: null, mandate_id: null, reason_code: null, detail: u.name + ' → ' + (store.role(next) || {}).name });
-            ui.toast('Peran ' + u.name + ' diubah menjadi ' + (store.role(next) || {}).name + ' (demo).', 'success');
-            D.router.render();
-          });
-        }
-      });
-    }
-
-    var invite = root.querySelector('#invite');
-    if (invite) invite.addEventListener('click', function () {
-      ui.modal({
-        title: 'Undang pengguna', subtitle: 'Undangan dikirim oleh administrator',
-        body: '<div class="stack" style="gap:12px">' +
-          '<div class="field"><label class="field__label">Nama lengkap <span class="req">*</span></label><input class="input" id="inv-name" placeholder="Nama pengguna"></div>' +
-          '<div class="field"><label class="field__label">Email kantor <span class="req">*</span></label><input class="input" id="inv-email" placeholder="nama@kenari.co.id" type="email"><div class="field__hint">Domain harus sesuai organisasi.</div></div>' +
-          '<div class="field"><label class="field__label">Peran</label><select class="select" id="inv-role">' +
-            store.roles.map(function (r) { return '<option value="' + r.id + '">' + esc(r.name) + '</option>'; }).join('') + '</select></div>' +
-          '</div><div class="banner banner--warning" style="margin-top:12px"><span class="material-symbols-outlined">construction</span>' +
-          '<div>Prototipe: formulir ini tidak mengirim email. Pengiriman undangan memerlukan backend.</div></div>',
-        footer: '<button class="btn btn--secondary" data-dismiss>Batal</button><button class="btn btn--primary" id="send-invite">Kirim undangan</button>',
-        onMount: function (node, ov) {
-          node.querySelector('#send-invite').addEventListener('click', function () {
-            var name = node.querySelector('#inv-name').value.trim();
-            var email = node.querySelector('#inv-email').value.trim();
-            if (!name || !email) { ui.toast('Nama dan email wajib diisi.', 'error'); return; }
-            ov.close();
-            store.users.push({ id: 'user_' + (store.users.length + 1), name: name, role: node.querySelector('#inv-role').value, title: 'Anggota baru', dept: '—', email: email.replace(/^(.?).*@/, '$1***@'), last_active: null, status: 'invited' });
-            ui.toast('Undangan dicatat secara lokal (demo). Tidak ada email terkirim.', 'info', 4800);
-            D.router.render();
-          });
-        }
-      });
-    });
-  };
-
-  /* ---------------- Permissions ---------------- */
+  /* ---------------- Permissions ----------------
+   *
+   * This page used to render a role × capability matrix. The matrix was demo
+   * data: no server endpoint produced it, and the identity model has no per-user
+   * roles at all — a token carries a scope, not a person. Showing a matrix
+   * implied a permission system that does not exist, so it is gone.
+   *
+   * What remains is the one thing the server actually states: the capabilities
+   * this token holds, and the ones nobody implements yet.
+   */
   D.views.permissions = function (root) {
-    var canManage = D.session.can('manage_users');
-    var head = '<tr><th style="text-align:left">Kemampuan</th>' + store.roles.map(function (r) {
-      return '<th>' + esc(r.name) + '</th>';
-    }).join('') + '</tr>';
-    var body = store.capabilities.map(function (c) {
-      return '<tr><td>' + esc(c.label) + '</td>' + store.roles.map(function (r) {
-        var v = (store.permMatrix[r.id] || {})[c.key];
-        if (v === 'yes') return '<td class="yes"><span class="material-symbols-outlined" style="font-size:17px;display:inline-block">check_circle</span></td>';
-        if (v === 'lim') return '<td class="lim">terbatas</td>';
-        return '<td class="no"><span class="material-symbols-outlined" style="font-size:17px;display:inline-block">remove</span></td>';
-      }).join('') + '</tr>';
-    }).join('');
+    var live = D.session.serverCapabilities !== null;
+    var caps = D.session.serverCapabilities || [];
+    var unbacked = D.session.serverUnbacked || [];
+    var tools = D.session.serverTools || [];
+
+    if (!live) {
+      root.innerHTML =
+        ui.pageHead({
+          eyebrow: 'Administration · Permissions',
+          title: 'Permissions',
+          desc: 'Kapabilitas yang dipegang token ini, dinyatakan oleh server.'
+        }) +
+        '<div class="card card--pad" style="max-width:680px">' +
+          '<div class="row" style="gap:10px;align-items:flex-start">' +
+            '<span class="material-symbols-outlined" style="color:var(--warning-600)">cloud_off</span>' +
+            '<div><div class="small strong">Butuh server MCP</div>' +
+            '<p class="small muted" style="margin-top:4px;line-height:1.6">Kapabilitas hanya bisa dinyatakan server lewat <span class="mono">get_caller_context</span>. Tanpa server, halaman ini tidak menampilkan matriks pengganti — matriks per peran memang tidak pernah ada di backend.</p>' +
+            '<p class="small muted" style="margin-top:8px">Navigasi tetap bisa dijelajahi: di mode tanpa server ia memakai model prototipe, dan itu dinyatakan di menu pengguna.</p>' +
+            '</div></div></div>';
+      return;
+    }
 
     root.innerHTML =
       ui.pageHead({
         eyebrow: 'Administration · Permissions',
         title: 'Permissions',
-        desc: 'Matriks kemampuan per peran. Ini sumber kebenaran untuk navigasi dan tombol yang aktif di seluruh dashboard.',
-        actions: (canManage ? '<button class="btn btn--secondary" id="edit-perm"><span class="material-symbols-outlined">edit</span>Ubah matriks</button>' : '') +
-          '<a class="btn btn--secondary" href="#/users"><span class="material-symbols-outlined">group</span>Pengguna</a>'
+        desc: 'Dinyatakan server untuk token ini. Bukan matriks per peran — model identitas DEXTRA tidak punya peran per pengguna.',
+        actions: '<a class="btn btn--secondary" href="#/audit"><span class="material-symbols-outlined">receipt_long</span>Audit Trail</a>'
       }) +
-      ui.demoBanner() +
-      '<div class="grid" style="grid-template-columns:minmax(0,1fr) 300px;align-items:start">' +
-        '<div class="card"><div class="card__head"><div><h2>Matriks izin</h2><p>Peran × kemampuan</p></div><div class="spacer"></div>' +
-          '<div class="chart-legend"><span><span class="material-symbols-outlined" style="font-size:14px;color:var(--success-600)">check_circle</span>penuh</span>' +
-          '<span class="lim">terbatas</span><span><span class="material-symbols-outlined" style="font-size:14px;color:var(--faint)">remove</span>tidak ada</span></div></div>' +
-          '<div class="card__body card__body--flush" style="overflow-x:auto"><table class="matrix"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>' +
+      '<div style="margin-bottom:16px">' + ui.statstrip([
+        { label: 'Scope token', value: D.session.scope || '—', hint: 'Satu-satunya identitas yang dikenali server' },
+        { label: 'Kapabilitas', value: caps.length, hint: 'Dipegang token ini', tone: 'success' },
+        { label: 'Tool diizinkan', value: tools.length, hint: 'Turunan dari kapabilitas', tone: 'info' },
+        { label: 'Tidak didukung', value: unbacked.length, hint: 'Belum diimplementasikan, bukan ditolak', tone: 'warn' }
+      ]) + '</div>' +
+      '<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px;align-items:start">' +
         '<div class="stack">' +
-          ui.card({ title: 'Peran Anda', body:
-            '<div class="row" style="gap:9px"><span class="avatar avatar--lg">' + esc(U.initials(D.session.user.name)) + '</span>' +
-            '<div><div class="small strong">' + esc(D.session.user.name) + '</div><div class="tiny muted">' + esc(D.session.roleLabel()) + '</div></div></div>' +
-            '<div class="divider"></div>' +
-            '<div class="stack" style="gap:6px">' + store.capabilities.map(function (c) {
-              var v = (store.permMatrix[D.session.user.role] || {})[c.key];
-              return '<div class="row" style="gap:7px"><span class="material-symbols-outlined" style="font-size:14px;color:' +
-                (v === 'yes' ? 'var(--success-600)' : v === 'lim' ? 'var(--warning-600)' : 'var(--faint)') + '">' +
-                (v === 'yes' ? 'check_circle' : v === 'lim' ? 'error' : 'remove') + '</span>' +
-                '<span class="tiny ' + (v === 'no' ? 'muted' : '') + '">' + esc(c.label) + '</span></div>';
+          ui.card({ title: 'Kapabilitas yang dipegang', body:
+            '<div class="stack" style="gap:6px">' + caps.map(function (c) {
+              return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:var(--success-600)">check_circle</span>' +
+                '<span class="small mono">' + esc(c) + '</span></div>';
             }).join('') + '</div>'
           }) +
-          ui.card({ title: 'Catatan desain', body:
-            '<p class="small muted" style="line-height:1.6">Navigasi menyembunyikan halaman yang tidak dapat diakses, tetapi item tetap terlihat dengan ikon kunci agar orang tahu halaman itu ada dan mengapa ia terkunci.</p>' +
-            '<p class="small muted" style="line-height:1.6;margin-top:8px">Izin "terbatas" berarti tindakan hanya berlaku pada kondisi tertentu — misalnya approver Legal hanya untuk penerima eksternal.</p>'
+          ui.card({ title: 'Tool yang boleh dipanggil', body:
+            (tools.length
+              ? '<div class="tag-row">' + tools.map(function (t) { return '<span class="tag mono">' + esc(t) + '</span>'; }).join('') + '</div>'
+              : '<p class="small muted">Server tidak melaporkan daftar tool.</p>')
+          }) +
+          ui.card({ title: 'Tidak didukung server', body:
+            '<p class="small muted" style="line-height:1.6">Kapabilitas di bawah ada dalam kosakata kontrak, tetapi tidak ada scope yang memberikannya dan tidak ada tool yang menopangnya.</p>' +
+            '<div class="stack" style="gap:6px;margin-top:10px">' + (unbacked.length ? unbacked.map(function (c) {
+              return '<div class="row" style="gap:8px"><span class="material-symbols-outlined" style="font-size:15px;color:var(--faint)">remove</span>' +
+                '<span class="small mono muted">' + esc(c) + '</span></div>';
+            }).join('') : '<p class="small muted">Tidak ada.</p>') + '</div>' +
+            '<div class="banner banner--info" style="margin-top:12px"><span class="material-symbols-outlined">info</span>' +
+            '<div>Bedanya penting: "ditolak" berarti server memutuskan Anda tidak berhak. "Tidak didukung" berarti server belum punya kemampuannya. Halaman ini tidak pernah menampilkan yang pertama untuk keadaan kedua.</div></div>'
+          }) +
+        '</div>' +
+        '<div class="stack">' +
+          ui.card({ title: 'Mengapa tidak ada matriks per peran', body:
+            '<p class="small muted" style="line-height:1.6">Token membawa <b>scope</b>, bukan nama orang. Server tidak tahu siapa Anda, dan tidak menyimpannya. Karena itu matriks "peran × kemampuan" tidak bisa dihasilkan dari server — dan matriks yang dulu ada di halaman ini berasal dari data contoh.</p>' +
+            '<p class="small muted" style="line-height:1.6;margin-top:8px">Halaman ini menggantikannya dengan satu hal yang benar-benar dijawab server: daftar kapabilitas token Anda.</p>'
+          }) +
+          ui.card({ title: 'Apa yang mengikuti daftar ini', body:
+            '<div class="stack" style="gap:8px">' +
+              ['Navigasi menandai halaman yang tidak dapat dibuka.', 'Tombol yang butuh kapabilitas tidak muncul atau dinonaktifkan.', 'Server tetap memeriksa ulang setiap panggilan tool.'].map(function (t) {
+                return '<div class="row" style="align-items:flex-start;gap:8px"><span class="material-symbols-outlined" style="font-size:14px;color:var(--brand-600);margin-top:2px">check</span><span class="tiny muted" style="line-height:1.5">' + esc(t) + '</span></div>';
+              }).join('') +
+            '</div>'
           }) +
         '</div>' +
       '</div>';
-
-    var ep = root.querySelector('#edit-perm');
-    if (ep) ep.addEventListener('click', function () {
-      ui.toast('Pengeditan matriks izin memerlukan backend tata kelola. Prototipe ini hanya menampilkan matriks.', 'warning', 4600);
-    });
   };
-
   /* ---------------- Integrations ---------------- */
   D.views.integrations = function (root) {
     var canManage = D.session.can('manage_integrations');
@@ -486,7 +372,7 @@
         root.querySelector('#export-all').addEventListener('click', function () {
           U.download('dextra-dashboard-data.json', JSON.stringify({
             org: store.org, plans: store.plans, mandates: store.mandates, audit: store.audit,
-            executions: store.executions, policies: store.policies, users: store.users, mode: store.mode
+            executions: store.executions, policies: store.policies, mode: store.mode
           }, null, 2), 'application/json');
           ui.toast('Seluruh data diekspor sebagai JSON.', 'success');
         });

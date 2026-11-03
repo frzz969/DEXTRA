@@ -14,7 +14,7 @@
     return '<article class="card" style="padding:0;overflow:hidden' + (blocked ? ';border-left:3px solid var(--danger-600)' : '') + '">' +
       '<div style="padding:14px 16px">' +
         '<div class="row" style="gap:8px;margin-bottom:6px">' +
-          '<span class="mono tiny faint">' + esc(p.plan_id) + '</span>' + D.statusBadge(p.status) + D.riskBadge(p.risk) +
+          '<span class="mono tiny faint">' + esc(p.plan_id) + '</span>' + D.planStatusBadge(p) + D.riskBadge(p.risk) +
           '<span class="spacer"></span><span class="tiny faint">' + U.rel(p.created_at) + '</span>' +
         '</div>' +
         '<div class="small strong" style="font-size:13.5px;line-height:1.4;margin-bottom:6px">' + esc(p.intent) + '</div>' +
@@ -43,9 +43,13 @@
 
   /* ---------------- Approval Inbox ---------------- */
   D.views.approvals = function (root) {
-    var awaiting = store.plans.filter(function (p) { return (p.status === 'READY' || p.status === 'NEEDS_REVIEW') && !p.mandate_id; });
+    /* A plan leaves the inbox once a human has decided, which is a fact the
+     * store derives from mandates and executions. It is not `p.mandate_id`:
+     * list_plans never returns that field, so filtering on it kept every
+     * approved plan in the queue forever. */
+    var awaiting = store.awaitingDecision();
     var blocked = store.plans.filter(function (p) { return p.status === 'BLOCKED'; });
-    var decided = store.plans.filter(function (p) { return p.status === 'APPROVED' || p.status === 'REJECTED' || p.status === 'EXECUTED'; });
+    var decided = store.plans.filter(function (p) { return p.approved || p.executed || p.status === 'REJECTED'; });
     var tab = 'awaiting';
 
     function list() {
@@ -121,7 +125,7 @@
             '</div>'
           }) +
           ui.card({ title: 'Batas wewenang Anda', body:
-            '<div class="row" style="gap:8px"><span class="avatar avatar--sm">' + esc(U.initials(D.session.user.name)) + '</span>' +
+            '<div class="row" style="gap:8px"><span class="avatar avatar--sm">' + esc(U.initials(D.session.displayName())) + '</span>' +
             '<div><div class="small strong">' + esc(D.session.roleLabel()) + '</div><div class="tiny muted">' +
             (D.session.can('issue_mandate') ? 'Dapat menerbitkan mandat' : 'Tidak dapat menerbitkan mandat') + '</div></div></div>'
           }) +
@@ -183,7 +187,7 @@
           return '<span class="badge badge--' + (f.severity === 'blocking' ? 'danger' : 'warning') + '">' + esc(f.code) + '</span>';
         }},
         { key: 'risk', label: 'Risiko', width: '118px', render: function (p) { return D.riskBadge(p.risk); } },
-        { key: 'status', label: 'Status', width: '132px', render: function (p) { return D.statusBadge(p.status); } },
+        { key: 'status', label: 'Status', width: '132px', render: function (p) { return D.planStatusBadge(p); } },
         { key: 'age', label: 'Umur', width: '92px', align: 'right', raw: function (p) { return new Date(p.created_at).getTime(); }, render: function (p) { return '<span class="tiny muted">' + U.rel(p.created_at) + '</span>'; } },
         { key: 'act', label: '', width: '96px', align: 'right', render: function (p) {
           return '<a class="btn btn--secondary btn--sm" href="#/review/' + encodeURIComponent(p.plan_id) + '">Tinjau</a>';
@@ -213,7 +217,7 @@
       '<div class="breadcrumbs" style="margin-bottom:10px"><a href="#/approvals">Approval Inbox</a><span class="sep">/</span>' +
         '<a href="#/work-packages/' + encodeURIComponent(p.plan_id) + '" class="mono">' + esc(p.plan_id) + '</a><span class="sep">/</span><span class="current">Review</span></div>' +
       '<div class="page-head"><div class="page-head__text">' +
-        '<div class="row" style="gap:8px;margin-bottom:6px">' + D.statusBadge(p.status) + D.riskBadge(p.risk) +
+        '<div class="row" style="gap:8px;margin-bottom:6px">' + D.planStatusBadge(p) + D.riskBadge(p.risk) +
           '<span class="badge badge--outline">' + acts.length + ' tindakan</span>' +
           (isBlocked ? '<span class="badge badge--danger">Tidak dapat disetujui</span>' : '') + '</div>' +
         '<h1 style="max-width:66ch">' + esc(p.intent) + '</h1>' +
@@ -408,7 +412,7 @@
       D.router.render();
     };
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
+      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
         .then(function (r) {
           p.mandate_id = r.mandate_id || mandateId;
           ui.toast('Mandat diterbitkan oleh server: ' + p.mandate_id, 'success');
@@ -422,7 +426,7 @@
 
   function doReject(p, reason) {
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
+      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
         .then(function () { ui.toast('Work package ditolak.', 'success'); D.router.go('/approvals'); })
         .catch(function (e) { ui.toast('Gagal: ' + e.message, 'error'); });
       return;
@@ -438,7 +442,7 @@
 
   function doRevise(p, reason) {
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'revise', approver_id: 'user_001', approval_token: 'apt_' + Date.now() })
+      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'revise', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
         .then(function () { ui.toast('Permintaan revisi dikirim.', 'success'); })
         .catch(function (e) { ui.toast('Gagal: ' + e.message, 'error'); });
       return;

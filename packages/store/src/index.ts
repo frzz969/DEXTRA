@@ -21,5 +21,8 @@ export {
 
 export * from './repository.ts';
 
+export { listSpecialists } from './specialists.ts';
+export type { SpecialistRecord } from './specialists.ts';
+
 export { seed } from './seed.ts';
 export type { SeedOptions, SeedSummary } from './seed.ts';

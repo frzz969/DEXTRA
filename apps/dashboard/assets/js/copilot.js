@@ -283,16 +283,25 @@
   };
 
   computes.specialists = function () {
+    if (D.store.mode !== 'live') {
+      return res({
+        tone: 'warn',
+        title: 'Roster hanya bisa dibaca dari server',
+        body: ['Daftar spesialis dibaca dari workbuddy/agents/*.md lewat tool `list_specialists`. Tanpa server, saya tidak punya daftarnya — dan saya tidak akan menampilkan daftar contoh seolah itu roster asli.'],
+        actions: [{ label: 'Buka Workforce', path: '/workforce' }]
+      });
+    }
     var rows = D.store.specialists || [];
-    if (!rows.length) return res({ tone: 'warn', title: 'Daftar spesialis kosong', body: ['Tidak ada data spesialis di peramban.'] });
+    if (!rows.length) return res({ tone: 'warn', title: 'Roster kosong', body: ['Server menjawab tetapi tidak menemukan berkas agen.'] });
     return res({
       title: plural(rows.length, 'spesialis', 'spesialis'),
-      bullets: rows.map(function (s) { return s.name + ' — ' + (s.role || '') + (s.status ? ' · ' + s.status : ''); }),
-      note: 'Daftar ini dari workbuddy/agents/*.md, bukan dari API — rutenya bertanda Data contoh.'
+      bullets: rows.map(function (s) { return s.name + ' — ' + (s.role || 'tanpa peran tercatat'); }),
+      note: 'Dikutip dari workbuddy/agents/*.md. Tidak ada versi, status, atau beban kerja — berkasnya tidak menyatakan itu.'
     });
   };
 
   computes.specialistLimits = function () {
+    if (D.store.mode !== 'live') return computes.specialists();
     var rows = D.store.specialists || [];
     var out = [];
     rows.forEach(function (s) {
@@ -300,17 +309,19 @@
     });
     return res({
       title: 'Batas yang dinyatakan tiap spesialis',
-      bullets: out.slice(0, 10),
-      note: out.length ? '' : 'Tidak ada batas tercatat pada data yang dimuat.'
+      bullets: out.slice(0, 12),
+      note: out.length ? 'Kutipan langsung dari bagian "Batas" pada tiap berkas agen.' : 'Tidak ada batas tercatat pada berkas yang dibaca.'
     });
   };
 
-  computes.gapWorkforce = function () {
+  computes.specialistSource = function () {
     return res({
-      tone: 'warn',
-      title: 'Registry agen belum diekspos server',
-      body: ['Tidak ada tool MCP yang mengembalikan daftar agen atau beban kerjanya. Isi halaman ini adalah data contoh, dan spanduk di halamannya menyatakan itu.'],
-      note: 'Saya tidak bisa membuat endpoint yang tidak ada, dan tidak akan menyajikannya sebagai data nyata.'
+      title: 'Dari mana roster ini dibaca',
+      body: [
+        'Tool `list_specialists` membaca `workbuddy/agents/*.md` — empat berkas yang juga dimuat runtime WorkBuddy. Tidak ada salinan kedua, jadi roster tidak bisa berbeda dari agen yang benar-benar berjalan.',
+        'Yang diambil hanya yang tertulis: judul, bagian Peran, butir Batas, dan baris Tools. Versi, status aktif, dan beban kerja tidak diambil karena tidak ada di berkasnya.'
+      ],
+      note: 'Halaman Workforce sebelumnya menampilkan field itu dari data contoh; sekarang tidak ditampilkan sama sekali.'
     });
   };
 
@@ -367,25 +378,18 @@
     });
   };
 
-  computes.gapUsers = function () {
-    return res({
-      tone: 'warn',
-      title: 'Belum tersedia, bukan ditolak',
-      body: [
-        'Tidak ada tool identitas di server dan tidak ada otorisasi admin. Karena itu halaman ini terkunci sebagai "belum tersedia" — bukan "akses ditolak".',
-        'Bedanya penting: "ditolak" berarti server memutuskan Anda tidak berhak. "Belum tersedia" berarti server belum punya kemampuannya. Menampilkan yang pertama untuk keadaan kedua berarti mengarang keputusan.'
-      ]
-    });
-  };
-
   computes.permissionGap = function () {
     var live = D.session.serverCapabilities !== null;
     return res({
-      tone: 'warn',
-      title: live ? 'Yang nyata hanya scope token' : 'Matriks ini model demo',
+      tone: live ? 'info' : 'warn',
+      title: 'Mengapa tidak ada matriks per peran',
       body: live
-        ? ['Kapabilitas efektif datang dari get_caller_context untuk token ini. Matriks peran per pengguna di halaman ini hanya model demo — manage_users dan manage_integrations tidak didukung scope mana pun.']
-        : ['Server belum menjawab, jadi yang tampil adalah matriks simulasi. Jangan dibaca sebagai wewenang nyata.']
+        ? [
+            'Server hanya mengenal scope token, bukan orang. Tidak ada tabel peran × kemampuan di backend, jadi matriks seperti itu tidak bisa dihasilkan — yang dulu tampil di halaman ini berasal dari data contoh.',
+            'Yang bisa dinyatakan server ada dua: kapabilitas yang dipegang token ini, dan kapabilitas yang belum didukung scope mana pun.'
+          ]
+        : ['Server belum menjawab, jadi kapabilitas tidak dapat dipastikan. Halaman ini tidak menampilkan matriks pengganti.'],
+      actions: [{ label: 'Buka Permissions', path: '/permissions' }]
     });
   };
 
@@ -626,155 +630,152 @@
   }
 
   /* ---------------- compose (plan drafting) ----------------
-     Moved here from views/assistant.js so the page and the panel share one
-     brain. Still a deterministic local planner, and it says so. */
+   *
+   * This is the only path that produces a plan, and it produces a REAL one: in
+   * live mode it calls `create_plan` and returns what the server stored, with
+   * the server's own validation findings. Before this, the assistant built a
+   * plan object in the browser, named it DRAFT-xxx, and linked to a review page
+   * for a plan that did not exist anywhere — the whole approve → mandate →
+   * execute chain was unreachable from the UI.
+   *
+   * The action payload must satisfy PlanActionSchema: the server is strict
+   * (`.strict()`), so a missing contact_id or timezone is a rejected plan, not
+   * a silently filled-in field. */
 
-  function guessHint(text) {
-    var t = text.toLowerCase(), best = null;
-    D.store.contacts.forEach(function (c) {
-      var full = (c.display_name || '').toLowerCase();
-      if (full.length > 3 && t.indexOf(full) >= 0 && (!best || full.length > best.length)) best = full;
-      (c.tags || []).forEach(function (tag) {
-        if (tag.length < 3 || t.indexOf(tag) < 0) return;
-        if (!best || tag.length > best.length) best = tag;
-      });
-    });
-    return best;
+  function orgId() {
+    return (D.store.org && D.store.org.org_id) || 'org_kenari';
   }
 
-  function decorate(candidate) {
-    var contact = D.store.contacts.filter(function (c) { return c.contact_id === candidate.contact_id; })[0];
+  function isScheduleRequest(text) {
+    return /jadwal|jadwalkan|rapat|agenda|undang/.test(String(text).toLowerCase());
+  }
+
+  function buildAction(text, recipient, asEvent) {
+    var t = String(text).toLowerCase();
+    var risk = /hapus|delete|bersihkan/.test(t) ? 'critical'
+      : /eksternal|vendor|kontrak/.test(t) ? 'high'
+      : 'medium';
+    var title = text.length > 60 ? text.slice(0, 60) + '…' : text;
     return {
-      contact_id: candidate.contact_id,
-      display_name: contact ? contact.display_name : candidate.contact_id,
-      department: contact ? contact.department : '',
-      masked: contact ? contact.masked_address : '—',
-      score: candidate.score,
-      evidence: candidate.evidence || [],
-      disputed: !!candidate.disputed,
-      known: !!contact
+      action_type: asEvent ? 'create_calendar_event' : 'send_email',
+      target: {
+        contact_id: recipient.contact_id,
+        display_name: recipient.display_name,
+        channel: asEvent ? 'calendar' : 'email',
+        masked_address: recipient.masked
+      },
+      schedule: {
+        start_at: new Date(Date.now() + 86400000).toISOString(),
+        timezone: 'Asia/Jakarta',
+        all_day: false
+      },
+      content: {
+        subject: (asEvent ? 'Rapat: ' : 'Ringkasan: ') + title,
+        body: text,
+        locale: 'id-ID'
+      },
+      risk: risk
     };
   }
 
-  function demoLookup(text) {
-    var t = text.toLowerCase();
-    var hits = [];
-    D.store.contacts.forEach(function (c) {
-      var matched = (c.tags || []).filter(function (tag) { return tag.length >= 3 && t.indexOf(tag) >= 0; });
-      var full = (c.display_name || '').toLowerCase();
-      var fullHit = full.length > 3 && t.indexOf(full) >= 0;
-      if (!matched.length && !fullHit) return;
-      var firstName = full.split(' ')[0];
-      var score = fullHit ? 1 : 0.4 + (matched.indexOf(firstName) >= 0 ? 0.4 : 0.2);
-      if (c.department && t.indexOf(c.department.toLowerCase()) >= 0) score += 0.2;
-      hits.push(decorate({
-        contact_id: c.contact_id,
-        score: Math.min(1, score),
-        evidence: [fullHit ? 'nama lengkap disebut' : 'cocok pada tag: ' + matched.join(', ')],
-        disputed: false
-      }));
-    });
-    hits.sort(function (a, b) { return b.score - a.score; });
-    var resolution = 'none';
-    if (hits.length === 1) resolution = 'unique';
-    else if (hits.length > 1) resolution = Math.abs(hits[0].score - hits[1].score) < 1e-9 ? 'ambiguous' : 'unique';
-    return { candidates: hits, resolution: resolution };
+  function stopped(recipient, text, code, message) {
+    return { text: text, steps: ['Mencari preseden penerima'], recipient: recipient, blocked: { code: code, message: message } };
   }
 
-  function liveLookup(text) {
-    var hint = guessHint(text);
-    if (!hint) return Promise.resolve({ candidates: [], resolution: 'none' });
-    return D.api.call('find_precedent', { subject: hint, context: text }).then(function (d) {
-      return { candidates: (d.candidates || []).map(decorate), resolution: d.resolution || 'none' };
-    }).catch(function (e) {
-      return { candidates: [], resolution: 'error', error: e.message };
-    });
-  }
+  /* Demo mode: same action shape, but nothing is stored and it says so. The two
+     local blocks below (SAFE-05, TIME-03) exist only here — in live mode the
+     server's policy engine decides, and duplicating that decision in the browser
+     would risk disagreeing with it. */
+  function localDraft(text, lookup) {
+    var t = String(text).toLowerCase();
+    var recipient = lookup.candidates[0];
+    var action = buildAction(text, recipient, isScheduleRequest(text));
 
-  function lookupRecipient(text) {
-    if (D.store.mode === 'live') return liveLookup(text);
-    return Promise.resolve(demoLookup(text));
-  }
-
-  function planDraft(text, lookup) {
-    var t = text.toLowerCase();
-    var isSchedule = /jadwal|jadwalkan|rapat|agenda|undang/.test(t);
-    var isDelete = /hapus|delete|bersihkan/.test(t);
-    var isFridayBlocked = /jumat|friday/.test(t) && /11[:.]?(3|4)\d/.test(t);
-
-    lookup = lookup || { candidates: [], resolution: 'none' };
-    var recipient = lookup.candidates[0] || null;
-
-    if (lookup.resolution === 'ambiguous') {
-      return {
-        text: 'Ada ' + lookup.candidates.length + ' kandidat penerima dengan kecocokan setara. Saya tidak memilih salah satunya — penerima harus ditentukan manusia.',
-        steps: ['Mencari preseden penerima', 'Membandingkan skor kecocokan'],
-        recipient: lookup,
-        blocked: {
-          code: 'AMBIGUOUS_RECIPIENT',
-          message: 'Kandidat: ' + lookup.candidates.map(function (c) { return c.display_name + ' (' + c.department + ')'; }).join(', ') + '. Sebutkan departemennya.'
-        }
-      };
+    if (/hapus|delete|bersihkan/.test(t)) {
+      return stopped(lookup,
+        'Permintaan ini menyentuh operasi destruktif. Saya dapat menyusunnya, tetapi tidak dapat menjalankannya tanpa dua approver.',
+        'SAFE-05', 'Operasi destruktif memerlukan dual approval dan tidak tercakup dalam mandat aktif.');
     }
-    if (lookup.resolution === 'error') {
-      return {
-        text: 'Pencarian penerima gagal di server, jadi saya tidak menyusun rencana.',
-        steps: ['Memanggil find_precedent'],
-        recipient: lookup,
-        blocked: { code: 'LOOKUP_FAILED', message: lookup.error }
-      };
-    }
-    if (!recipient) {
-      return {
-        text: 'Saya tidak menemukan penerima pada permintaan ini. Sebutkan nama atau departemennya, lalu saya susun rencananya.',
-        steps: ['Mencari preseden penerima'],
-        recipient: lookup
-      };
-    }
-
-    var actions = [{
-      action_type: isSchedule ? 'schedule_event' : 'send_email',
-      target: { display_name: recipient.display_name, masked_address: recipient.masked, channel: isSchedule ? 'calendar' : 'email' },
-      schedule: { start_at: new Date(Date.now() + 86400000).toISOString() },
-      risk: isDelete ? 'critical' : /eksternal|vendor|kontrak/.test(t) ? 'high' : 'medium'
-    }];
-
-    if (isDelete) {
-      return {
-        text: 'Permintaan ini menyentuh operasi destruktif. Saya dapat menyusunnya, tetapi tidak dapat menjalankannya tanpa dua approver.',
-        steps: ['Mengidentifikasi objek yang akan dihapus', 'Memeriksa kebijakan retensi SAFE-05'],
-        recipient: lookup,
-        blocked: { code: 'SAFE-05', message: 'Operasi destruktif memerlukan dual approval dan tidak tercakup dalam mandat aktif.' }
-      };
-    }
-    if (isFridayBlocked) {
-      return {
-        text: 'Jadwal yang Anda minta berada di dalam jendela Salat Jumat. Kebijakan TIME-03 memblokir penjadwalan pada 11:30–13:00 WIB. Saya dapat mengusulkan 09:00 atau 13:15.',
-        steps: ['Membaca aturan organisasi', 'Mengevaluasi slot yang diminta'],
-        recipient: lookup,
-        blocked: { code: 'TIME-03', message: 'Jendela 11:30–13:00 pada hari Jumat dilindungi dan tidak dapat dijadwalkan.' }
-      };
+    if (/jumat|friday/.test(t) && /11[:.]?(3|4)\d/.test(t)) {
+      return stopped(lookup,
+        'Jadwal yang Anda minta berada di dalam jendela Salat Jumat. Kebijakan TIME-03 memblokir penjadwalan pada 11:30–13:00 WIB. Saya dapat mengusulkan 09:00 atau 13:15.',
+        'TIME-03', 'Jendela 11:30–13:00 pada hari Jumat dilindungi dan tidak dapat dijadwalkan.');
     }
     return {
-      text: 'Saya menyusun satu work package. Ini masih rencana — belum ada pesan terkirim dan belum ada data yang diubah.',
+      text: 'Draf disusun di peramban. Server tidak aktif, jadi rencana ini tidak tersimpan dan tidak bisa disetujui.',
       steps: [
         'Workforce Dispatcher memecah permintaan menjadi 1 tindakan',
         'Executive Assistant menyusun draf',
         'Adversarial Reviewer menguji lingkup',
-        'Policy Validator mengevaluasi aturan aktif'
+        'Policy Validator belum dijalankan (butuh server)'
       ],
       recipient: lookup,
       plan: {
         plan_id: 'DRAFT-' + String(Math.floor(Math.random() * 900 + 100)),
-        status: 'READY',
+        status: 'DRAFT',
         intent: text.length > 110 ? text.slice(0, 110) + '…' : text,
-        actions: actions
+        actions: [action]
       }
     };
   }
 
+  function liveCompose(text, lookup) {
+    var action = buildAction(text, lookup.candidates[0], isScheduleRequest(text));
+    return D.api.call('create_plan', {
+      org_id: orgId(),
+      request_id: 'req_' + Date.now().toString(36),
+      intent: text.length > 160 ? text.slice(0, 160) + '…' : text,
+      actions: [action]
+    }).then(function (d) {
+      var plan = d && d.plan;
+      if (!plan) {
+        return stopped(lookup, 'Server tidak mengembalikan rencana, jadi tidak ada yang saya tampilkan.', 'CREATE_EMPTY', 'create_plan tidak mengembalikan plan.');
+      }
+      plan.specialist = null;
+      D.store.plans.unshift(plan);
+      var findings = (plan.findings || []).filter(function (f) { return f.severity === 'blocking'; });
+      return {
+        text: findings.length
+          ? 'Server menyusun rencana ini lalu memblokirnya. Temuannya di bawah — rencananya tetap tersimpan dan bisa ditinjau.'
+          : 'Server menyusun dan menyimpan rencana ini. Belum ada pesan terkirim; persetujuan manusia masih diperlukan.',
+        steps: [
+          'Memanggil create_plan di server',
+          'Policy Validator mengevaluasi aturan aktif',
+          'Tersimpan sebagai ' + plan.plan_id + ' · status ' + plan.status
+        ],
+        recipient: lookup,
+        plan: plan
+      };
+    }).catch(function (e) {
+      return stopped(lookup, 'Server menolak pembuatan rencana, jadi tidak ada draf yang saya tampilkan.', 'CREATE_FAILED', e.message || String(e));
+    });
+  }
+
   function compose(text) {
-    return lookupRecipient(text).then(function (lookup) { return planDraft(text, lookup); });
+    return lookupRecipient(text).then(function (lookup) {
+      if (lookup.resolution === 'ambiguous') {
+        return {
+          text: 'Ada ' + lookup.candidates.length + ' kandidat penerima dengan kecocokan setara. Saya tidak memilih salah satunya — penerima harus ditentukan manusia.',
+          steps: ['Mencari preseden penerima', 'Membandingkan skor kecocokan'],
+          recipient: lookup,
+          blocked: {
+            code: 'AMBIGUOUS_RECIPIENT',
+            message: 'Kandidat: ' + lookup.candidates.map(function (c) { return c.display_name + ' (' + c.department + ')'; }).join(', ') + '. Sebutkan departemennya.'
+          }
+        };
+      }
+      if (lookup.resolution === 'error') {
+        return stopped(lookup, 'Pencarian penerima gagal di server, jadi saya tidak menyusun rencana.', 'LOOKUP_FAILED', lookup.error);
+      }
+      if (!lookup.candidates.length) {
+        return {
+          text: 'Saya tidak menemukan penerima pada permintaan ini. Sebutkan nama atau departemennya, lalu saya susun rencananya.',
+          steps: ['Mencari preseden penerima'],
+          recipient: lookup
+        };
+      }
+      return D.store.mode === 'live' ? liveCompose(text, lookup) : localDraft(text, lookup);
+    });
   }
 
   /* ---------------- public ---------------- */

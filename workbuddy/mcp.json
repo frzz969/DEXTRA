@@ -18,7 +18,8 @@
         "get_mandate",
         "list_mandates",
         "list_executions",
-        "get_status"
+        "get_status",
+        "list_specialists"
       ],
       "note": "Agent token only. Ops token (execute_action, submit_approval, issue_mandate, revoke_mandate) is never exposed to the agent (PRD §8.3, TC-010)."
     }
