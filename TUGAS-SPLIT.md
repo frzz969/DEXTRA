@@ -208,14 +208,57 @@ kode hari ini, dan tidak ada butir yang mengulang butir lain.
 
 ---
 
+## A6 — Data basi setelah mutasi · **SELESAI (`20c91f2`)**
+
+`store.hydrateLive()` hanya dipanggil saat boot. Setujui → eksekusi → buka
+`/audit`, dan event yang baru terjadi tidak ada. Sekarang setiap tool non-baca
+menandai store basi (pembungkus di transport, bukan di tiap pemanggilan) dan
+navigasi berikutnya membaca ulang server.
+
+E2E juga tidak lagi menulis ke `data/`: server MCP dijalankan sendiri dengan
+`DEXTRA_DATA_DIR` sementara, dan port yang terpakai dilaporkan gagal alih-alih
+dipakai diam-diam.
+
+## A7 — Resource scope per mandate · **SELESAI (`fc1ba3e`)**
+
+Pemilik boleh eksekusi + cabut; penerbit hanya boleh cabut. `owner_principal_id`
+dan `issued_by` kini ikut ditandatangani HMAC (sebelumnya bisa dipalsukan dengan
+menyunting `data/mandates.json`). `submit_approval` menolak bila tidak ada
+principal terikat. Uji: `apps/mcp-server/tests/resource-scope.test.ts` (7).
+
+## A8 — `/assistant`: `lookupRecipient` tidak pernah ada · **SELESAI (`45e8733`)**
+
+`compose()` memanggil fungsi yang tidak didefinisikan → ReferenceError mematikan
+seluruh jalur draf. Ditambahkan pencarian penerima dari kontak server.
+
+---
+
+## B10 — Perbarui A-07 di docs (temuan dari A7)
+
+`docs/AUTHORIZATION_AUDIT.md` baris 22 dan bagian A-07 masih menyatakan
+**"No resource-scope checks: any `ops` caller may act on any mandate — Open,
+blocked"**. Sejak `fc1ba3e` itu tidak lagi benar: kepemilikan per mandate sudah
+ditegakkan dan diuji.
+
+Yang masih benar-benar terbuka hanyalah **kepemilikan per organisasi**
+(`Plan.org_id`). Jadi A-07 sebaiknya menjadi **PARTIAL**, dengan pemisahan:
+
+- sudah: pemilik/penerbit mandate (per-record)
+- belum: isolasi antar organisasi (per-tenant), karena `get_caller_context`
+  belum menyatakan `org_id` pemanggil
+
+Berkas `docs/**` milik stream B, jadi A7 tidak menyuntingnya.
+
+---
+
 # Urutan
 
 | Putaran | WorkBuddy | opencode | Titik temu |
 |---|---|---|---|
 | 1 | ~~A1~~ selesai | ~~B1~~ selesai | — |
 | 2 | ~~A3~~ selesai | **B2** | A5 menunggu B2 |
-| 3 | **A2** (berikutnya) | B3, B4 | — |
-| 4 | A5 | — | setelah B2 hijau |
+| 3 | ~~A6~~ ~~A7~~ ~~A8~~ selesai | B3, B4 | — |
+| 4 | A5 (menunggu B2) | **B10** | — |
 
 Putaran 1 dan 2 sengaja tidak berbagi berkas sama sekali, supaya dua agen bisa
 bekerja bersamaan tanpa rebase yang menyakitkan.
