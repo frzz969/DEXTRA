@@ -77,13 +77,15 @@ dextra/
 │   ├── mandate-engine/     validate (siklus + scope)
 │   ├── executor/           eksekusi terkontrol
 │   ├── replay/             rekonstruksi jejak
+│   ├── alerts/             deteksi, retry, dedup notifikasi (transport palsu)
+│   ├── skill-registry/     validasi manifest skill (metadata; belum tersambung)
+│   ├── workflow/           registry definisi workflow + catatan run
 │   ├── ui/                 komponen reusable (kanonik; disalin ke dashboard)
 │   ├── design-system/      token warna/ruang/radius (kanonik; disalin ke dashboard)
 │   └── api-client/         bridge JSON-RPC (kanonik; disalin ke dashboard)
 ├── workbuddy/              agents/, knowledge/, mcp.json, connector-meta.json
 ├── data/                   state runtime: plans, mandates, approvals, audit.jsonl, …
 ├── docs/                   PRD + audit + verifikasi
-├── stitch-ref/             referensi visual
 ├── scripts/                dev-api.sh, dev-web.sh, migrate.sh, test-all.sh,
 │                           sync-packages.mjs, verify-packages.mjs
 ├── package-lock.json       lockfile npm workspaces

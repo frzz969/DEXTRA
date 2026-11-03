@@ -32,6 +32,9 @@ dextra/
 │   ├── mandate-engine/     # Validasi siklus mandat (v1)
 │   ├── executor/           # Eksekusi terkontrol + idempotensi (v1)
 │   ├── replay/             # Rekonstruksi jejak eksekusi
+│   ├── alerts/             # Deteksi, retry, dedup notifikasi (transport palsu)
+│   ├── skill-registry/     # Validasi manifest skill (metadata, belum tersambung)
+│   ├── workflow/           # Registry definisi workflow + catatan run
 │   ├── ui/                 # Komponen UI — sumber kanonik
 │   ├── design-system/      # tokens.json + dashboard.css — sumber kanonik
 │   └── api-client/         # Klien JSON-RPC — sumber kanonik
@@ -42,8 +45,7 @@ dextra/
 ├── infra/docker/           # compose + Dockerfile api/web + init SQL audit
 ├── scripts/                # sync/verify paket, dev-api, dev-web, migrate, test-all
 ├── workbuddy/              # Manifest agen, skills, knowledge, mcp.json
-├── docs/                   # PRD, audit, model otorisasi, skema DB, peta migrasi
-└── stitch-ref/             # Referensi desain (bukan kode produksi)
+└── docs/                   # PRD, audit, model otorisasi, skema DB, peta migrasi
 ```
 
 ## Menjalankan
