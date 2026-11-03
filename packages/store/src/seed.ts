@@ -16,6 +16,7 @@ import {
   SEED_DOCUMENTS,
   SEED_ORG,
   SEED_PRECEDENTS,
+  SEED_PRINCIPALS,
 } from './seed-data.ts';
 import type { CalendarEvent } from './types.ts';
 
@@ -86,6 +87,10 @@ export async function seed(options: SeedOptions = {}): Promise<SeedSummary> {
 
   if (await isEmptyArray(store.precedents)) {
     await writeJsonAtomic(store.precedents, SEED_PRECEDENTS);
+  }
+
+  if (await isEmptyArray(store.principals)) {
+    await writeJsonAtomic(store.principals, SEED_PRINCIPALS);
   }
 
   const calendarRaw = await readJsonFile<{ events?: unknown }>(store.calendar, { events: [] });

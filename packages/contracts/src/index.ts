@@ -12,3 +12,4 @@ export * from './precedent.ts';
 export * from './audit.ts';
 export * from './envelope.ts';
 export * from './hash.ts';
+export * from './identity.ts';

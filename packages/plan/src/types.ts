@@ -13,4 +13,6 @@ export interface CreatePlanInput {
   intent: string;
   actions: PlanActionDraft[];
   created_at?: string;
+  requester_id?: string;
+  assignee_id?: string;
 }

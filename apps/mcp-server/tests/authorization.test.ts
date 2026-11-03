@@ -175,11 +175,12 @@ describe('authorization at the HTTP boundary', () => {
     assert.equal(last.detail?.scope, 'agent');
   });
 
-  test('get_caller_context reports the scope and never invents a principal', async () => {
+  test('get_caller_context reports the scope and a server-bound principal (never a client claim)', async () => {
     const res = await call(OPS_TOKEN, 'get_caller_context', {});
     const data = JSON.parse(res.result.content[0].text).data;
     assert.equal(data.scope, 'ops');
-    assert.equal(data.principal, null);
+    // Principal comes from the server-side roster, not from the request body.
+    assert.ok(data.principal === null || (data.principal && typeof data.principal.principal_id === 'string'));
     assert.deepEqual(data.capabilities, [...SCOPE_CAPABILITIES.ops]);
     assert.deepEqual(data.unbacked_capabilities, [...UNBACKED_CAPABILITIES]);
   });

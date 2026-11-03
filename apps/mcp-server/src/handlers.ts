@@ -1,11 +1,11 @@
-import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal } from '../../../packages/store/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
 import { executeAction } from '../../../packages/executor/src/execute.ts';
 import { OrgSchema } from '../../../packages/contracts/src/index.ts';
 import type { Plan, Approval, Mandate } from '../../../packages/contracts/src/index.ts';
-import { isAllowed, callerContext, type Scope } from './auth.ts';
+import { isAllowed, callerContext, resolvePrincipal, type Scope } from './auth.ts';
 
 export async function handleTool(name: string, args: any, scope: string): Promise<any> {
   /*
@@ -28,7 +28,7 @@ export async function handleTool(name: string, args: any, scope: string): Promis
 
   switch (name) {
     case 'get_caller_context': {
-      return { ok: true, data: callerContext(scope as Scope) };
+      return { ok: true, data: await callerContext(scope as Scope) };
     }
     case 'get_org_rules': {
       const org = await getOrgRules();
@@ -41,12 +41,27 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'create_plan': {
       const org = await getOrgRules();
       const contactIds = await getContactIds();
+      const principal = await resolvePrincipal(scope as Scope);
+      const rawAssignee = typeof args?.assignee_id === 'string' ? String(args.assignee_id).trim() : '';
+      let assigneeId: string | undefined;
+      if (rawAssignee !== '') {
+        if (!principal) {
+          return { ok: false, error: { code: 'UNAUTHENTICATED', message: 'assignee_id requires an authenticated principal.' } };
+        }
+        const known = await getPrincipal(rawAssignee);
+        if (!known) {
+          return { ok: false, error: { code: 'UNKNOWN_PRINCIPAL', message: `Unknown assignee: ${rawAssignee}` } };
+        }
+        assigneeId = rawAssignee;
+      }
       const plan = buildPlan({
         org_id: org.org_id,
         request_id: args.request_id,
         intent: args.intent,
         created_at: new Date().toISOString(),
         actions: args.actions ?? [],
+        requester_id: principal?.principal_id,
+        assignee_id: assigneeId ?? principal?.principal_id,
       });
       const validated = runValidate(plan, org, contactIds);
       await savePlan(validated);
@@ -67,8 +82,12 @@ export async function handleTool(name: string, args: any, scope: string): Promis
     case 'list_plans': {
       const all = await listPlans();
       const status = typeof args?.status === 'string' ? args.status : null;
+      const requesterId = typeof args?.requester_id === 'string' ? args.requester_id : null;
+      const assigneeId = typeof args?.assignee_id === 'string' ? args.assignee_id : null;
       const limit = typeof args?.limit === 'number' && args.limit > 0 ? Math.floor(args.limit) : 100;
       const filtered = (status ? all.filter((plan) => plan.status === status) : all)
+        .filter((plan) => !requesterId || plan.requester_id === requesterId)
+        .filter((plan) => !assigneeId || plan.assignee_id === assigneeId)
         .slice()
         .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
       return { ok: true, data: { plans: filtered.slice(0, limit), total: filtered.length } };
@@ -92,12 +111,14 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         return { ok: false, error: { code: 'INVALID_PLAN', message: 'Approval token already used.' } };
       }
       const decision = args.decision;
+      const principal = await resolvePrincipal(scope as Scope);
+      const approverId = principal?.principal_id ?? args.approver_id;
       const approval: Approval = {
         approval_id: `appr_${Date.now()}` as any,
         plan_id: plan.plan_id,
         plan_hash: plan.plan_hash,
         decision,
-        approver_id: args.approver_id,
+        approver_id: approverId,
         approval_token: args.approval_token,
         issued_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),

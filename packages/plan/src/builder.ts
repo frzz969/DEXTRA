@@ -32,6 +32,8 @@ export function createPlan(input: CreatePlanInput): Plan {
     findings: [] as Finding[],
     created_at: input.created_at ?? new Date().toISOString(),
     contract_version: CONTRACT_VERSION,
+    ...(input.requester_id ? { requester_id: input.requester_id } : {}),
+    ...(input.assignee_id ? { assignee_id: input.assignee_id } : {}),
   };
   const plan = { ...base, plan_hash: computePlanHash(base) } as unknown as Plan;
   return plan;

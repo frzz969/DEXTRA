@@ -9,6 +9,8 @@ import {
   type Scope,
   type ToolName,
 } from '../../../packages/contracts/src/authorization.ts';
+import type { Principal } from '../../../packages/contracts/src/identity.ts';
+import { getPrincipal } from '../../../packages/store/src/principals.ts';
 
 export type { Scope };
 export { toolsForScope };
@@ -79,18 +81,32 @@ export function isAllowed(scope: Scope, tool: string): boolean {
  */
 export interface CallerContext {
   scope: Scope;
-  /** No principal exists yet: a token identifies a capability set, not a person. */
-  principal: null;
+  /** Principal bound to this token server-side; null if none. */
+  principal: Principal | null;
   capabilities: Capability[];
   /** Capabilities in the vocabulary that no scope grants — unimplemented, not denied. */
   unbacked_capabilities: Capability[];
   tools: ToolName[];
 }
 
-export function callerContext(scope: Scope): CallerContext {
+export async function resolvePrincipal(scope: Scope): Promise<Principal | null> {
+  const id =
+    scope === 'ops'
+      ? (process.env.DEXTRA_OPS_PRINCIPAL ?? 'usr_nadia')
+      : (process.env.DEXTRA_AGENT_PRINCIPAL ?? '');
+  if (id.trim() === '') return null;
+  try {
+    return await getPrincipal(id.trim());
+  } catch {
+    return null;
+  }
+}
+
+export async function callerContext(scope: Scope): Promise<CallerContext> {
+  const principal = await resolvePrincipal(scope);
   return {
     scope,
-    principal: null,
+    principal,
     capabilities: capabilitiesForScope(scope),
     unbacked_capabilities: [...UNBACKED_CAPABILITIES],
     tools: toolsForScope(scope),

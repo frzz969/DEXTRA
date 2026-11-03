@@ -97,6 +97,12 @@ export const SEED_ORG: Org = {
   contract_version: '1.0.0',
 };
 
+export const SEED_PRINCIPALS = [
+  { principal_id: 'usr_nadia', display_name: 'Nadia Rahman', org_id: 'org_kenari', role: 'governance_lead' },
+  { principal_id: 'usr_andi', display_name: 'Andi Prasetyo', org_id: 'org_kenari', role: 'finance_approver' },
+  { principal_id: 'usr_sari', display_name: 'Sari Wulandari', org_id: 'org_kenari', role: 'requester' },
+];
+
 export const SEED_CALENDAR: CalendarEvent[] = [
   {
     event_id: 'evt_cal_friday_conflict',

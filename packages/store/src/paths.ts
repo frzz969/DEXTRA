@@ -36,6 +36,7 @@ export function getStorePaths(): StorePaths {
     precedents: resolve(dataDir, 'precedents.json'),
     calendar: resolve(dataDir, 'calendar.json'),
     plans: resolve(dataDir, 'plans.json'),
+    principals: resolve(dataDir, 'principals.json'),
     mandates: resolve(dataDir, 'mandates.json'),
     approvals: resolve(dataDir, 'approvals.json'),
     executions: resolve(dataDir, 'executions.json'),

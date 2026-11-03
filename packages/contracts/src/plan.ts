@@ -80,6 +80,8 @@ export const PlanSchema = z
     findings: z.array(FindingSchema),
     plan_hash: PlanHashSchema,
     contract_version: z.string().min(1),
+    requester_id: z.string().min(1).optional(),
+    assignee_id: z.string().min(1).optional(),
   })
   .strict();
 export type Plan = z.infer<typeof PlanSchema>;

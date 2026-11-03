@@ -1,0 +1,20 @@
+[
+  {
+    "principal_id": "usr_nadia",
+    "display_name": "Nadia Rahman",
+    "org_id": "org_kenari",
+    "role": "governance_lead"
+  },
+  {
+    "principal_id": "usr_andi",
+    "display_name": "Andi Prasetyo",
+    "org_id": "org_kenari",
+    "role": "finance_approver"
+  },
+  {
+    "principal_id": "usr_sari",
+    "display_name": "Sari Wulandari",
+    "org_id": "org_kenari",
+    "role": "requester"
+  }
+]

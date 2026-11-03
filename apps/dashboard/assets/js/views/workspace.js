@@ -17,14 +17,21 @@
   D.views.requests = function (root) {
     var filter = { q: '', status: 'all', specialist: 'all' };
 
-    /* Ownership is only knowable when the source records it. Demo data does;
-     * list_plans does not. When nothing is attributed, we show the whole
-     * workspace and say so — a wrong "mine" is worse than an honest "all". */
+    /* Ownership is only knowable when the source records it. The server now
+     * records requester_id bound to a principal; fall back to the old demo
+     * attribution only when no principal is bound. */
+    var principal = store.principal || null;
     var attributed = store.plans.filter(function (p) { return p.requester; });
-    var ownershipKnown = attributed.length > 0;
-    var scope = ownershipKnown
-      ? attributed.filter(function (p) { return p.requester === D.session.user.name; })
-      : store.plans;
+    var principalOwns = !!principal && store.plans.some(function (p) { return p.requester_id === principal.principal_id; });
+    var ownershipKnown = principalOwns || attributed.length > 0;
+    var scope;
+    if (principal && principalOwns) {
+      scope = store.plans.filter(function (p) { return p.requester_id === principal.principal_id; });
+    } else if (ownershipKnown) {
+      scope = attributed.filter(function (p) { return p.requester === D.session.user.name; });
+    } else {
+      scope = store.plans;
+    }
 
     var specOpts = store.hasAttribution() ? [{ value: 'all', label: 'Semua spesialis' }].concat(store.specialists.map(function (s) { return { value: s.id, label: s.name }; })) : null;
 
@@ -194,15 +201,23 @@
 
   /* ---------------- My Work ---------------- */
   D.views.myWork = function (root) {
-    /* Same limitation as /requests: there is no assignment or ownership field
-     * server-side, so this queue is derived from plan status across the whole
-     * workspace. Say that plainly rather than implying it is personal. */
-    var ownershipKnown = store.plans.some(function (p) { return p.requester; });
+    /* Assignment is recorded server-side as assignee_id (or, when unassigned,
+     * the requester). Fall back to the old status-derived queue only when no
+     * principal is bound. */
+    var principal = store.principal || null;
+    var ownershipKnown = !!principal && store.plans.some(function (p) {
+      return p.assignee_id === principal.principal_id || (!p.assignee_id && p.requester_id === principal.principal_id);
+    });
+    var basePlans = ownershipKnown
+      ? store.plans.filter(function (p) {
+          return p.assignee_id === principal.principal_id || (!p.assignee_id && p.requester_id === principal.principal_id);
+        })
+      : store.plans;
 
-    var awaiting = store.plans.filter(function (p) { return store.displayStatus(p) === 'READY'; });
-    var needs = store.plans.filter(function (p) { return store.displayStatus(p) === 'NEEDS_REVIEW'; });
-    var blocked = store.plans.filter(function (p) { return store.displayStatus(p) === 'BLOCKED'; });
-    var drafts = store.plans.filter(function (p) { return store.displayStatus(p) === 'DRAFT'; });
+    var awaiting = basePlans.filter(function (p) { return store.displayStatus(p) === 'READY'; });
+    var needs = basePlans.filter(function (p) { return store.displayStatus(p) === 'NEEDS_REVIEW'; });
+    var blocked = basePlans.filter(function (p) { return store.displayStatus(p) === 'BLOCKED'; });
+    var drafts = basePlans.filter(function (p) { return store.displayStatus(p) === 'DRAFT'; });
 
     function group(title, desc, items, icon, tone, cta) {
       return ui.card({

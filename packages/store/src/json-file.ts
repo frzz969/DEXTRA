@@ -140,6 +140,7 @@ export async function ensureStoreFiles(): Promise<void> {
     [paths.precedents, '[]\n'],
     [paths.calendar, '{"events":[]}\n'],
     [paths.plans, '[]\n'],
+    [paths.principals, '[]\n'],
     [paths.mandates, '[]\n'],
     [paths.approvals, '[]\n'],
     [paths.executions, '[]\n'],

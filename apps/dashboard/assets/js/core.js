@@ -389,12 +389,18 @@
       /* The roster is read from the agent definition files, not from demo data.
        * Only the four fields the files actually contain are kept. */
       var specialistsP = api.call('list_specialists', {}).then(function (d) {
+  /* */
         return (d.specialists || []).map(function (s) {
           return { id: s.id, name: s.name, role: s.role, limits: s.limits || [], tools: s.tools || [] };
         });
       }).catch(function () { return null; });
 
-      return Promise.all([plansP, mandatesP, executionsP, specialistsP]).then(function (res) {
+      /* Principal is server-bound to the token; null when none — never invent one. */
+      var principalP = api.call('get_caller_context', {}).then(function (d) {
+        return (d && d.principal) ? d.principal : null;
+      }).catch(function () { return null; });
+
+      return Promise.all([plansP, mandatesP, executionsP, specialistsP, principalP]).then(function (res) {
         self.plans = res[0].map(function (p) {
           /* The Plan contract has no `specialist` field. Defaulting it to
            * 'dispatcher' (as this used to) attributed every plan to an agent the
@@ -410,7 +416,7 @@
            * Plan contract carries no requester field. Stamping the signed-in user
            * here would invent ownership and make /requests lie. Leave it null and
            * let the view say ownership is not recorded. */
-          p.requester = p.requester || null;
+          p.requester = p.requester || p.requester_id || null;
           return p;
         }).sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
 
@@ -460,7 +466,7 @@
 
         /* Only replace the roster when the server actually answered; otherwise
            the page shows its "needs server" state rather than stale demo rows. */
-        if (res[3]) self.specialists = res[3];
+        if (res[3]) self.specialists = res[3];\n         self.principal = res[4] || null;
 
         /*
          * The Plan contract has four statuses — DRAFT, READY, NEEDS_REVIEW,

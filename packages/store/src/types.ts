@@ -120,6 +120,7 @@ export interface StorePaths {
   precedents: string;
   calendar: string;
   plans: string;
+  principals: string;
   mandates: string;
   approvals: string;
   executions: string;

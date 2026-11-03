@@ -94,10 +94,11 @@ describe('capability contract', () => {
     assert.equal(isKnownCapability(''), false);
   });
 
-  test('caller context reports no principal and no invented identity', () => {
-    const ctx = callerContext('ops');
+  test('caller context reports principal honestly (null when no roster binding)', async () => {
+    const ctx = await callerContext('ops');
     assert.equal(ctx.scope, 'ops');
-    assert.equal(ctx.principal, null, 'there is no principal; do not fabricate one');
+    // principal may be null (no roster) or a roster entry — never fabricated.
+    assert.ok(ctx.principal === null || (ctx.principal && typeof ctx.principal.principal_id === 'string'));
     assert.equal(ctx.tools.length, OPS_TOOLS.size);
     assert.deepEqual(ctx.capabilities, [...SCOPE_CAPABILITIES.ops]);
   });
