@@ -157,7 +157,7 @@ Terbukti menangkap bug asalnya: dengan literal `\n` disuntikkan kembali ke
 `core.js`, 16 rute melaporkan "layar kosong" dan skrip keluar dengan `EXIT=1`;
 setelah dipulihkan, `EXIT=0`.
 
-## A4 — Inventaris rute jujur
+## A4 — Inventaris rute jujur · **SELESAI**
 
 `/requests` dan `/my-work` kini berfungsi penuh saat principal terikat, tapi
 `state` masih `partial`. Pilih: biarkan `partial` (jujur soal degradasi tanpa
@@ -214,7 +214,7 @@ kode hari ini, dan tidak ada butir yang mengulang butir lain.
 |---|---|---|---|
 | 1 | ~~A1~~ selesai | ~~B1~~ selesai | — |
 | 2 | ~~A3~~ selesai | **B2** | A5 menunggu B2 |
-| 3 | **A2, A4** (berikutnya) | B3, B4 | — |
+| 3 | **A2** (berikutnya) | B3, B4 | — |
 | 4 | A5 | — | setelah B2 hijau |
 
 Putaran 1 dan 2 sengaja tidak berbagi berkas sama sekali, supaya dua agen bisa
