@@ -19,7 +19,7 @@ behaviour that produced it. Findings that were fixed are marked and reference th
 | A-04 | Tokens captured at import; no rotation; the auth test proved nothing | Medium | Fixed |
 | A-05 | `issue_mandate` minted a mandate with no audit event | Medium | Fixed |
 | A-06 | `issue_mandate` described as "service only" while exposed to `ops` | Low | Fixed (description) |
-| A-07 | No resource-scope checks: any `ops` caller may act on any mandate | **High** | **Open — blocked** |
+| A-07 | No resource-scope checks: any `ops` caller may act on any mandate | **High** | **Partial — mandate execution/revoke guarded (A7); list_* masih global** |
 | A-08 | No token expiry or revocation | Medium | **Open — documented** |
 | A-09 | No principal; `approver_id` is caller-asserted and unverified | **High** | **Open — blocked** |
 | A-10 | Client permission matrix duplicated business rules with no server counterpart | Medium | Partially fixed |
@@ -150,7 +150,7 @@ would be an API-surface change unrelated to the identity work. It is documented 
 
 ---
 
-## A-07 — No resource-scope authorization (OPEN)
+## A-07 — No resource-scope authorization (PARTIAL)
 
 `execute_action`, `revoke_mandate`, `list_plans`, `list_mandates`, and `list_executions`
 accept an identifier and act on it. None consults `Plan.org_id` or any ownership attribute.
@@ -164,6 +164,12 @@ org would produce a check that always passes — the appearance of security with
 substance. That is worse than a documented gap, because it stops anyone looking.
 
 **Blocker:** principal identity (A-09) and a tenancy attribute on the caller.
+
+**Status update (A7, WorkBuddy):** `execute_action` dan `revoke_mandate` kini menolak
+mandate yang bukan milik pemanggil (resource-scope pada level mandate). `list_plans`,
+`list_mandates`, `list_executions` masih mengembalikan seluruh workspace — pemfilteran
+per pemilik belum diterapkan. Pemeriksaan penuh lintas resource menunggu prinsipal di
+jalur Python (A-09) dan atribut ownership pada Mandate.
 
 ---
 
