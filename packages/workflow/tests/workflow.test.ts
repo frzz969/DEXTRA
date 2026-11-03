@@ -21,12 +21,12 @@ describe('workflow package', () => {
   test('readySteps returns root first', () => {
     const r = readySteps(def, new Set());
     assert.equal(r.length, 1);
-    assert.equal(r[0].id, 'a');
+    assert.equal(r[0]!.id, 'a');
   });
   test('readySteps returns dependent after root done', () => {
     const r = readySteps(def, new Set(['a']));
     assert.equal(r.length, 1);
-    assert.equal(r[0].id, 'b');
+    assert.equal(r[0]!.id, 'b');
   });
   test('invalid dependency is reported', () => {
     const bad: WorkflowDefinition = { ...def, steps: [{ id: 'x', name: 'X', step_type: 'code', depends_on: ['nope'], invokes: [], optional: false }] };
