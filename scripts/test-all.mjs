@@ -61,6 +61,7 @@ function resolvePython() {
 
 const python = resolvePython();
 
+run('sintaks JavaScript dapat di-parse', 'node', ['scripts/check-syntax.mjs']);
 run('salinan paket tidak menyimpang', 'node', ['scripts/verify-packages.mjs']);
 run('typecheck semua workspace', 'npm', ['run', 'typecheck']);
 run('tes paket + gateway', 'npm', ['test']);

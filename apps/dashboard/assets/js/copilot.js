@@ -162,22 +162,70 @@
   };
 
   computes.ownershipGap = function () {
+    var principal = D.session.principal;
+    var plans = D.store.plans || [];
+    var owned = principal
+      ? plans.filter(function (p) { return p.requester_id === principal.principal_id; })
+      : [];
+    var withOwner = plans.filter(function (p) { return !!p.requester_id; });
+
+    /* The answer is read from the data, not asserted. A plan only carries
+       requester_id when the server bound a principal to the token at creation
+       time; older plans created before that binding stay unowned, and saying
+       "everything is owned" would be as wrong as saying "nothing is". */
+    if (principal && withOwner.length > 0) {
+      return res({
+        tone: owned.length > 0 ? 'ok' : 'warn',
+        title: 'Kepemilikan tercatat',
+        body: [
+          withOwner.length + ' dari ' + plans.length + ' plan punya pemohon tercatat; ' +
+            owned.length + ' di antaranya atas nama ' + principal.display_name + '.',
+          owned.length > 0
+            ? 'Halaman ini menyaring dengan requester_id = ' + principal.principal_id + ', bukan menampilkan seluruh workspace.'
+            : 'Tidak ada plan atas nama Anda, jadi halaman ini kosong — itu hasil penyaringan, bukan kegagalan memuat.'
+        ],
+        note: 'Ikatan token ke orang ditentukan server lewat roster principal, bukan dikirim klien.'
+      });
+    }
+
     return res({
       tone: 'warn',
-      title: 'Kepemilikan tidak tercatat',
+      title: 'Kepemilikan tidak tercatat untuk sesi ini',
       body: [
-        'Plan tidak punya field pemohon, dan token MCP membawa scope — bukan nama orang. Jadi daftar di halaman ini adalah seluruh permintaan workspace, bukan "milik saya".',
+        'Server tidak mengikat principal ke token ini, dan ' + (plans.length - withOwner.length) +
+          ' dari ' + plans.length + ' plan tidak punya requester_id.',
+        'Jadi daftar di halaman ini adalah seluruh permintaan workspace, bukan "milik saya".',
         'Saya tidak akan menempelkan nama Anda ke plan yang bukan milik Anda untuk membuat halaman ini terlihat benar.'
       ],
-      note: 'Terlihat juga di catatan rute /requests pada sources.js.'
+      note: 'Kesenjangan dicatat, bukan ditutupi dengan data contoh.'
     });
   };
 
   computes.assignmentGap = function () {
+    var principal = D.session.principal;
+    var plans = D.store.plans || [];
+    var assigned = principal
+      ? plans.filter(function (p) { return p.assignee_id === principal.principal_id; })
+      : [];
+    var withAssignee = plans.filter(function (p) { return !!p.assignee_id; });
+
+    if (withAssignee.length > 0) {
+      return res({
+        tone: 'ok',
+        title: 'Penugasan tercatat',
+        body: [
+          withAssignee.length + ' dari ' + plans.length + ' plan punya assignee_id' +
+            (principal ? '; ' + assigned.length + ' ditugaskan ke ' + principal.display_name + '.' : '.'),
+          'Antrean di halaman ini menyaring dengan field itu, bukan menebak dari status.'
+        ],
+        note: 'Plan yang dibuat sebelum ikatan principal aktif tetap tanpa assignee dan tidak ikut terhitung.'
+      });
+    }
+
     return res({
       tone: 'warn',
-      title: 'Penugasan tidak ada di server',
-      body: ['Tidak ada field assignee pada plan. Antrean di halaman ini diturunkan dari status plan, sehingga isinya item terbuka seluruh workspace — bukan tugas pribadi.'],
+      title: 'Penugasan tidak tercatat',
+      body: ['Tidak ada plan dengan assignee_id. Antrean di halaman ini diturunkan dari status plan, sehingga isinya item terbuka seluruh workspace — bukan tugas pribadi.'],
       note: 'Kesenjangan dicatat, bukan ditutupi dengan data contoh.'
     });
   };

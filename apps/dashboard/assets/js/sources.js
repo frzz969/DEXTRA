@@ -60,7 +60,7 @@
 
     { route: '/requests', label: 'My Requests', domain: 'Operasional', state: 'partial',
       tools: ['list_plans'], modules: ['store', 'plan'],
-      note: 'Daftar dari list_plans. Plan tidak menyimpan pemohon dan autentikasi MCP hanya membawa scope, jadi kepemilikan per pengguna tidak dapat diketahui — layar menampilkan seluruh permintaan workspace dan menyatakannya.',
+      note: 'Daftar dari list_plans. Kepemilikan tercatat bila server mengikat principal ke token (requester_id diisi server, bukan klien); layar menyaring dengan field itu. Tanpa ikatan, layar menampilkan seluruh permintaan workspace dan menyatakannya.',
       intents: [
         { id: 'rq.recent', label: 'Permintaan terbaru di workspace', kind: 'answer', compute: 'recentPlans' },
         { id: 'rq.owner', label: 'Siapa pemilik permintaan ini?', kind: 'answer', compute: 'ownershipGap' }
@@ -68,7 +68,7 @@
 
     { route: '/my-work', label: 'My Work', domain: 'Operasional', state: 'partial',
       tools: ['list_plans', 'get_audit_log'], modules: ['store', 'plan'],
-      note: 'Antrean diturunkan dari status plan; tidak ada field penugasan di server, jadi isinya item terbuka seluruh workspace.',
+      note: 'Antrean diturunkan dari status plan dan assignee_id bila server mencatatnya. Tanpa principal atau tanpa assignee, isinya item terbuka seluruh workspace dan halaman menyatakannya.',
       intents: [
         { id: 'mw.queue', label: 'Apa yang menunggu saya?', kind: 'answer', compute: 'awaiting' },
         { id: 'mw.assign', label: 'Apakah penugasan tercatat server?', kind: 'answer', compute: 'assignmentGap' }

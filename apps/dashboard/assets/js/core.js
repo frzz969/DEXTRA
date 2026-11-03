@@ -175,6 +175,8 @@
     serverCapabilities: null,
     serverUnbacked: null,
     serverTools: null,
+    /* The person the server binds to this token, or null. Server-stated only. */
+    principal: null,
 
     applyServerContext: function (ctx) {
       if (!ctx) {
@@ -182,12 +184,14 @@
         this.serverCapabilities = null;
         this.serverUnbacked = null;
         this.serverTools = null;
+        this.principal = null;
         return;
       }
       this.scope = typeof ctx.scope === 'string' ? ctx.scope : null;
       this.serverCapabilities = Array.isArray(ctx.capabilities) ? ctx.capabilities.slice() : [];
       this.serverUnbacked = Array.isArray(ctx.unbacked_capabilities) ? ctx.unbacked_capabilities.slice() : [];
       this.serverTools = Array.isArray(ctx.tools) ? ctx.tools.slice() : [];
+      this.principal = ctx.principal && typeof ctx.principal === 'object' ? ctx.principal : null;
     },
 
     /* True when the browser is relying on the simulated matrix instead of the server. */
@@ -221,50 +225,78 @@
       return row[cap] === 'lim';
     },
 
-    /* Identity as the server understands it, or the demo persona. Never mixed. */
+    /*
+     * Identity as the server understands it, or the demo persona. Never mixed.
+     *
+     * Three states, not two:
+     *   principal present — the server binds a named person to this token, so
+     *                       the name and role come from the roster, not from `user`
+     *   live, no principal — the server authenticated a scope but binds nobody;
+     *                       say so instead of inventing a name
+     *   demo             — the display persona, which never reaches the server
+     */
+    hasPrincipal: function () {
+      return this.principal !== null && this.principal !== undefined;
+    },
+
     roleLabel: function () {
+      if (this.hasPrincipal()) {
+        return (ROLE_LABEL[this.principal.role] || this.principal.role) + ' · ' + this.scope;
+      }
       if (this.serverCapabilities) return 'Token ' + this.scope + ' · server';
       return ROLE_LABEL[this.user.role] || this.user.role;
     },
 
     /*
-     * What to put in the user chip. In live mode there is no person behind the
-     * token — the server authenticates a scope, and the demo persona's name is
-     * not an identity that exists anywhere. Printing "Farhan Pratama" next to a
-     * live session would attribute real authority to a fictional person, so the
-     * chip shows the scope instead.
+     * What to put in the user chip. In live mode without a principal there is no
+     * person behind the token — the server authenticates a scope, and the demo
+     * persona's name is not an identity that exists anywhere. Printing "Farhan
+     * Pratama" next to a live session would attribute real authority to a
+     * fictional person, so the chip shows the scope instead.
      */
     displayName: function () {
+      if (this.hasPrincipal()) return this.principal.display_name;
       if (this.serverCapabilities) return 'Token ' + this.scope;
       return this.user.name;
     },
 
-    /* Second line of the user chip: what backs this session, not who it is. */
+    /* Second line of the user chip: who is bound, or what backs the session. */
     subtitle: function () {
+      if (this.hasPrincipal()) return this.principal.role;
       if (this.serverCapabilities) {
         return 'server · ' + this.serverCapabilities.length + ' kapabilitas';
       }
       return ROLE_LABEL[this.user.role] || this.user.role;
     },
 
-    /* The persona's e-mail is demo data; it must not be shown as a real account. */
+    /*
+     * The resolvable id behind the session. The persona's e-mail is demo data
+     * and must never be shown as a real account.
+     */
     contactLine: function () {
+      if (this.hasPrincipal()) return this.principal.principal_id;
       if (this.serverCapabilities) return 'tanpa identitas per orang';
       return this.user.email || '';
     },
 
     /*
-     * The id to record as the approver. The server has no person behind a token,
-     * only a scope, so writing 'user_001' would put a name in the audit trail
-     * that no system can resolve and that nobody can be held to. Record the
-     * authority that actually decided instead.
+     * The id to record as the approver. When the server binds a principal, that
+     * is the only correct answer — it is what the server will record anyway.
+     * Otherwise record the authority that actually decided, never 'user_001':
+     * a name no system can resolve and nobody can be held to.
      */
     identityId: function () {
+      if (this.hasPrincipal()) return this.principal.principal_id;
       if (this.serverCapabilities) return 'scope:' + this.scope;
       return this.user.id;
     },
 
     identityLine: function () {
+      if (this.hasPrincipal()) {
+        return 'Terautentikasi sebagai ' + this.principal.display_name + ' (' + this.principal.principal_id + ') ' +
+          'pada scope ' + this.scope + '. Ikatan token-ke-orang ditentukan server lewat roster; ' +
+          'token ini tidak punya masa berlaku atau pencabutan.';
+      }
       if (this.serverCapabilities) {
         return 'Terautentikasi sebagai scope ' + this.scope +
           '. Tidak ada identitas per orang: token membawa wewenang, bukan nama.';
@@ -466,7 +498,8 @@
 
         /* Only replace the roster when the server actually answered; otherwise
            the page shows its "needs server" state rather than stale demo rows. */
-        if (res[3]) self.specialists = res[3];\n         self.principal = res[4] || null;
+        if (res[3]) self.specialists = res[3];
+        self.principal = res[4] || null;
 
         /*
          * The Plan contract has four statuses — DRAFT, READY, NEEDS_REVIEW,
