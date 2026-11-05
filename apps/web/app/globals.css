@@ -3,109 +3,15 @@
    oleh scripts/verify-packages.mjs — jangan disunting langsung. */
 @import "./dextra-design-system.css";
 
-.shell {
-  display: grid;
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-  min-height: 100vh;
-  background: var(--bg);
-}
-
-.sidebar {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: var(--s-5) var(--s-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-6);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--text);
-}
-
-.brand__mark {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-md);
-  background: var(--brand-600);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
-}
-
-.nav__group {
-  font-size: 11px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--faint);
-  margin: var(--s-3) 0 var(--s-1);
-}
-
-.nav__item {
-  display: block;
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-sm);
-  color: var(--text-2);
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.nav__item:hover { background: var(--surface-3); }
-.nav__item.is-active { background: var(--brand-050); color: var(--brand-700); font-weight: 600; }
-
-.main {
-  padding: var(--s-8);
-  max-width: var(--content-max);
-  width: 100%;
-}
-
-.page-head { margin-bottom: var(--s-6); }
-.page-head h1 { font-family: var(--font-display); font-size: 30px; margin: 0 0 var(--s-1); color: var(--text); }
-.page-head p { margin: 0; color: var(--muted); font-size: 14px; }
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--s-4);
-  margin-bottom: var(--s-6);
-}
-
-.kpi {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: var(--s-4);
-  box-shadow: var(--shadow-xs);
-}
-
-.kpi__label { font-size: 12px; color: var(--muted); margin-bottom: var(--s-2); }
-.kpi__value { font-size: 26px; font-family: var(--font-mono); color: var(--text); }
-
-.notice {
-  border-radius: var(--r-lg);
-  padding: var(--s-4);
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-2);
-  font-size: 14px;
-}
-
-.notice--warn { border-color: var(--warning-600); background: var(--warning-100); color: var(--warning-600); }
-
-@media (max-width: 768px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .main { padding: var(--s-4); }
-}
+/* App-specific additions only.
+ *
+ * The design system above owns the shell (.sidebar / .main / .content),
+ * KPI cards, page headers, banners, and responsive behaviour
+ * (sidebar hides <=1080px, grid collapses at its own breakpoints).
+ * Do NOT re-declare those classes here — previous overrides caused a
+ * double sidebar offset (grid .shell + fixed .sidebar + .main margin).
+ *
+ * This single rule only guards against horizontal page overflow from
+ * long unbreakable tokens. `clip` (unlike `hidden`) does not create a
+ * scroll container, so sticky topbars/rails keep working. */
+html, body { overflow-x: clip; }

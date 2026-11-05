@@ -1,5 +1,28 @@
-"""Alur tata kelola end-to-end: approval -> mandate -> eksekusi -> cabut -> diblokir."""
+"""Alur tata kelola end-to-end: approval -> mandate -> eksekusi -> cabut -> diblokir.
+
+Sejak token gateway diikat ke tenant, alur ini berjalan sebagai gateway yang
+terikat — bukan sebagai token tanpa tenant yang dulu bisa membaca mandate siapa
+pun. Tanpa pengikatan, langkah baca akan 404 dan tes ini akan menguji kebalikan
+dari yang dimaksud.
+"""
 from __future__ import annotations
+
+import uuid
+
+import pytest
+
+from dextra.database.session import session_scope
+from dextra.repositories import tenants as tenant_repo
+
+
+@pytest.fixture(autouse=True)
+def legacy_tenant(app, monkeypatch):
+    """Tenant tempat token gateway bekerja selama tes alur tata kelola."""
+    slug = f"gov-{uuid.uuid4().hex[:8]}"
+    with session_scope() as db:
+        tenant_repo.create_tenant(db, slug=slug, name="Governance Flow")
+    monkeypatch.setenv("DEXTRA_LEGACY_TENANT", slug)
+    return slug
 
 
 def _approve(client, ops_headers, *, plan_id="pln_flow", action_id="act_1", params=None):

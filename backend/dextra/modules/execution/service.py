@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from ...governance import mandate as mandate_service
 from ...governance.mandate import MandateError
 from ...models.execution import ActionRecord, Execution, ExecutionStep
+from ...models.governance import Mandate
 from ...repositories import audit as audit_repo
 
 
@@ -33,11 +34,21 @@ class ExecutionError(Exception):
         self.message = message
 
 
+#: Adapter yang dipakai service eksekusi. Satu tempat: _adapter_result dan
+#: kolom executions.adapter harus selalu memakai nilai ini.
+ADAPTER_NAME = "mock"
+
+
 def _adapter_result(action_type: str, params: dict) -> dict:
-    """Adapter mock yang jujur: menyatakan dirinya mock, bukan pura-pura mengirim."""
+    """Adapter mock yang jujur: menyatakan dirinya mock, bukan pura-pura mengirim.
+
+    NON-PROD (A22): provider tetap 'mock'. UI wajib menampilkan label ini
+    sebagai "mock/demo — tidak ada sistem eksternal dipanggil".
+    """
     return {
-        "adapter": "mock",
-        "note": "Adapter mock: tidak ada sistem eksternal yang benar-benar dipanggil.",
+        "adapter": ADAPTER_NAME,
+        "provider": "mock",
+        "note": "Adapter mock (NON-PROD): tidak ada sistem eksternal yang benar-benar dipanggil.",
         "action_type": action_type,
         "accepted_params": sorted(params.keys()),
     }
@@ -52,15 +63,28 @@ def execute(
     params: dict,
     actor: str = "executor",
     correlation_id: str = "",
+    tenant_id: str | None = None,
 ) -> Execution:
     # Idempotensi diperiksa LEBIH DULU. Permintaan ulang untuk (mandate, aksi) yang
     # sama tidak boleh menjalankan aksi lagi, dan tidak boleh berubah menjadi
     # penolakan hanya karena status mandate sudah bergerak ke "executing" setelah
     # eksekusi pertama. Yang dikembalikan adalah catatan eksekusi yang sudah ada.
-    key = f"{mandate_id}:{action_id}:{mandate_service.params_digest(params)}"
+    params_digest = mandate_service.params_digest(params)
+    key = f"{mandate_id}:{action_id}:{params_digest}"
     existing = db.scalar(select(Execution).where(Execution.idempotency_key == key))
     if existing is not None:
+        # Idempotensi tidak boleh menjadi celah lintas tenant: pemanggil tenant A
+        # tidak mendapat catatan eksekusi tenant B hanya karena kuncinya sama.
+        if tenant_id is not None and existing.tenant_id != tenant_id:
+            raise ExecutionError("MANDATE_NOT_FOUND", "Mandate tidak ditemukan.")
         return existing
+
+    if tenant_id is not None:
+        owned = db.get(Mandate, mandate_id)
+        if owned is None or owned.tenant_id != tenant_id:
+            # Diperiksa di sini, bukan hanya di router, supaya jalur MCP dan
+            # worker mendapat pemeriksaan yang sama.
+            raise ExecutionError("MANDATE_NOT_FOUND", "Mandate tidak ditemukan.")
 
     try:
         mandate = mandate_service.validate_for_execution(
@@ -76,6 +100,7 @@ def execute(
             resource=mandate_id,
             decision="deny",
             mandate_id=mandate_id,
+            tenant_id=tenant_id,
             correlation_id=correlation_id,
             detail={"code": exc.code, "message": exc.message},
         )
@@ -89,11 +114,13 @@ def execute(
         id=f"exe_{int(time.time() * 1000)}_{secrets.token_hex(3)}",
         plan_id=mandate.plan_id,
         mandate_id=mandate.id,
+        tenant_id=tenant_id if tenant_id is not None else mandate.tenant_id,
         action_id=action_id,
         agent_id=mandate.agent_id,
-        adapter="mcp",
+        adapter=ADAPTER_NAME,
         status="running",
         idempotency_key=key,
+        params_digest=params_digest,
         started_at=started,
         correlation_id=correlation_id,
     )
@@ -157,8 +184,9 @@ def execute(
         plan_id=mandate.plan_id,
         mandate_id=mandate.id,
         execution_id=execution.id,
+        tenant_id=tenant_id or mandate.tenant_id,
         correlation_id=correlation_id,
-        detail={"adapter": "mock", "duration_ms": execution.duration_ms},
+        detail={"adapter": ADAPTER_NAME, "duration_ms": execution.duration_ms},
     )
     db.commit()
     return execution

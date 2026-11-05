@@ -36,6 +36,12 @@ export const OrgIdSchema = brandedIdSchema<'OrgId'>(ORG_ID_PATTERN);
 export const RequestIdSchema = brandedIdSchema<'RequestId'>(REQUEST_ID_PATTERN);
 export const EventIdSchema = brandedIdSchema<'EventId'>(EVENT_ID_PATTERN);
 
+export function asEventId(value: string): EventId {
+  const result = EventIdSchema.safeParse(value);
+  if (!result.success) throw new Error(`Invalid EventId: ${value}`);
+  return result.data;
+}
+
 export function asPlanId(value: string): PlanId {
   const result = PlanIdSchema.safeParse(value);
   if (!result.success) {

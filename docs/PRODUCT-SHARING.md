@@ -12,16 +12,24 @@ Kantor kecil dan menengah membuang waktu untuk pekerjaan administratif berulang:
 
 DEXTRA adalah workforce AI yang bekerja seperti tim administrasi nyata, dengan satu perbedaan: setiap tindakan yang mengubah state eksternal wajib lewat mandat.
 
-Alur:
-1. Pengguna memberi instruksi dalam bahasa Indonesia.
-2. Dispatcher memecah instruksi menjadi tindakan diskret (siapa, apa, kapan, ke mana).
-3. Spesialis AI menyusun rencana dan draf.
-4. Adversarial Reviewer memeriksa risiko, ambiguitas, dan konflik jadwal.
-5. Validator deterministik memeriksa aturan organisasi.
-6. Manusia menyetujui rencana versi tertentu.
+Alur yang **berjalan hari ini** (bukan rancangan):
+
+1. Pengguna menulis instruksi dalam bahasa Indonesia di `/assistant`.
+2. `compose()` mencari penerima lewat `find_precedent`. Kalau ada dua kandidat
+   setara, ia **berhenti dan bertanya** — tidak memilih.
+3. `create_plan` di server menyusun objek rencana: siapa, apa, kapan, di mana.
+4. Validator deterministik memeriksa aturan organisasi dan menandai konflik
+   (Salat Jumat, jam kerja, hari libur, bulk egress, instruksi tertanam).
+5. Manusia meninjau penerima, waktu, isi, dan `plan_hash` di `/work-packages/:id`.
+6. `submit_approval` mengikat keputusan pada hash itu.
 7. Mandat diterbitkan dengan ruang lingkup tepat: tindakan, penerima, waktu, isi.
 8. Executor memvalidasi mandat secara independen sebelum menjalankan.
-9. Semua kejadian tercatat di audit log.
+9. Semua kejadian tercatat di audit log; ekspornya bisa diverifikasi di luar aplikasi.
+
+Tidak ada Dispatcher, Spesialis, atau Adversarial Reviewer di jalur ini. Versi
+sebelumnya menuliskan ketiganya sebagai langkah yang berjalan; itu tidak benar.
+Yang menyusun rencana adalah `packages/plan` (deterministik), dan tidak ada LLM
+di jalur produksi.
 
 ## Prinsip utama
 
@@ -33,14 +41,16 @@ AI boleh membaca, menganalisis, menyiapkan, dan merekomendasikan. Tindakan yang 
 
 - **Mandat sebagai capability, bukan flag approval.** Tool eksekusi tidak pernah terekspos ke model. Pemisahan ini ditegakkan di server, bukan di prompt.
 - **Validator deterministik.** Bukan agen LLM kedua. Aturan organisasi diperiksa dengan kode, bukan dengan prompt.
-- **Scope Inspector.** Manusia melihat persis penerima, waktu, isi, dan lampiran sebelum menyetujui. Yang disetujui adalah teks persis, bukan ringkasan.
-- **Audit append-only.** Setiap kejadian tercatat dengan alasan. Rencana yang berubah setelah persetujuan membatalkan mandat lama.
+- **Layar persetujuan yang menampilkan teks persisnya.** Sebelum menyetujui, manusia melihat penerima (ter-mask), zona waktu dan jam, isi pesan utuh, `plan_hash`, serta temuan kebijakan. Yang disetujui adalah rencana versi itu — bukan ringkasan. Tidak ada field lampiran di kontrak rencana, jadi tidak ada yang diklaim di sini.
+- **Audit append-only dengan rantai hash.** Setiap kejadian tercatat dengan alasan, dan setiap event membawa hash pendahulunya. Menghapus atau mengubah satu baris terdeteksi; ekspornya bisa diperiksa dengan perintah terpisah yang tidak butuh server. Rencana yang berubah setelah persetujuan membatalkan mandat lama.
 - **Privasi by construction.** Data sensitif tidak pernah keluar dari store dalam bentuk penuh. Masking di sumber, bukan di tampilan.
 
 ## Teknologi
 
-WorkBuddy Desktop (agen LLM) + MCP server lokal (Node.js, 127.0.0.1) + dashboard lokal (HTML/CSS/JS). Tanpa database eksternal, tanpa cloud, tanpa akun tambahan. Setup di bawah 5 menit.
+Dashboard lokal (HTML/CSS/JS, tanpa build step) + MCP server lokal (Node.js, 127.0.0.1:8765) + penyimpanan JSON. Tanpa database eksternal, tanpa cloud, tanpa akun tambahan. Setup di bawah 5 menit.
 
 ## Status
 
-MVP selesai. 101 test otomatis lulus. Demo 7 menit dengan satu test case 90 detik yang belum pernah dilihat. Mode offline tersedia.
+MVP selesai. **349 tes otomatis lulus** (`npm run test:inproc`, 2026-11-04). Demo 7 menit dengan satu test case 90 detik yang belum pernah dilihat. Mode offline tersedia, dan saat offline dashboard menyatakan datanya demo.
+
+Batas yang dinyatakan, bukan disembunyikan: pengiriman email/kalender masih mock, notifikasi Telegram masih transport palsu, hanya satu zona waktu yang dikonfigurasi, dan belum ada identitas per pengguna dengan expiry.

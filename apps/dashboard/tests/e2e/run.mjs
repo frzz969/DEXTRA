@@ -2,6 +2,16 @@
 /**
  * Uji ujung-ke-ujung dashboard, tanpa dependensi.
  *
+ * Cara menjalankan (A25):
+ *   npm run test:e2e
+ *   node apps/dashboard/tests/e2e/run.mjs
+ *
+ * Prasyarat: Node >= 20 dengan WebSocket bawaan; Chrome/Chromium terpasang
+ * (auto-detect di lokasi umum, atau set DEXTRA_CHROME ke path eksplisit).
+ * Port MCP 8765 dan port dashboard (default 8899) harus bebas — uji
+ * menjalankan servernya sendiri dan menolak server asing yang sudah jalan.
+ * Di CI tanpa Chrome, uji ini SKIP dengan keluar 0 (bukan gagal).
+ *
  * Kenapa ada: commit beba8ec menulis literal `\n` di `core.js`, sehingga seluruh
  * dashboard gagal dimuat — layar kosong. `npm run test:all` tetap hijau karena
  * tidak ada pemeriksaan yang benar-benar MENJALANKAN halaman. `check-syntax.mjs`
@@ -42,7 +52,8 @@ const ROUTES = [
   '/overview', '/requests', '/my-work', '/board', '/work-packages',
   '/execution', '/workforce', '/approvals', '/review', '/mandates',
   '/audit', '/policies', '/permissions', '/settings', '/assistant', '/integrations',
-  '/analytics', '/security', '/explorer',
+  '/analytics', '/security', '/explorer', '/office-agent', '/data-management',
+  '/account', '/access', '/tokens', '/service-identities', '/security-center', '/skills', '/workflow', '/service-identities', '/security-center', '/skills', '/workflow',
 ];
 
 const CHROME_CANDIDATES = [

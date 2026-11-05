@@ -14,8 +14,12 @@ from ..database.base import Base, IdMixin, TimestampMixin, new_id
 
 class Agent(Base, IdMixin, TimestampMixin):
     __tablename__ = "agents"
+    __table_args__ = (UniqueConstraint("tenant_id", "slug", name="agent_tenant_slug"),)
 
-    slug: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    slug: Mapped[str] = mapped_column(String(64), nullable=False)
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     agent_type: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="", nullable=False)
@@ -59,4 +63,7 @@ class AgentAssignment(Base, IdMixin, TimestampMixin):
 
     agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
     task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     role: Mapped[str] = mapped_column(String(64), default="executor", nullable=False)

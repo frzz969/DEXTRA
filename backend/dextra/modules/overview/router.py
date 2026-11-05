@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from ...core.authz import require_tenant
 from ...core.security import CallerContext, get_caller
 from ...database.session import get_db
 from ...models.execution import Execution
@@ -19,6 +20,10 @@ router = APIRouter(tags=["overview"])
 
 @router.get("/overview")
 def overview(db: Session = Depends(get_db), caller: CallerContext = Depends(get_caller)) -> dict:
+    #: KPI Approval/Mandate/Execution dibatasi tenant pemanggil; tanpa tenant
+    #: (gateway lama tanpa pengikatan) endpoint menolak — angka global lintas
+    #: tenant adalah kebocoran, bukan ringkasan.
+    tenant_id = require_tenant(caller)
     now = datetime.now(timezone.utc)
 
     def count(model, *conditions) -> int:
@@ -28,7 +33,10 @@ def overview(db: Session = Depends(get_db), caller: CallerContext = Depends(get_
         return int(db.scalar(stmt) or 0)
 
     active_mandates = db.scalars(
-        select(Mandate).where(Mandate.status.in_(("issued", "approved", "executing")))
+        select(Mandate).where(
+            Mandate.tenant_id == tenant_id,
+            Mandate.status.in_(("issued", "approved", "executing")),
+        )
     ).all()
     usable = [m for m in active_mandates if m.is_usable(now)]
 
@@ -36,12 +44,18 @@ def overview(db: Session = Depends(get_db), caller: CallerContext = Depends(get_
         "generated_at": now.isoformat(),
         "scope": caller.scope,
         "kpi": {
-            "active_agents": count(Agent, Agent.is_enabled.is_(True)),
+            "active_agents": count(Agent, Agent.tenant_id == tenant_id, Agent.is_enabled.is_(True)),
             "open_work_packages": count(
-                WorkPackage, WorkPackage.status.notin_(("completed", "cancelled", "rejected"))
+                WorkPackage,
+                WorkPackage.tenant_id == tenant_id,
+                WorkPackage.status.notin_(("completed", "cancelled", "rejected")),
             ),
-            "pending_approvals": count(Approval, Approval.decision == "pending"),
-            "failed_executions": count(Execution, Execution.status == "failed"),
+            "pending_approvals": count(
+                Approval, Approval.tenant_id == tenant_id, Approval.decision == "pending"
+            ),
+            "failed_executions": count(
+                Execution, Execution.tenant_id == tenant_id, Execution.status == "failed"
+            ),
             "active_mandates": len(usable),
         },
         #: Rata-rata waktu respons approval belum dihitung: tabel approvals belum

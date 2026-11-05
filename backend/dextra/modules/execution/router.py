@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ...core.authz import scope_to_tenant
 from ...core.security import CallerContext, get_caller, require_capability
 from ...database.session import get_db
 from ...models.execution import Execution
@@ -28,8 +29,9 @@ def list_executions(
     db: Session = Depends(get_db),
     caller: CallerContext = Depends(get_caller),
 ) -> dict:
+    statement = scope_to_tenant(select(Execution), Execution, caller)
     rows = db.scalars(
-        select(Execution).order_by(Execution.created_at.desc()).limit(min(limit, 200))
+        statement.order_by(Execution.created_at.desc()).limit(min(limit, 200))
     ).all()
     return {
         "items": [
@@ -63,6 +65,7 @@ def create_execution(
             action_type=payload.action_type,
             params=payload.params,
             correlation_id=payload.correlation_id,
+            tenant_id=caller.tenant_id,
         )
     except ExecutionError as exc:
         # 409: permintaan sah tetapi ditolak aturan, bukan kesalahan klien.

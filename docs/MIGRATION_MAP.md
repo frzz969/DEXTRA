@@ -10,8 +10,8 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 
 | Domain | v1 (berjalan) | v2 (target) | Status migrasi |
 |---|---|---|---|
-| Frontend | `apps/dashboard` (vanilla SPA, 23 rute) | `apps/web` (Next.js) | **Fondasi ada**, 2 halaman. Dashboard lama tetap produksi. |
-| Backend API | `apps/mcp-server` (JSON-RPC) | `apps/api` (FastAPI REST) | **Fondasi ada**, 9 router. Gateway lama tetap produksi. |
+| Frontend | `apps/dashboard` (vanilla SPA, 24 rute) | `apps/web` (Next.js) | **Fondasi ada**, 2 halaman. Dashboard lama tetap produksi. |
+| Backend API | `apps/mcp-server` (JSON-RPC) | `apps/api` (FastAPI REST) | **Fondasi ada (NON-PROD)**, 16 router (`backend/dextra/main.py:67-85`). Gateway v1 tetap produksi. |
 | Persistensi | `data/*.json` + `packages/store` | PostgreSQL + SQLAlchemy | **Skema + migrasi ada**, data belum dipindahkan. |
 | Governance | `packages/policy-engine`, `mandate-engine` | `backend/dextra/governance` | **Setara fungsional**, parity test sebagian. |
 | Executor | `packages/executor` | `backend/dextra/modules/execution` | **Setara**, adapter masih mock di kedua sisi. |
@@ -25,7 +25,7 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 |---|---|
 | Implementasi existing | `apps/dashboard/index.html` + `assets/js/{core,sources,data,ui,shell,app}.js` + 10 view |
 | Path | `apps/dashboard/` |
-| Perilaku sekarang | 23 rute, 10 live / 6 partial / 4 demo / 3 none. Tanpa build step. |
+| Perilaku sekarang | 24 rute, 18 live / 3 partial / 0 demo / 3 none. Tanpa build step. |
 | Perilaku target | `apps/web` Next.js + Tailwind + shadcn, data dari `/api/v1` |
 | Strategi | Halaman per halaman, mulai dari Overview dan Workforce. Dashboard lama **tidak dihapus** sampai parity tercapai (PRD v2.0.0 §22). |
 | Dependensi | `packages/design-system` (token), `packages/ui` (komponen), `packages/api-client` |
@@ -41,12 +41,12 @@ diverifikasi (`scripts/verify-packages.mjs`).
 | Aspek | Isi |
 |---|---|
 | Implementasi existing | `apps/mcp-server/src/{server,auth,handlers}.ts`, JSON-RPC di `127.0.0.1:8765` |
-| Perilaku sekarang | 16 tool, otorisasi berbasis scope token, allowlist diturunkan dari kontrak |
+| Perilaku sekarang | 19 tool, otorisasi berbasis scope token, allowlist diturunkan dari kontrak |
 | Perilaku target | FastAPI `/api/v1`, REST + SSE, Pydantic, dependency injection |
 | Strategi | Endpoint REST ditulis per domain; gateway lama tetap melayani dashboard sampai `apps/web` lengkap |
 | Dependensi | `packages/contracts/src/authorization.ts` (sumber kebenaran capability) |
 | Risiko | **Duplikasi aturan otorisasi di dua bahasa.** Mitigasi: `tests/security/test_authorization_parity.py` membandingkan keduanya dan gagal bila menyimpang. |
-| Verifikasi | 38 tes pytest; paritas tool→capability identik dengan TS |
+| Verifikasi | pytest (`tests/integration/test_migrations.py` lulus di SQLite pada sesi ini); paritas tool→capability identik dengan TS |
 
 Endpoint v2 yang sudah ada: `/overview`, `/agents`, `/work-packages`, `/tasks`,
 `/executions`, `/approvals`, `/mandates`, `/policies`, `/audit-events`,
@@ -62,7 +62,7 @@ Endpoint v2 yang sudah ada: `/overview`, `/agents`, `/work-packages`, `/tasks`,
 | Strategi | Skema ditulis dari domain, bukan dari bentuk JSON. Migrasi data dibuat **setelah** parity test. |
 | Dependensi | `database/migrations`, `database/seeds` |
 | Risiko | Bentuk data lama tidak punya kolom yang diwajibkan skema baru (`params_hash`, `nonce`, `idempotency_key`). Sebagian data lama **tidak akan bisa** dimigrasikan tanpa mengarang nilai. |
-| Verifikasi | `alembic upgrade head` membuat 21 tabel; seed idempoten |
+| Verifikasi | `alembic upgrade head` membuat 33 tabel (9 revisi, head `g6a3b4c5d6e7` via `27ba08c94572`); seed idempoten; PostgreSQL belum diverifikasi ulang di sesi ini |
 
 Data lama yang tidak bisa dimigrasikan tanpa mengarang: mandat lama tidak punya
 `params_hash` maupun `nonce`, jadi tidak bisa dijadikan mandate v2 yang sah.

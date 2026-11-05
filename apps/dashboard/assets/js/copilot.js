@@ -516,6 +516,119 @@
     });
   };
 
+  computes.pBackendGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Data Management: halaman DEMO (tidak ada router P7 di backend)',
+      rows: [
+        { label: 'Router P7', value: 'tidak ada — main.py (backend/dextra/main.py:67) mendaftarkan 16 router tanpa P7/database/health/tenants' },
+        { label: 'PostgreSQL', value: 'peran: persistensi backend v2; klaim versi+tabel tidak terverifikasi dari kode' },
+        { label: 'Persistensi dashboard', value: 'tetap data/*.json lewat MCP server lokal; halaman ini fixture DEMO berlabel jelas' },
+        { label: 'Halaman ini', value: 'mode DEMO, diberi label jelas' }
+      ],
+      body: ['Layar Data Management menampilkan fixture contoh, bukan koneksi database. Angka dan daftar di sana bukan data produksi.'],
+      note: 'Jangan mengklaim PostgreSQL tersambung sebelum probe backend membuktikannya.'
+    });
+  };
+
+  computes.humanAuthGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Akun & Keamanan: halaman DEMO (backend v2 ada via router auth, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint P8', value: 'ada di backend v2: router auth (POST /api/v1/auth/login, /logout, /mfa/*, /password, /sessions/*)' },
+        { label: 'Login manusia', value: 'ada di /api/v1/auth/*; Google OAuth dicabut eksplisit (503)' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan enterprise/api.js probe-aware (live bila GET /api/v1/auth/session berhasil)' }
+      ],
+      body: ['Akun & Keamanan menampilkan data backend bila probe live, atau fixture contoh (identitas, sesi, MFA, aktivitas) bila backend tak tercapai. Mutasi demo hanya berlaku di tab dan tidak tercatat di mana pun.'],
+      note: 'Jangan mengklaim pengguna terautentikasi sebelum backend P8 membuktikannya.'
+    });
+  };
+
+  computes.accessMgmtGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Access Management: halaman DEMO (backend v2 ada via router identity, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint P9', value: 'ada di backend v2: router identity (GET /api/v1/users, /roles, /permissions)' },
+        { label: '/users dan /roles', value: 'ada di /api/v1/users & /api/v1/roles' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan enterprise/api.js probe-aware' }
+      ],
+      body: ['Access Management menampilkan anggota, peran, dan matriks izin dari backend bila live, atau dari fixture contoh bila demo. Keputusan otorisasi nyata tetap di server.'],
+      note: 'Jangan mengklaim peran atau keanggotaan berubah di server.'
+    });
+  };
+
+  computes.apiTokensGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'API Tokens: halaman DEMO (backend v2 ada via router tokens, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint P10', value: 'ada di backend v2: router tokens (GET/POST /api/v1/tokens, /{id}/revoke, /{id}/rotate)' },
+        { label: 'Koneksi caller', value: 'ada di /api/v1/tokens (caller context v2)' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan enterprise/api.js probe-aware' }
+      ],
+      body: ['API Tokens menampilkan inventaris backend bila live, atau fixture contoh bila demo. Penerbitan, pencabutan, dan rotasi pada mode demo hanya mengubah tab ini; rahasia contoh tidak bisa dipakai ke server mana pun.'],
+      note: 'Jangan mengklaim token terbit atau dicabut di server.'
+    });
+  };
+
+  computes.serviceIdentityGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Service Identity: halaman DEMO (backend v2 ada via router service_accounts, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint P11', value: 'ada di backend v2: router service_accounts (GET/POST /api/v1/service-accounts, /{id}, /{id}/revoke)' },
+        { label: 'Akun layanan', value: 'ada di /api/v1/service-accounts' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan service-identity/api.js probe-aware' }
+      ],
+      body: ['Service Identity menampilkan inventaris backend bila live, atau fixture contoh bila demo. Mutasi demo hanya berlaku pada tab ini.'],
+      note: 'Jangan mengklaim akun layanan dibuat, dinonaktifkan, dicabut, atau dirotasi di server.'
+    });
+  };
+
+  computes.securityCenterGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Security Center: halaman DEMO (backend v2 ada via router security_center, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint P12', value: 'ada di backend v2: router security_center (GET /api/v1/security/overview, /events, /login-history, /sessions, /tokens, /service-identities, /mfa-status)' },
+        { label: 'Audit/sesi/token', value: 'ada di /api/v1/security/*' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan security-center/api.js probe-aware' }
+      ],
+      body: ['Security Center menampilkan peristiwa, sesi, token, dan identitas layanan dari backend bila live, atau dari fixture contoh bila demo. Mutasi demo hanya berlaku pada tab ini.'],
+      note: 'Jangan mengklaim audit, sesi, token, atau identitas layanan diubah di server.'
+    });
+  };
+
+  computes.skillsGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Skill Registry: halaman DEMO (backend v2 ada via router skills, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint Skill Registry', value: 'ada di backend v2: router skills (GET/POST /api/v1/skills, /{slug}, /{slug}/versions, /{slug}/status)' },
+        { label: 'Katalog skill', value: 'ada di /api/v1/skills' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan skills/api.js probe-aware' }
+      ],
+      body: ['Skill Registry menampilkan katalog, review, schema, dan policy dari backend bila live, atau dari fixture contoh bila demo. Mutasi demo hanya berlaku pada tab ini.'],
+      note: 'Jangan mengklaim skill dipublikasikan, diverifikasi, atau dijalankan di server.'
+    });
+  };
+
+  computes.workflowGap = function () {
+    return res({
+      tone: 'warn',
+      title: 'Workflow: halaman DEMO (backend v2 ada via router workflows, mode demo bila probe gagal)',
+      rows: [
+        { label: 'Endpoint Workflow', value: 'ada di backend v2: router workflows (GET/POST /api/v1/workflows, /{id}/activate, /{id}/runs, /runs, /runs/{id}/gates/{step_id}/approve, /runs/{id}/resume)' },
+        { label: 'Run/checkpoint', value: 'ada di /api/v1/workflows' },
+        { label: 'Halaman ini', value: 'mode DEMO berlabel jelas — jembatan workflow/api.js probe-aware' }
+      ],
+      body: ['Workflow Orchestration menampilkan katalog, run, checkpoint, dan approval gate dari backend bila live, atau dari fixture contoh bila demo. Mutasi demo hanya berlaku pada tab ini.'],
+      note: 'Jangan mengklaim workflow berjalan, diulang, dilanjutkan, atau disetujui di server.'
+    });
+  };
+
   computes.mandates = function () {
     var rows = (D.store.mandates || []).filter(function (m) { return m.status === 'active'; });
     if (!rows.length) return res({ tone: 'warn', title: 'Tidak ada mandat aktif', body: ['Belum ada mandat aktif yang dimuat.'] });

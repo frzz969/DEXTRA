@@ -9,21 +9,27 @@ dihitung dari kode, bukan disalin dari dokumen lain.
 
 ## 0. Mana yang benar-benar berjalan (jawaban singkat)
 
-**Jalur produksi — yang melayani dashboard hari ini:**
-- `apps/dashboard` (SPA, 23 rute) → `apps/mcp-server` (JSON-RPC 127.0.0.1:8765, 16 tool) →
-  `packages/{contracts,store,policy-engine,plan,mandate-engine,executor,replay,ui,design-system,api-client}`.
+Status resmi (A6-A9): **v1 TypeScript = PRODUCTION**; **v2 Python (`apps/web` + `apps/api` + `apps/worker` + `backend/dextra` + `database`/`tests`) = fondasi NON-PROD**
+(16 router `main.py:67-85`, 33 tabel, 9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`, PostgreSQL **belum diverifikasi ulang di sesi ini**, tetapi dashboard v1
+tidak memanggilnya; belum ada cutover). Modul non-prod eksplisit: `apps/telegram-adapter` (TODO/post-MVP), `apps/worker` (pemeliharaan, bukan queue), mock executor
+(`packages/executor/src/mocks.ts`, `backend/dextra/modules/execution/service.py` `provider:'mock'`), 8 rute demo
+dashboard, dan Google OAuth (dicabut 503, A15).
+
+**PRODUCTION (A6-A9, ditetapkan) — yang melayani dashboard hari ini:**
+- `apps/dashboard` (SPA, 24 rute) → `apps/mcp-server` (JSON-RPC 127.0.0.1:8765, 19 tool) →
+  `packages/{contracts,store,policy-engine,plan,mandate-engine,executor,replay,ui,design-system,api-client,office-agent}`.
 - State disimpan di `data/*.json` (JSON file store). Tidak ada PostgreSQL, tidak ada Docker.
 
-**Referensi / fondasi v2 — ada, lulus tes, tapi TIDAK dipakai produk:**
-- `backend/dextra/**` (FastAPI) + `apps/api` + `database/` (Alembic, 21 tabel) + `tests/` (pytest, 38 lulus).
-- `apps/web` (Next.js 16, hanya 2 dari 23 rute).
-- `apps/worker` (pemeliharaan).
+**Referensi / fondasi v2 (NON-PROD, A6-A9) — ada, lulus tes, tapi TIDAK dipakai produk:**
+- `backend/dextra/**` (FastAPI, 16 router `main.py:67-85`) + `apps/api` + `database/` (Alembic, 33 tabel, 9 revisi head `g6a3b4c5d6e7` via `27ba08c94572`; PostgreSQL **belum diverifikasi ulang di sesi ini**) + `tests/` (pytest).
+- `apps/web` (Next.js 16, hanya 2 dari 24 rute).
+- `apps/worker` (pemeliharaan berkala — expire mandate + rekap eksekusi macet; **bukan queue**).
 
 Dashboard **tidak** memanggil Python. Python adalah target migrasi, bukan backend produksi saat ini.
 Dua jalur berbagi *kontrak* (`packages/contracts`), bukan implementasi — lihat §5.
 
-Yang **belum terbukti**: PostgreSQL (belum pernah dijalankan di mesin ini), Docker (tidak terpasang),
-migrasi data `data/*.json` → PostgreSQL, 21/23 rute `apps/web` yang belum ada, LangGraph (belum dipakai).
+Yang **belum terbukti**: Docker (tidak terpasang),
+migrasi data `data/*.json` → PostgreSQL, 21/24 rute `apps/web` yang belum ada, LangGraph (belum dipakai).
 
 ---
 
@@ -32,22 +38,22 @@ migrasi data `data/*.json` → PostgreSQL, 21/23 rute `apps/web` yang belum ada,
 | Area | Status | Catatan |
 |---|---|---|
 | TypeScript monorepo (npm workspaces) | ADA | `package.json` → `["packages/*", "apps/mcp-server", "apps/telegram-adapter"]`. `apps/web` sengaja di luar workspace: symlink gagal di Windows. |
-| Domain packages (10) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay, ui, design-system, api-client |
-| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 16 tool |
-| Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 23 rute) |
+| Domain packages (15) | ADA | contracts, store, policy-engine, plan, mandate-engine, executor, replay, ui, design-system, api-client, workflow, skill-registry, alerts, audit-export, **office-agent** |
+| MCP gateway | ADA | `apps/mcp-server`, JSON-RPC di `127.0.0.1:8765`, 19 tool |
+| Dashboard | ADA | `apps/dashboard` (SPA tanpa build step, 24 rute) |
 | WorkBuddy config | ADA | `workbuddy/` — manifest, 4 agen, 5 knowledge |
 | Channel adapter | SEBAGIAN | `apps/telegram-adapter` — post-MVP, satu file `index.ts` |
 | Next.js + Tailwind + shadcn | **SEBAGIAN** | `apps/web` Next.js 16 berjalan (2 halaman: `/`, `/agents`). Tailwind/shadcn belum dipakai; styling memakai token `packages/design-system`. |
-| FastAPI + Pydantic | **ADA** | `backend/dextra` + `apps/api`, 9 router di `/api/v1`, Pydantic untuk validasi |
-| PostgreSQL + SQLAlchemy + Alembic | **SEBAGIAN** | Skema + migrasi Alembic ada (21 tabel); PostgreSQL belum dijalankan di mesin ini, tes memakai SQLite |
+| FastAPI + Pydantic | **ADA** | `backend/dextra` + `apps/api`, 16 router di `/api/v1`, Pydantic untuk validasi |
+| PostgreSQL + SQLAlchemy + Alembic | **SEBAGIAN** | Skema + migrasi Alembic ada (33 tabel, 9 revisi head `g6a3b4c5d6e7` via `27ba08c94572`); PostgreSQL **belum diverifikasi ulang di sesi ini**; suite SQLite dijalankan di sesi ini |
 | LangGraph | **BELUM** | Orkestrasi dipegang WorkBuddy, bukan LangGraph |
 | Worker | **ADA** | `apps/worker` — expire mandate + rekap eksekusi macet |
-| Tests Python | **ADA** | `tests/` pytest, 38 tes lulus (unit, integration, security) |
+| Tests Python | **ADA** | `tests/` pytest (unit, integration, security); PostgreSQL-only dilewati bila `DEXTRA_TEST_DATABASE_URL` tidak diset |
 
 **Kesimpulan:** ada dua jalur yang berjalan berdampingan. Jalur v1 (TypeScript: `apps/dashboard`,
-`apps/mcp-server`, 10 package) adalah yang dipakai sekarang; jalur v2 (`apps/web`, `apps/api`,
+`apps/mcp-server`, 15 package termasuk `office-agent`) adalah yang dipakai sekarang (**PRODUCTION**); jalur v2 (`apps/web`, `apps/api`,
 `apps/worker`, `backend/dextra`, `database/`, `tests/`) sudah berdiri dan lulus tesnya, tetapi
-belum menjadi jalur produksi — belum ada cutover, dan PostgreSQL belum pernah dijalankan di sini.
+merupakan **fondasi NON-PROD** — belum ada cutover, dan PostgreSQL **belum diverifikasi ulang di sesi ini**.
 Keduanya berbagi kontrak yang sama, bukan dua salinan logika yang berbeda (lihat §5).
 
 
@@ -58,16 +64,16 @@ Keduanya berbagi kontrak yang sama, bukan dua salinan logika yang berbeda (lihat
 ```text
 dextra/
 ├── apps/
-│   ├── dashboard/          SPA v1: 23 rute, tanpa dependency (masih jalur produksi)
+│   ├── dashboard/          SPA v1: 24 rute, tanpa dependency (masih jalur produksi)
 │   ├── web/                Next.js 16 (v2): Overview + Workforce
 │   ├── api/                entrypoint ASGI -> backend/dextra/main.py
 │   ├── worker/             worker pemeliharaan
 │   ├── mcp-server/         gateway JSON-RPC + auth + origin policy (v1)
 │   └── telegram-adapter/   channel adapter (post-MVP)
 ├── backend/dextra/         FastAPI: core, database, models, repositories,
-│                           governance, mcp, modules (9 domain), main.py
-├── database/               migrations (Alembic) + seeds
-├── tests/                  pytest: unit, integration, security (38 tes)
+│                           governance, mcp, modules (16 domain), main.py
+├── database/               migrations (Alembic, 9 revisi) + seeds
+├── tests/                  pytest: unit, integration, security
 ├── infra/docker/           compose + Dockerfile.api + Dockerfile.web + init SQL audit
 ├── packages/
 │   ├── contracts/          skema Plan, Mandate, Approval, Audit, Execution, Risk
@@ -82,7 +88,8 @@ dextra/
 │   ├── workflow/           registry definisi workflow + catatan run
 │   ├── ui/                 komponen reusable (kanonik; disalin ke dashboard)
 │   ├── design-system/      token warna/ruang/radius (kanonik; disalin ke dashboard)
-│   └── api-client/         bridge JSON-RPC (kanonik; disalin ke dashboard)
+│   ├── api-client/         bridge JSON-RPC (kanonik; disalin ke dashboard)
+│   └── office-agent/       Office Agent (v2 NON-PROD): rencana rute kantor
 ├── workbuddy/              agents/, knowledge/, mcp.json, connector-meta.json
 ├── data/                   state runtime: plans, mandates, approvals, audit.jsonl, …
 ├── docs/                   PRD + audit + verifikasi
@@ -101,18 +108,18 @@ dextra/
 
 | Target | Aktual | Verdict |
 |---|---|---|
-| `apps/web` (Next.js) | `apps/web` (Next.js 16, 2 halaman) **dan** `apps/dashboard` (SPA v1) | **ADA, SEBAGIAN** — jalur v2 berdiri tetapi baru 2 dari 23 rute; dashboard lama tetap jalur produksi |
-| `apps/api` (FastAPI) | `apps/api` → `backend/dextra/main.py` | **ADA** — `/api/v1`, 9 router, Pydantic |
+| `apps/web` (Next.js) | `apps/web` (Next.js 16, 2 halaman) **dan** `apps/dashboard` (SPA v1) | **ADA, SEBAGIAN** — jalur v2 berdiri tetapi baru 2 dari 24 rute; dashboard lama tetap jalur produksi |
+| `apps/api` (FastAPI) | `apps/api` → `backend/dextra/main.py` | **ADA** — `/api/v1`, 16 router, Pydantic (NON-PROD) |
 | `apps/worker` | `apps/worker` | **ADA** — expire mandate + rekap eksekusi macet |
 | `packages/ui` | `packages/ui` (kanonik) → disalin ke `apps/dashboard/assets/js/ui.js` | **SESUAI** — satu sumber, diverifikasi `scripts/verify-packages.mjs` |
 | `packages/design-system` | `packages/design-system` (token CSS + `tokens.json`) → disalin ke dashboard | **SESUAI** — 44 token, satu kontrak, light + dark |
 | `packages/api-client` | `packages/api-client` (kanonik) → disalin ke `apps/dashboard/assets/js/core.js` | **SESUAI** — satu bridge JSON-RPC |
 | `packages/contracts` | `packages/contracts` | **SESUAI** |
-| `backend/dextra/modules/*` | `backend/dextra/modules/` — 9 domain | **SESUAI** — approvals, audit, execution, identity, mandates, overview, policies, tasks, workforce |
+| `backend/dextra/modules/*` | `backend/dextra/modules/` — 16 domain | **SESUAI** — approvals, audit, auth, execution, identity, mandates, office_agent, overview, policies, security_center, service_accounts, skills, tasks, tokens, workforce, workflows |
 | `backend/dextra/governance` | `backend/dextra/governance/` + `policy-engine` + `mandate-engine` | **SETARA** — TS dan Python berbagi kontrak, bukan logika yang disalin |
 | `backend/dextra/mcp` | `backend/dextra/mcp/` + `apps/mcp-server` | **SETARA** — registry Python dibandingkan ke `authorization.ts` oleh `tests/security/test_authorization_parity.py` |
-| `database/migrations` | `database/migrations/` (Alembic, 21 tabel) + `database/seeds/seed.py` | **ADA** — belum pernah dijalankan di PostgreSQL sungguhan |
-| `tests/` (pytest) | `tests/` pytest (38 lulus) **dan** `packages/*/tests`, `apps/mcp-server/tests` (node:test) | **ADA** — dua runner, keduanya dijalankan `scripts/test-all.sh` |
+| `database/migrations` | `database/migrations/` (Alembic, 33 tabel, 9 revisi head `g6a3b4c5d6e7` via `27ba08c94572`) + `database/seeds/seed.py` | **ADA** — PostgreSQL **belum diverifikasi ulang di sesi ini** |
+| `tests/` (pytest) | `tests/` pytest **dan** `packages/*/tests`, `apps/mcp-server/tests` (node:test) | **ADA** — dua runner, keduanya dijalankan `scripts/test-all.sh` |
 | `infra/docker` | `infra/docker/` — compose, Dockerfile.api, Dockerfile.web, init SQL | **ADA** — belum pernah di-build; Docker tidak tersedia di mesin ini |
 | `pnpm-workspace.yaml` + Turborepo + uv (§11.3) | `pnpm-workspace.yaml` (deklarasi) + npm + pip | **BERBEDA** — package manager yang benar-benar dipakai tetap npm; belum ada Turborepo; Python memakai pip, bukan uv |
 | `pyproject.toml` | `pyproject.toml` | **ADA** — metadata pytest/ruff, bukan build backend |
@@ -131,26 +138,39 @@ yang dipakai, dan modul yang menopangnya. Dokumen ini hanya ringkasannya.
 
 | Status | Arti | Jumlah |
 |---|---|---|
-| `live` | Bisa menampilkan data server nyata saat MCP hidup | 10 |
-| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 6 |
-| `demo` | Belum ada permukaan backend; data contoh | 4 |
+| `live` | Bisa menampilkan data server nyata saat MCP hidup | 18 |
+| `partial` | Sebagian nyata, sisanya demo (tidak ada endpoint list/agregat) | 3 |
+| `demo` | Backend v2 ada, dashboard v1 tidak memanggilnya; fixture berlabel jelas | 8 |
 | `none` | Bukan rute data (login, forbidden, not-found) | 3 |
 
-Tool MCP yang dipakai dashboard (15): `create_plan`, `execute_action`, `find_precedent`,
+Angka di atas dihitung ulang pada 2026-11-04:
+
+```
+grep -c "route: '" apps/dashboard/assets/js/sources.js        # 24
+grep -o "state: '[a-z]*'" apps/dashboard/assets/js/sources.js | sort | uniq -c
+```
+
+Tool MCP yang dipakai dashboard (16): `create_plan`, `execute_action`, `find_precedent`,
 `get_audit_log`, `get_caller_context`, `get_mandate`, `get_org_rules`, `get_plan`,
 `get_status`, `list_executions`, `list_mandates`, `list_plans`, `revoke_mandate`,
-`submit_approval`, `validate_plan`.
+`submit_approval`, `validate_plan`, dan `list_specialists`.
 
-Dari 16 tool yang ada, **15 dipakai** oleh rute dashboard. Satu sisanya hanya dipanggil server:
-`issue_mandate` diterbitkan setelah approval, bukan oleh tombol. Ini tercatat sebagai
-kesenjangan, bukan disembunyikan.
+Dari 19 tool yang ada, **16 dipakai** oleh rute dashboard. Tiga sisanya tidak punya
+tombol, dan alasannya berbeda-beda:
 
-`get_caller_context` dipakai tiga rute yang sebelumnya tidak punya sumber data:
-`/permissions`, `/integrations`, dan `/login`. Efeknya `/permissions` pindah dari `live` ke
-`demo` — karena yang bisa ditampilkan hanyalah kapabilitas scope token, sedangkan matriks
-peran per pengguna tetap model demo.
+- `issue_mandate` diterbitkan setelah approval, bukan oleh tombol.
+- `export_audit` dipanggil dari CLI/console; halaman `/security` belum punya tombol ekspor.
+- `list_alerts` sudah ada di server tetapi belum ada rute yang menampilkannya.
 
-Eksekusi kini dipicu dari drawer mandat (`execute_action`), dan AI Assistant memakai
+Ini tercatat sebagai kesenjangan, bukan disembunyikan.
+
+`get_caller_context` menopang tiga rute: `/permissions`, `/integrations`, dan `/login`.
+`/permissions` berstatus `live` karena server memang menyatakan kapabilitas dan tool untuk
+token yang sedang dipakai — bukan karena ada matriks per peran. Matriks per peran sudah
+dihapus: model identitas tidak punya peran per pengguna, dan matriksnya berasal dari data
+contoh.
+
+Eksekusi dipicu dari drawer mandat (`execute_action`), dan AI Assistant memakai
 `find_precedent` untuk mencari penerima — termasuk berhenti dan bertanya saat hasilnya seri,
 alih-alih memilih salah satu. Rantai approve → mandat → eksekusi → audit bisa dijalankan utuh
 dari UI.
@@ -183,7 +203,7 @@ tanpa analisis"* serta *"Jangan melakukan migrasi besar tanpa rollback dan parit
 Aturan itu dipakai untuk memutuskan apa yang dibangun dan apa yang **tidak**:
 
 - Jalur v1 (`apps/dashboard`, `apps/mcp-server`, `packages/*`) tetap utuh. Tidak ada satu baris
-  pun di sana yang dihapus. Dashboard masih memakai 23 rute yang sama.
+  pun di sana yang dihapus. Dashboard masih memakai 24 rute yang sama.
 - Jalur v2 (`apps/web`, `apps/api`, `backend/dextra`, `database/`, `tests/`) dibangun di
   sampingnya, **bukan** dengan menyalin logika v1 ke Python.
 - Yang dipakai bersama adalah **kontrak**, bukan implementasi: `packages/contracts` memuat
@@ -195,10 +215,10 @@ Yang masih **belum** benar, dan tidak disembunyikan:
 
 | Belum | Akibatnya |
 |---|---|
-| PostgreSQL belum pernah dijalankan di mesin ini | Skema + migrasi Alembic diuji di SQLite. Perbedaan perilaku PostgreSQL (tipe, constraint, timezone) belum terbukti. |
+| PostgreSQL **belum diverifikasi ulang di sesi ini**; suite SQLite dijalankan di sini | Skema + migrasi Alembic ada (33 tabel, 9 revisi); klaim verifikasi PG lama tidak dipertahankan tanpa bukti sesi ini; PG di CI dilewati bila `DEXTRA_TEST_DATABASE_URL` tidak diset. |
 | Docker belum tersedia | `infra/docker/*` belum pernah di-build. Berkasnya ada, tapi belum dieksekusi. |
 | Data `data/*.json` belum dimigrasi | Jalur v2 mulai dari `database/seeds/seed.py`. Tidak ada jalur impor dari state v1. |
-| `apps/web` baru 2 dari 23 rute | Dashboard lama tetap satu-satunya UI lengkap. |
+| `apps/web` baru 2 dari 24 rute | Dashboard lama tetap satu-satunya UI lengkap. |
 | LangGraph belum dipakai | Orkestrasi masih dipegang WorkBuddy. |
 
 Urutan cutover yang benar, bila migrasi dilanjutkan:
@@ -211,7 +231,7 @@ Urutan cutover yang benar, bila migrasi dilanjutkan:
 5. Baru jalur v1 boleh dipensiunkan, dan hanya setelah parity lulus.
 
 Sampai langkah 2 dan 3 selesai, jalur v1 tetap yang dipakai. Menukar sekarang berarti memindahkan
-pengguna ke jalur yang belum punya data dan belum pernah menyentuh database sesungguhnya.
+pengguna ke jalur yang belum punya data dan yang belum terverifikasi di PostgreSQL pada sesi ini.
 
 ---
 
@@ -222,15 +242,16 @@ pengguna ke jalur yang belum punya data dan belum pernah menyentuh database sesu
 ls apps packages
 node -e "console.log(require('./package.json').workspaces.join(', '))"
 
-# 16 tool MCP yang diklaim
+# 19 tool MCP yang diklaim
 grep -o "case '[a-z_]*'" apps/mcp-server/src/handlers.ts | sort -u | wc -l
 
-# rute dan sebaran statusnya (23 rute)
+# rute dan sebaran statusnya (24 rute)
 grep -c "route: '" apps/dashboard/assets/js/sources.js
 grep -o "state: '[a-z]*'" apps/dashboard/assets/js/sources.js | sort | uniq -c
 
-# 38 tes Python lulus
-python -m pytest tests -q
+# tes migrasi (SQLite terverifikasi sesi ini; PostgreSQL-only dilewati bila DEX…
+python -m pytest tests/integration/test_migrations.py -q --tb=short
+npm run lint   # typecheck + node --check seluruh JS
 
 # salinan package tidak menyimpang dari sumber kanonik (gagal = exit 1)
 node scripts/verify-packages.mjs

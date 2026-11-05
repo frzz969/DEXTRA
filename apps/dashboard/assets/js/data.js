@@ -368,7 +368,7 @@
     { key: 'manage_integrations', label: 'Kelola integrasi' }
   ];
   var permMatrix = {
-    operations_manager: { view_own: 'yes', view_all: 'yes', create_request: 'yes', approve: 'yes', issue_mandate: 'yes', revoke_mandate: 'yes', execute: 'yes', view_audit: 'yes', edit_policy: 'no', manage_users: 'no', manage_integrations: 'no' },
+    operations_manager: { view_own: 'yes', view_all: 'yes', create_request: 'yes', approve: 'yes', issue_mandate: 'yes', revoke_mandate: 'yes', execute: 'yes', view_audit: 'yes', edit_policy: 'no', manage_users: 'yes', manage_integrations: 'yes' },
     governance_lead: { view_own: 'yes', view_all: 'yes', create_request: 'yes', approve: 'yes', issue_mandate: 'yes', revoke_mandate: 'yes', execute: 'no', view_audit: 'yes', edit_policy: 'yes', manage_users: 'no', manage_integrations: 'no' },
     legal_reviewer: { view_own: 'yes', view_all: 'yes', create_request: 'yes', approve: 'lim', issue_mandate: 'no', revoke_mandate: 'no', execute: 'no', view_audit: 'yes', edit_policy: 'no', manage_users: 'no', manage_integrations: 'no' },
     finance_approver: { view_own: 'yes', view_all: 'yes', create_request: 'yes', approve: 'lim', issue_mandate: 'no', revoke_mandate: 'no', execute: 'no', view_audit: 'yes', edit_policy: 'no', manage_users: 'no', manage_integrations: 'no' },

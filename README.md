@@ -15,15 +15,15 @@ An office agent that acts only on human-approved mandates.
 ```
 dextra/
 ├── apps/
-│   ├── dashboard/          # SPA operasional v1 (produksi): 23 rute, tanpa build step
+│   ├── dashboard/          # SPA operasional v1 (produksi): 24 rute, tanpa build step
 │   ├── web/                # Next.js 16 (v2): Overview + Workforce, data dari /api/v1
 │   ├── api/                # Entrypoint ASGI -> backend/dextra/main.py
 │   ├── worker/             # Pemeliharaan: expire mandate, rekap eksekusi macet
 │   ├── mcp-server/         # Gateway JSON-RPC v1 di 127.0.0.1:8765
 │   └── telegram-adapter/   # Channel adapter (post-MVP)
 ├── backend/
-│   └── dextra/             # FastAPI: core, database, models, repositories,
-│                           # governance, mcp, modules (9 domain), main.py
+│   └── dextra/             # FastAPI (NON-PROD): core, database, models, repositories,
+│                           # governance, mcp, modules (16 domain), main.py
 ├── packages/
 │   ├── contracts/          # Skema Plan, Mandate, ActionResult + kontrak otorisasi
 │   ├── store/              # Persistensi JSON, repository, audit log (v1)
@@ -33,20 +33,80 @@ dextra/
 │   ├── executor/           # Eksekusi terkontrol + idempotensi (v1)
 │   ├── replay/             # Rekonstruksi jejak eksekusi
 │   ├── alerts/             # Deteksi, retry, dedup notifikasi (transport palsu)
+│   ├── audit-export/       # Ekspor audit JSONL + verifier independen
 │   ├── skill-registry/     # Validasi manifest skill (metadata, belum tersambung)
 │   ├── workflow/           # Registry definisi workflow + catatan run
 │   ├── ui/                 # Komponen UI — sumber kanonik
 │   ├── design-system/      # tokens.json + dashboard.css — sumber kanonik
 │   └── api-client/         # Klien JSON-RPC — sumber kanonik
+│   ├── office-agent/       # Office Agent (v2 NON-PROD): rencana rute kantor
 ├── database/
-│   ├── migrations/         # Alembic (1 revisi awal, 21 tabel)
+│   ├── migrations/         # Alembic (9 revisi, head g6a3b4c5d6e7 via 27ba08c94572, 33 tabel)
 │   └── seeds/              # Seed idempoten: 4 spesialis, role, policy
-├── tests/                  # pytest: unit, integration, security (38 tes)
+├── tests/                  # pytest: unit, integration, security
 ├── infra/docker/           # compose + Dockerfile api/web + init SQL audit
 ├── scripts/                # sync/verify paket, dev-api, dev-web, migrate, test-all
 ├── workbuddy/              # Manifest agen, skills, knowledge, mcp.json
 └── docs/                   # PRD, audit, model otorisasi, skema DB, peta migrasi
 ```
+
+## Stack produksi (A6-A9 — ditetapkan tanpa refactor besar)
+
+| Jalur | Status | Bukti |
+| --- | --- | --- |
+| **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`, JSON-RPC 127.0.0.1:8765, `data/*.json`) | **PRODUCTION** — yang melayani dashboard hari ini | `npm run typecheck`, `npm run lint`, `node scripts/check-syntax.mjs` |
+| **v2 Python** (`backend/dextra`, FastAPI `/api/v1`, 16 router di `backend/dextra/main.py:67-85`, 33 tabel, 9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) | **FONDASI NON-PROD** — ada, dashboard v1 TIDAK memanggilnya; belum ada cutover. PostgreSQL **belum diverifikasi ulang di sesi ini** (klaim PG 16.2 / 206 tes lama tidak disertakan tanpa bukti sesi ini; suite SQLite dijalankan di sini) | `py -m pytest tests/integration/test_migrations.py -q`, `grep __tablename__ backend/dextra/models`, `docs/DATABASE_SCHEMA.md` |
+
+Klaim basi yang diperbaiki (A6-A9): FastAPI **16 router** (`main.py:67-85`, bukan 9);
+skema **33 tabel** (`grep __tablename__ backend/dextra/models`, bukan 21); Alembic
+**9 revisi, head `g6a3b4c5d6e7`** (rantai: `d9cd32b89961 → b1f7c2a9d4e6 → c4d8e1f6a2b3 → d2a6b8c41f07 → e7b3c9d51a84 → f5a2d7e93c18 → a8c1e5f70b92 → 27ba08c94572 → g6a3b4c5d6e7`,
+bukan 1 revisi / head lama `27ba08c94572`); PostgreSQL: **belum diverifikasi ulang di
+sesi ini** — tidak ada klaim "PG 16.2 terverifikasi" atau "206 tes lulus di PostgreSQL"
+tanpa bukti sesi ini. `packages/office-agent` kini masuk daftar package (baris di atas).
+
+### Modul non-prod eksplisit (jangan dianggap produksi)
+
+- `apps/telegram-adapter/` — TODO/post-MVP: channel adapter belum lengkap (1 file `index.ts`).
+- `apps/worker/` — bukan queue (bukan antrean job): hanya pemeliharaan berkala (expire mandate, rekap eksekusi macet).
+- Mock executor: `packages/executor/src/mocks.ts` + `backend/dextra/modules/execution/service.py`
+  adapter `provider:'mock'` — tidak memanggil sistem eksternal; UI wajib label mock.
+- `apps/dashboard` rute demo (8): `/account`, `/access`, `/tokens`,
+  `/data-management`, `/service-identities`, `/security-center`, `/skills`,
+  `/workflow` — `sources.js state:'demo'`, fixture berlabel jelas; backend v2
+  untuk semuanya SUDAH ada (`/api/v1/auth/*`, `/users`, `/roles`, `/tokens`,
+  `/service-accounts`, `/security/*`, `/skills`, `/workflows`) tetapi dashboard
+  v1 tidak memanggilnya.
+- Google OAuth (`/api/v1/auth/google*`) — dicabut eksplisit, 503 jujur (A15),
+  sampai sesi bisa diterbitkan dengan validasi state/exp/email_verified.
+
+## Stack produksi (A6-A9 — ditetapkan tanpa refactor besar)
+
+| Jalur | Status | Bukti |
+| --- | --- | --- |
+| **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`, JSON-RPC 127.0.0.1:8765, `data/*.json`) | **PRODUCTION** — yang melayani dashboard hari ini | `npm run typecheck`, `npm run lint`, `node scripts/check-syntax.mjs` |
+| **v2 Python** (`backend/dextra`, FastAPI `/api/v1`, 16 router di `backend/dextra/main.py:67-85`, 33 tabel, 9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) | **FONDASI NON-PROD** — ada, dashboard v1 TIDAK memanggilnya; belum ada cutover. PostgreSQL **belum diverifikasi ulang di sesi ini** (klaim PG 16.2 / 206 tes lama tidak disertakan tanpa bukti sesi ini; suite SQLite dijalankan di sini) | `py -m pytest tests/integration/test_migrations.py -q`, `grep __tablename__ backend/dextra/models`, `docs/DATABASE_SCHEMA.md` |
+
+Klaim basi yang diperbaiki (A6-A9): FastAPI **16 router** (`main.py:67-85`, bukan 9);
+skema **33 tabel** (`grep __tablename__ backend/dextra/models`, bukan 21); Alembic
+**9 revisi, head `g6a3b4c5d6e7`** (rantai: `d9cd32b89961 → b1f7c2a9d4e6 → c4d8e1f6a2b3 → d2a6b8c41f07 → e7b3c9d51a84 → f5a2d7e93c18 → a8c1e5f70b92 → 27ba08c94572 → g6a3b4c5d6e7`,
+bukan 1 revisi / head lama `27ba08c94572`); PostgreSQL: **belum diverifikasi ulang di
+sesi ini** — tidak ada klaim "PG 16.2 terverifikasi" atau "206 tes lulus di PostgreSQL"
+tanpa bukti sesi ini. `packages/office-agent` kini masuk daftar package (baris di atas).
+
+### Modul non-prod eksplisit (jangan dianggap produksi)
+
+- `apps/telegram-adapter/` — TODO/post-MVP: channel adapter belum lengkap (1 file `index.ts`).
+- `apps/worker/` — bukan queue (bukan antrean job): hanya pemeliharaan berkala (expire mandate, rekap eksekusi macet).
+- Mock executor: `packages/executor/src/mocks.ts` + `backend/dextra/modules/execution/service.py`
+  adapter `provider:'mock'` — tidak memanggil sistem eksternal; UI wajib label mock.
+- `apps/dashboard` rute demo (8): `/account`, `/access`, `/tokens`,
+  `/data-management`, `/service-identities`, `/security-center`, `/skills`,
+  `/workflow` — `sources.js state:'demo'`, fixture berlabel jelas; backend v2
+  untuk semuanya SUDAH ada (`/api/v1/auth/*`, `/users`, `/roles`, `/tokens`,
+  `/service-accounts`, `/security/*`, `/skills`, `/workflows`) tetapi dashboard
+  v1 tidak memanggilnya.
+- Google OAuth (`/api/v1/auth/google*`) — dicabut eksplisit, 503 jujur (A15),
+  sampai sesi bisa diterbitkan dengan validasi state/exp/email_verified.
 
 ## Menjalankan
 
@@ -147,21 +207,29 @@ Detail lengkap: `docs/IDENTITY_AUTHORIZATION_MODEL.md`.
 
 | Status | Jumlah | Arti |
 | --- | --- | --- |
-| `live` | 10 | Bisa menampilkan data server nyata |
-| `partial` | 6 | Sebagian data nyata, sisanya demo (tidak ada endpoint daftar/agregat) |
-| `demo` | 4 | Belum ada permukaan backend; data demo saja |
+| `live` | 18 | Bisa menampilkan data server nyata |
+| `partial` | 3 | Sebagian data nyata, sisanya demo (tidak ada endpoint daftar/agregat) |
+| `demo` | 8 | Halaman demo berlabel jelas (backend v2 ada, dashboard tidak memanggilnya) |
 | `none` | 3 | Bukan rute data (login, error) |
 
-Total 23 rute data. Halaman `/integrations` menampilkan tabel ini supaya klaim "terhubung"
-bisa diperiksa sendiri.
+Total 32 rute. Halaman `/integrations` menampilkan tabel ini supaya klaim "terhubung"
+bisa diperiksa sendiri. Angka ini dihitung dari `sources.js`, bukan dari ingatan:
+`grep -c "route: '" apps/dashboard/assets/js/sources.js`.
 
 ## Tes
 
 ```bash
-npm test          # seluruh workspace, terisolasi per paket — 171 tes
-npm run test:inproc  # semua tes dalam satu proses — 171 tes
+npm test          # seluruh workspace, terisolasi per paket — 349 tes
+npm run test:inproc  # semua tes dalam satu proses — 349 tes
 npm run test:http    # verifikasi batas HTTP (origin policy, token, tools/list) — 16 tes
+npm run lint          # typecheck semua workspace + node --check seluruh JS (66 berkas)
+npm run test:e2e      # e2e dashboard via Chrome headless + CDP (tanpa dependensi)
 ```
+
+E2E (`npm run test:e2e`, `apps/dashboard/tests/e2e/run.mjs`): butuh Chrome/Chromium
+terpasang; tanpa Chrome ia mencetak `LEWATI` dan exit 0. Set `DEXTRA_CHROME` untuk
+path eksplisit. Ia menjalankan MCP server sendiri di direktori data sementara,
+port 8765/8899/9333 — hentikan proses lain di port itu dulu. Lihat header run.mjs.
 
 ## Batas Kepercayaan
 
@@ -200,9 +268,10 @@ Ini didokumentasikan, bukan disembunyikan:
   karena capability-nya belum punya backend.
 - **Workforce registry & specialist** masih demo: belum ada sumber data server, dan tidak
   dibangun dari prosa Markdown.
-- **Migrasi stack** baru tahap fondasi: Next.js 2 halaman, FastAPI 9 router,
-  skema PostgreSQL + Alembic ada, tetapi PostgreSQL belum pernah dijalankan di
-  mesin ini dan data lama belum dipindahkan — lihat `docs/MIGRATION_MAP.md`.
+- **Status produksi** (A6-A9): v1 TS = production; v2 Python (16 router, 33 tabel,
+  9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) = fondasi non-prod, belum cutover.
+  PostgreSQL **belum diverifikasi ulang di sesi ini**. Data lama
+  `data/*.json` belum dimigrasi — lihat `docs/MIGRATION_MAP.md`.
 
 ## Dokumen rujukan
 
@@ -211,9 +280,10 @@ Ini didokumentasikan, bukan disembunyikan:
 | `docs/PRD.md` | PRD v2.0.0 — spesifikasi produk lengkap (dokumen target) |
 | `docs/IDENTITY_AUTHORIZATION_MODEL.md` | Model identitas & otorisasi yang berlaku hari ini |
 | `docs/AUTHORIZATION_AUDIT.md` | Temuan audit otorisasi, akar masalah, status perbaikan |
+| `design/AUDIT-EXPORT.md` | Format ekspor audit, apa yang diperiksa verifier, dan batasnya |
 | `docs/AUTHORIZATION_TEST_MATRIX.md` | Kasus uji otorisasi: mana yang teruji, mana yang belum |
 | `docs/CROSS_MODULE_CONSISTENCY.md` | Konsistensi Board ↔ Work Package ↔ Execution History |
 | `docs/MONOREPO-MAP.md` | Struktur aktual vs target arsitektur |
 | `docs/REPOSITORY_AUDIT.md` | Audit kondisi aktual, penyimpangan, dan bug yang ditemukan |
 | `docs/MIGRATION_MAP.md` | Peta v1 → v2 per domain: strategi, risiko, verifikasi |
-| `docs/DATABASE_SCHEMA.md` | Skema 21 tabel, index, batas transaksi, yang belum ada |
+| `docs/DATABASE_SCHEMA.md` | Skema 33 tabel (9 revisi, head `g6a3b4c5d6e7`; PG belum diverifikasi ulang sesi ini), index, batas transaksi, yang belum ada |

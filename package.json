@@ -24,11 +24,14 @@
     "sync:packages": "node scripts/sync-packages.mjs",
     "verify:packages": "node scripts/verify-packages.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
+    "lint": "npm run typecheck && node scripts/check-syntax.mjs && npm run lint:dashboard",
+    "lint:dashboard": "node scripts/lint-dashboard.mjs",
     "demo:seed": "node --experimental-strip-types packages/store/src/seed.ts",
     "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset",
     "demo:flow": "node scripts/demo-flow.mjs",
     "dev:mcp": "node --experimental-strip-types apps/mcp-server/src/index.ts",
     "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
+    "audit:verify": "node --experimental-strip-types packages/audit-export/src/cli.ts",
     "dev:dashboard": "node scripts/serve-dashboard.mjs"
   }
 }

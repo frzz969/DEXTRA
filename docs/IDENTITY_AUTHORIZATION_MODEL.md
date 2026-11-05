@@ -1,8 +1,21 @@
 # DEXTRA — Identity & Authorization Model
 
-Status: **implemented in part, with documented gaps.** This document describes what the
+Status: **implemented (P7-P12), with documented gaps.** This document describes what the
 system actually does today, not what it is intended to do eventually. Where a capability
 does not exist, it says so instead of describing an aspiration.
+
+Per 2026-11-04 the contract in §9 is no longer a proposal: sessions, role-based
+capability resolution, tenant isolation, API tokens, service identities, MFA, and the
+Security Center all exist and are covered by tests. §10 has been rewritten to match.
+
+The two gaps that §10 used to list are now closed, and the closing is tested rather than
+described:
+
+- The **legacy gateway token is tenant-bound** via `DEXTRA_LEGACY_TENANT`. Without that
+  setting it sees **no** tenant-scoped data at all — fail-closed, not fail-open.
+- The **audit chain carries `tenant_id`** through a versioned payload: rows written
+  before the change keep `chain_version = 1` and their original hash, new rows use
+  `chain_version = 2` with `tenant_id` inside the hash.
 
 Scope of this document: how a caller is identified, what a token authorises, how the
 server decides, how the dashboard reflects that decision, and what is missing.
@@ -148,17 +161,19 @@ handler.
 
 ### Unbacked capabilities
 
-Some capabilities exist in the vocabulary with no scope granting them:
+`unbacked_capabilities` is **empty**. Every capability in the vocabulary now has an
+endpoint that enforces it and filters by tenant:
 
-| Capability | Why unbacked |
+| Capability | Enforced by |
 | --- | --- |
-| `manage_users` | No identity system, no user tool. |
-| `manage_integrations` | No integration-management tool. |
-| `edit_policy` | Policies are read-only; `get_org_rules` has no writer. |
+| `manage_users` | `/users`, `/roles`, cross-user session revocation in `/security` |
+| `manage_integrations` | `/service-accounts`, `/tokens`, `PATCH`/`DELETE /agents` |
+| `edit_policy` | `PATCH`/`DELETE /policies` |
 
-`get_caller_context` reports these in `unbacked_capabilities`. The dashboard renders them as
-**"not available"**, never as **"denied"** — because no decision was made, and claiming one
-would be a false statement about the system's behaviour.
+`/meta` and `/permissions` compute this list from `require_capability` call sites, so a
+capability that loses its enforcer reappears there automatically. The dashboard renders an
+unbacked capability as **"not available"**, never as **"denied"** — because no decision was
+made, and claiming one would be a false statement about the system's behaviour.
 
 ---
 
@@ -233,8 +248,8 @@ claimed `approver_id`. See §1.
 
 ## 9. Required contract for real per-user identity
 
-To move from "token = capability set" to "principal with a role", the following would have
-to exist. This is a contract proposal, not a plan of record, and none of it is implemented.
+The six parts below are the contract P7-P12 implemented. They are kept in this form so
+each part can be checked against a stated definition rather than a memory of one.
 
 1. **Principal** — a verified `principal_id` bound to the token (signed assertion or a
    server-side session), not a client-supplied string.
@@ -242,9 +257,10 @@ to exist. This is a contract proposal, not a plan of record, and none of it is i
 3. **Resource scope** — an ownership or tenancy attribute on `Plan` and `Mandate`, and
    checks in `execute_action` / `revoke_mandate` / `list_*` that consult it.
 4. **Token lifecycle** — `exp`, revocation, and an audit record per issuance and rotation.
-5. **Admin authorization** — a scope or role that can actually perform user and integration
-   management, plus the tools to do it. Until that exists, `manage_users` and
-   `manage_integrations` stay unbacked and the pages stay locked.
+5. **Admin authorization** — a role that can actually perform user, integration, agent, and
+   policy management, plus the tools to do it. `admin` holds `manage_users`,
+   `manage_integrations`, and `edit_policy`, and each is enforced by a tenant-filtered
+   endpoint.
 6. **Client handshake** — `get_caller_context` extended to return the principal and its
    capabilities, so the UI continues to render server truth rather than a persona.
 
@@ -256,16 +272,26 @@ was not done.
 
 ## 10. Summary of what a caller can and cannot do today
 
-| Action | `agent` | `ops` | Anonymous |
-| --- | --- | --- | --- |
-| Read org rules, plans, mandates, executions | Yes | Yes | No |
-| Create and validate a plan | Yes | Yes | No |
-| Read the audit log | No | Yes | No |
-| Approve a plan (issues a mandate) | No | Yes | No |
-| Issue a mandate from an existing approval | No | Yes | No |
-| Execute an action under a mandate | No | Yes | No |
-| Revoke a mandate | No | Yes | No |
-| Manage users / integrations / policies | No — unbacked | No — unbacked | No |
-| Act on a mandate belonging to another org | Yes (no check) | Yes (no check) | No |
+Three kinds of caller now exist: a **session** (human, role-derived capabilities), an
+**API token** (`dx_…`, capability = scope ∩ owner capabilities), and the **legacy gateway
+token** (`agent`/`ops`, capability = fixed scope, tenant = `DEXTRA_LEGACY_TENANT`).
 
-The last row is the known resource-scope gap described in §3.
+| Action | `viewer` | `operator` | `approver` | `auditor` | `admin` | `agent` | `ops` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Read org data | own only | all | all | all | all | all | all |
+| Create a request | No | Yes | Yes | No | Yes | Yes | Yes |
+| Approve / issue mandate | No | No | Yes | No | Yes | No | Yes |
+| Execute under a mandate | No | No | Yes | No | Yes | No | Yes |
+| Read the audit log | No | No | Yes | Yes | Yes | No | Yes |
+| Manage users, tokens, service identities | No | No | No | No | Yes | No | No |
+| Edit or delete agents, work packages, tasks | No | Yes (tasks) | Yes | No | Yes | No | No |
+| Edit or delete policies | No | No | No | No | Yes | No | No |
+| Assign an agent to a task | No | Yes | Yes | No | Yes | No | No |
+| Act on another tenant's mandate | No (404) | No (404) | No (404) | No (404) | No (404) | No (404) | No (404) |
+
+The last two columns used to say "Yes (no check)". They no longer do: the gateway token
+is bound to one tenant, and every tenant-scoped read is filtered by it. When
+`DEXTRA_LEGACY_TENANT` is empty the token resolves to **no** tenant and sees nothing —
+`core.authz.scope_to_tenant` returns an always-false predicate instead of an unfiltered
+query. A misconfigured slug returns `401` rather than silently restoring global access.
+`tests/integration/test_authorization_rbac.py` covers all three states.

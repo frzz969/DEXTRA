@@ -42,8 +42,11 @@ describe('auth scoping', () => {
      * tidak disengaja. `list_alerts` menambah satu tool ops (view_audit) pada
      * 2026-11-03; agent tidak mendapatkannya, karena membaca riwayat alert
      * adalah pandangan seluruh organisasi, bukan pandangan sendiri.
+     * `export_audit` (P4, 2026-11-04) menambah satu lagi dengan capability yang
+     * sama: ekspor memuat SELURUH log, jadi agent yang hanya punya `view_all`
+     * tidak boleh mendapatkannya.
      */
-    assert.equal(OPS_TOOLS.size, 18);
+    assert.equal(OPS_TOOLS.size, 19);
     assert.equal(AGENT_TOOLS.size, 12);
   });
 

@@ -9,6 +9,7 @@
     { group: 'Workspace', items: [
       { path: '/overview', title: 'Overview', icon: 'space_dashboard', view: 'overview', cap: 'view_all', desc: 'Ringkasan operasi, persetujuan, dan tata kelola' },
       { path: '/assistant', title: 'AI Assistant', icon: 'forum', view: 'assistant', cap: 'create_request', desc: 'Menyusun rencana dari permintaan bebas' },
+      { path: '/office-agent', title: 'Office Agent', icon: 'auto_awesome', view: 'officeAgent', cap: 'create_request', desc: 'Meeting to Action — notulen menjadi rencana yang disetujui manusia' },
       { path: '/requests', title: 'My Requests', icon: 'send', view: 'requests', cap: 'view_own', desc: 'Permintaan yang saya kirim' },
       { path: '/my-work', title: 'My Work', icon: 'assignment_ind', view: 'myWork', cap: 'view_own', desc: 'Pekerjaan yang menunggu saya' }
     ]},
@@ -22,7 +23,9 @@
     ]},
     { group: 'Intelligence', items: [
       { path: '/analytics', title: 'Analytics', icon: 'query_stats', view: 'analytics', cap: 'view_all', desc: 'Ringkasan eksekusi yang benar-benar terukur' },
-      { path: '/explorer', title: 'Data Explorer', icon: 'travel_explore', view: 'explorer', cap: 'view_all', desc: 'Cari dan telusuri rekaman yang tersimpan, satu entitas per permintaan' }
+      { path: '/explorer', title: 'Data Explorer', icon: 'travel_explore', view: 'explorer', cap: 'view_all', desc: 'Cari dan telusuri rekaman yang tersimpan, satu entitas per permintaan' },
+      { path: '/skills', title: 'Skill Registry', icon: 'extension', view: 'skills', cap: 'view_all', desc: 'Katalog skill, review, schema, dan policy (DEMO)' },
+      { path: '/workflow', title: 'Workflow Orchestration', icon: 'account_tree', view: 'workflow', cap: 'view_all', desc: 'Katalog workflow, run, checkpoint, dan approval gate (DEMO)' },
     ]},
     { group: 'Governance', items: [
       { path: '/approvals', title: 'Approval Inbox', icon: 'assignment_turned_in', view: 'approvals', cap: 'approve', desc: 'Menunggu keputusan manusia', count: 'awaiting' },
@@ -35,6 +38,10 @@
     { group: 'Administration', items: [
       { path: '/permissions', title: 'Permissions', icon: 'key', view: 'permissions', cap: 'view_own', desc: 'Kapabilitas yang benar-benar dipegang token ini' },
       { path: '/integrations', title: 'Integrations', icon: 'extension', view: 'integrations', cap: 'manage_integrations', desc: 'Koneksi sistem eksternal' },
+      { path: '/data-management', title: 'Data Management', icon: 'database', view: 'dataManagement', cap: 'manage_integrations', desc: 'PostgreSQL, tenant, membership, migrasi — status yang jujur' },
+      { path: '/access', title: 'Access Management', icon: 'admin_panel_settings', view: 'access', cap: 'manage_users', desc: 'Peran, anggota, dan matriks izin' },
+      { path: '/tokens', title: 'API Tokens', icon: 'key', view: 'tokens', cap: 'manage_users', desc: 'Token API, scope, kedaluwarsa, dan rotasi' },
+      { path: '/service-identities', title: 'Service Identity', icon: 'smart_toy', view: 'serviceIdentities', cap: 'manage_integrations', desc: 'Akun layanan, kredensial, dan rotasi (DEMO)' },
       { path: '/settings', title: 'Settings', icon: 'settings', view: 'settings', cap: 'view_all', desc: 'Konfigurasi organisasi' }
     ]}
   ];
@@ -42,6 +49,7 @@
   var EXTRA_ROUTES = [
     { path: '/work-packages/:id', title: 'Work Package', view: 'workPackageDetail', cap: 'view_all', parent: '/work-packages' },
     { path: '/review/:id', title: 'Review', view: 'review', cap: 'view_all', parent: '/review' },
+    { path: '/account', title: 'Akun & Keamanan', view: 'account', cap: 'view_own' },
     { path: '/login', title: 'Masuk', view: 'login', bare: true },
     { path: '/forbidden', title: 'Akses ditolak', view: 'forbidden', bare: true },
     { path: '/unavailable', title: 'Belum tersedia', view: 'unavailable', bare: true },
@@ -153,7 +161,7 @@
             g.items.map(navItem).join('') + '</div>';
         }).join('') +
         '<div class="nav-group" style="margin-bottom:4px">' +
-          '<div style="margin:0 10px;padding:7px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;gap:6px" title="Semua layanan listen di 127.0.0.1. Token ops tidak disimpan di dashboard.">' +
+          '<div style="margin:0 10px;padding:7px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;gap:6px" title="Semua layanan listen di 127.0.0.1. Sesi manusia memakai cookie httpOnly; token ops MCP disimpan di sessionStorage saja.">' +
             '<span class="material-symbols-outlined" style="font-size:14px;color:var(--success-600)">shield_lock</span>' +
             '<span style="font-size:10.5px;font-weight:600;color:var(--muted)">Local-only · 127.0.0.1</span>' +
           '</div>' +
@@ -189,6 +197,7 @@
     var roles = ['operations_manager', 'governance_lead', 'legal_reviewer', 'finance_approver', 'requester', 'auditor', 'org_admin'];
     ui.menu(anchor, [
       { label: 'Akun' },
+      { text: 'Akun & Keamanan', icon: 'manage_accounts', onClick: function () { D.router.go('/account'); } },
       { text: 'Profil & preferensi', icon: 'person', onClick: function () { D.router.go('/settings'); } },
       { text: 'Ganti tema', icon: 'contrast', onClick: function () { D.theme.toggle(); paintAll(); } },
       { sep: true },
@@ -199,7 +208,22 @@
       { text: 'Auditor (read-only)' + (session.user.role === 'auditor' ? ' ✓' : ''), icon: 'receipt_long', onClick: function () { switchRole('auditor'); } },
       { text: 'Organization Admin' + (session.user.role === 'org_admin' ? ' ✓' : ''), icon: 'admin_panel_settings', onClick: function () { switchRole('org_admin'); } },
       { sep: true },
-      { text: 'Keluar', icon: 'logout', danger: true, onClick: function () { D.router.go('/login'); } }
+      /* Logout nyata: panggil server (menghapus cookie sesi httpOnly di
+       * backend), hapus bearer MCP ops token, lalu ke /login. */
+      { text: 'Keluar', icon: 'logout', danger: true, onClick: function () {
+        var api = D.api;
+        function done() {
+          try { api.clearToken(); } catch (e) {}
+          D.router.go('/login');
+        }
+        if (api && api.auth && typeof api.auth.logout === 'function') {
+          Promise.resolve().then(function () { return api.auth.logout(); }).then(function () {
+            ui.toast('Anda telah keluar. Sesi server sudah dicabut.', 'success');
+          }).catch(function (err) {
+            ui.toast('Logout server gagal: ' + ((err && err.message) || 'network'), 'warning');
+          }).then(done);
+        } else { done(); }
+      } }
     ], { head: '<div class="menu__head"><div class="small strong">' + esc(session.displayName()) + '</div><div class="tiny muted">' + esc(session.contactLine()) + ' · ' + esc(session.roleLabel()) + '</div></div>' });
     void roles;
   }

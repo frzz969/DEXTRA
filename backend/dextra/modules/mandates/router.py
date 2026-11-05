@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ...core.authz import assert_tenant_access, scope_to_tenant
 from ...core.security import CallerContext, get_caller, require_capability
 from ...database.session import get_db
 from ...governance import mandate as mandate_service
@@ -43,7 +44,8 @@ def _serialize(m: Mandate) -> dict:
 def list_mandates(
     db: Session = Depends(get_db), caller: CallerContext = Depends(get_caller)
 ) -> dict:
-    rows = db.scalars(select(Mandate).order_by(Mandate.issued_at.desc()).limit(200)).all()
+    statement = scope_to_tenant(select(Mandate), Mandate, caller)
+    rows = db.scalars(statement.order_by(Mandate.issued_at.desc()).limit(200)).all()
     return {"items": [_serialize(m) for m in rows]}
 
 
@@ -54,6 +56,7 @@ def get_mandate(
     mandate = db.get(Mandate, mandate_id)
     if mandate is None:
         raise HTTPException(status_code=404, detail="Mandate tidak ditemukan.")
+    assert_tenant_access(caller, mandate.tenant_id, resource="Mandate")
     return _serialize(mandate)
 
 
@@ -64,6 +67,10 @@ def revoke(
     db: Session = Depends(get_db),
     caller: CallerContext = Depends(require_capability("revoke_mandate")),
 ) -> dict:
+    existing = db.get(Mandate, mandate_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Mandate tidak ditemukan.")
+    assert_tenant_access(caller, existing.tenant_id, resource="Mandate")
     try:
         mandate = mandate_service.revoke(db, mandate_id, payload.reason)
     except MandateError as exc:
@@ -78,6 +85,7 @@ def revoke(
         decision="allow",
         plan_id=mandate.plan_id,
         mandate_id=mandate.id,
+        tenant_id=caller.tenant_id,
         detail={"reason": payload.reason},
     )
     db.commit()

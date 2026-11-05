@@ -66,12 +66,19 @@ def test_agent_can_read_own_context(client, agent_headers):
 
 
 def test_unbacked_capability_is_locked_for_ops(client, ops_headers):
-    """manage_users tidak diberikan ke scope mana pun, termasuk ops."""
+    """manage_users tidak pernah diberikan ke scope gateway, termasuk ops."""
     assert client.get("/api/v1/users", headers=ops_headers).status_code == 403
     assert client.get("/api/v1/roles", headers=ops_headers).status_code == 403
 
 
-def test_unbacked_reported_as_not_granted(client, ops_headers):
+def test_capability_report_distinguishes_enforced_from_granted(client, ops_headers):
+    """Tiga hal berbeda: dimiliki pemanggil, punya penegak, dan belum ada penegak.
+
+    `manage_users` sekarang punya penegak (endpoint admin P9/P11), tetapi tetap
+    tidak dimiliki scope `ops`. Dulu laporan menyebutnya "belum tersedia" —
+    klaim yang salah pada endpoint yang dibaca frontend.
+    """
     payload = client.get("/api/v1/permissions", headers=ops_headers).json()
-    assert "manage_users" in payload["unbacked_capabilities"]
     assert "manage_users" not in payload["capabilities"]
+    assert "manage_users" in payload["enforced_capabilities"]
+    assert payload["unbacked_capabilities"] == []

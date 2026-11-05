@@ -7,9 +7,6 @@ konteks pemanggil apa adanya, dan /users menolak dengan 403 karena
 """
 from __future__ import annotations
 
-import urllib.parse
-
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,13 +15,16 @@ from ...core.config import get_settings
 from ...core.security import (
     CAPABILITIES,
     SCOPE_CAPABILITIES,
-    UNBACKED_CAPABILITIES,
     CallerContext,
     get_caller,
+    enforced_capabilities,
     require_capability,
+    unbacked_capabilities,
 )
+from ...core.authz import require_tenant
 from ...database.session import get_db
 from ...models.identity import Role, User
+from ...models.tenant import Membership
 
 router = APIRouter(tags=["identity"])
 
@@ -35,7 +35,8 @@ def permissions(caller: CallerContext = Depends(get_caller)) -> dict:
         "scope": caller.scope,
         "principal": caller.principal,
         "capabilities": list(caller.capabilities),
-        "unbacked_capabilities": list(UNBACKED_CAPABILITIES),
+        "enforced_capabilities": list(enforced_capabilities()),
+        "unbacked_capabilities": list(unbacked_capabilities()),
         "all_capabilities": list(CAPABILITIES),
         "scope_capabilities": {k: list(v) for k, v in SCOPE_CAPABILITIES.items()},
         "note": "Tidak ada identitas per pengguna: token membawa wewenang, bukan nama.",
@@ -47,9 +48,35 @@ def list_users(
     db: Session = Depends(get_db),
     caller: CallerContext = Depends(require_capability("manage_users")),
 ) -> dict:
-    # Tidak akan tercapai selama manage_users tidak diberikan ke scope mana pun.
-    rows = db.scalars(select(User).order_by(User.email)).all()
-    return {"items": [{"id": u.id, "email": u.email, "display_name": u.display_name} for u in rows]}
+    """Anggota tenant pemanggil. Tidak ada jalur ke pengguna tenant lain.
+
+    Daftar ini sebelumnya mengembalikan seluruh tabel `users`. Begitu `admin`
+    memegang `manage_users`, query tanpa filter tenant akan menjadi kebocoran —
+    jadi filternya ada di sini, bukan di UI.
+    """
+    tenant_id = require_tenant(caller)
+    rows = db.execute(
+        select(Membership, User, Role)
+        .join(User, User.id == Membership.user_id)
+        .join(Role, Role.id == Membership.role_id)
+        .where(Membership.tenant_id == tenant_id)
+        .order_by(User.email)
+    ).all()
+    return {
+        "items": [
+            {
+                "id": user.id,
+                "email": user.email,
+                "display_name": user.display_name,
+                "role": role.name,
+                "status": membership.status,
+                "is_default": membership.is_default,
+                "joined_at": membership.created_at.isoformat(),
+            }
+            for membership, user, role in rows
+        ],
+        "tenant_id": tenant_id,
+    }
 
 
 @router.get("/roles")
@@ -57,8 +84,24 @@ def list_roles(
     db: Session = Depends(get_db),
     caller: CallerContext = Depends(require_capability("manage_users")),
 ) -> dict:
-    rows = db.scalars(select(Role).order_by(Role.name)).all()
-    return {"items": [{"id": r.id, "name": r.name, "permissions": len(r.permissions)} for r in rows]}
+    tenant_id = require_tenant(caller)
+    rows = db.scalars(
+        select(Role)
+        .where((Role.tenant_id == tenant_id) | (Role.tenant_id.is_(None)))
+        .order_by(Role.name)
+    ).all()
+    return {
+        "items": [
+            {
+                "id": role.id,
+                "name": role.name,
+                "description": role.description,
+                "is_system": role.is_system,
+                "capabilities": sorted(perm.capability for perm in role.permissions),
+            }
+            for role in rows
+        ]
+    }
 
 
 # --- Google OAuth (fondasi; status honest: butuh env GOOGLE_CLIENT_ID/SECRET) ---
@@ -70,60 +113,24 @@ GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
 @router.get("/auth/google")
 def google_login() -> dict:
-    settings = get_settings()
-    if not settings.google_client_id:
-        raise HTTPException(
-            status_code=503,
-            detail="Google OAuth belum dikonfigurasi: set GOOGLE_CLIENT_ID (dan GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI).",
-        )
-    params = {
-        "client_id": settings.google_client_id,
-        "redirect_uri": settings.google_redirect_uri,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "access_type": "offline",
-        "prompt": "consent",
-    }
-    return {"authorization_url": GOOGLE_AUTH_URL + "?" + urllib.parse.urlencode(params)}
+    """OAuth dicabut secara eksplisit sampai sesi bisa diterbitkan dengan benar.
+
+    Keputusan A15: session belum siap (tidak ada alur: state terverifikasi,
+    tukar code->id_token dengan validasi exp/aud/iss/email_verified, lalu
+    buat session cookie). Daripada mengembalikan principal tanpa sesi — yang
+    memberi kesan login berhasil — endpoint ini menjawab 503 jujur.
+    Response netral: tidak membocorkan konfigurasi server.
+    """
+    raise HTTPException(
+        status_code=503,
+        detail="Login Google belum tersedia.",
+    )
 
 
 @router.get("/auth/google/callback")
 def google_callback(code: str = Query(...), state: str | None = None) -> dict:
-    settings = get_settings()
-    if not settings.google_client_id or not settings.google_client_secret:
-        raise HTTPException(status_code=503, detail="Google OAuth belum dikonfigurasi.")
-    with httpx.Client(timeout=15.0) as client:
-        token_res = client.post(
-            GOOGLE_TOKEN_URL,
-            data={
-                "code": code,
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "redirect_uri": settings.google_redirect_uri,
-                "grant_type": "authorization_code",
-            },
-        )
-    if token_res.status_code != 200:
-        raise HTTPException(status_code=400, detail="Gagal menukar code: " + token_res.text)
-    tokens = token_res.json()
-    id_token = tokens.get("id_token")
-    if not id_token:
-        raise HTTPException(status_code=400, detail="Google tidak mengembalikan id_token.")
-    with httpx.Client(timeout=15.0) as client:
-        info_res = client.get(GOOGLE_TOKENINFO_URL, params={"id_token": id_token})
-    if info_res.status_code != 200:
-        raise HTTPException(status_code=400, detail="ID token tidak valid.")
-    info = info_res.json()
-    if info.get("aud") != settings.google_client_id:
-        raise HTTPException(status_code=400, detail="audience mismatch.")
-    if info.get("iss") not in ("https://accounts.google.com", "accounts.google.com"):
-        raise HTTPException(status_code=400, detail="issuer mismatch.")
-    return {
-        "principal": {
-            "sub": info.get("sub"),
-            "email": info.get("email"),
-            "name": info.get("name"),
-            "picture": info.get("picture"),
-        },
-        "note": "Fondasi OAuth. Sesi server-side (cookie/JWT) belum diimplementasikan; token mentah tidak disimpan.",
-    }
+    """Lihat google_login. Callback tidak menukar code apa pun."""
+    raise HTTPException(
+        status_code=503,
+        detail="Login Google belum tersedia.",
+    )

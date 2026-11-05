@@ -1,4 +1,7 @@
-import { getOrgRules, getPlan, savePlan, insertPlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries } from '../../../packages/store/src/index.ts';
+import { join } from 'node:path';
+
+import { getOrgRules, getPlan, savePlan, insertPlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries, getStorePaths } from '../../../packages/store/src/index.ts';
+import { AuditExportError, exportAuditLog } from '../../../packages/audit-export/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
 import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
@@ -671,6 +674,41 @@ export async function handleTool(name: string, args: any, scope: string): Promis
           integrity,
         },
       };
+    }
+    case 'export_audit': {
+      /*
+       * Export writes a new artifact and never touches the log. The output
+       * directory comes from the store's own layout, not from the caller, so a
+       * caller cannot choose where the server writes.
+       */
+      const paths = getStorePaths();
+      const principal = await resolvePrincipal(scope as Scope);
+      try {
+        const result = await exportAuditLog({
+          sourcePath: paths.audit,
+          checkpointPath: paths.auditCheckpoint,
+          outDir: join(paths.dataDir, 'exports'),
+          exportedBy: principal?.principal_id ?? `scope:${scope}`,
+        });
+        return {
+          ok: true,
+          data: {
+            manifest: result.manifest,
+            files: { jsonl: result.jsonlPath, manifest: result.manifestPath },
+            /*
+             * The command is part of the response because "verify it yourself"
+             * is the point of the feature. The verifier needs neither this
+             * server nor the dashboard nor the data directory.
+             */
+            verify_command: `node --experimental-strip-types packages/audit-export/src/cli.ts "${result.manifestPath}"`,
+          },
+        };
+      } catch (error) {
+        if (error instanceof AuditExportError) {
+          return { ok: false, error: { code: error.code, message: error.message } };
+        }
+        throw error;
+      }
     }
     case 'list_alerts': {
       /*

@@ -1,24 +1,41 @@
 # DATABASE SCHEMA — DEXTRA v2
 
-Status: **implemented, verified on SQLite; not yet verified on PostgreSQL.**
+Status: **implemented; skema terverifikasi di SQLite pada sesi ini. PostgreSQL belum diverifikasi ulang di sesi ini**
+(tidak ada klaim "PG 16.2 terverifikasi" / "206 tes lulus di PostgreSQL" tanpa bukti sesi ini).
 
 Dokumen ini menjelaskan skema yang benar-benar ada di `backend/dextra/models/`
-dan dibuat oleh migrasi `database/migrations/versions/d9cd32b89961_initial_schema.py`.
+dan dibuat oleh sembilan migrasi di `database/migrations/versions/` (skema awal, P7,
+P8, P9, Skill Registry + workflow, Office Agent, atribusi tenant pada audit,
+backfill idempotensi FASE 2, lalu ciphertext MFA FASE 4). Rantai revisi:
+`d9cd32b89961 → b1f7c2a9d4e6 → c4d8e1f6a2b3 → d2a6b8c41f07 → e7b3c9d51a84 → f5a2d7e93c18 → a8c1e5f70b92 → 27ba08c94572 → g6a3b4c5d6e7` (head).
 Isinya bukan rancangan aspirasional: setiap tabel di sini bisa diperiksa dengan
 `alembic upgrade head` lalu `\dt`.
+
+Verifikasi pada sesi ini (SQLite): `py -m pytest tests/integration/test_migrations.py -q --tb=short`
+lulus; `grep __tablename__ backend/dextra/models` = 33 tabel. Verifikasi
+PostgreSQL historis (upgrade→33, downgrade→0, upgrade→33) **tidak** diulang di sesi ini
+dan tidak dipertahankan sebagai klaim sesi ini. Perilaku transaksional PostgreSQL
+diuji di `tests/integration/test_postgres_runtime.py` (dilewati bila
+`DEXTRA_TEST_DATABASE_URL` bukan PostgreSQL).
 
 ## 1. Ringkasan
 
 | Kelompok | Tabel |
 |---|---|
+| Tenancy | `tenants`, `memberships` |
 | Identity & access | `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `sessions` |
+| Machine identity | `service_accounts`, `api_tokens` |
+| Security | `security_events`, `login_throttles` |
+| Catalog | `skills`, `skill_versions` |
+| Orchestration | `workflow_definitions`, `workflow_runs`, `workflow_step_runs` |
+| Office Agent | `office_plan_requests` |
 | Workforce | `agents`, `agent_capabilities`, `agent_versions`, `agent_assignments` |
 | Work management | `work_packages`, `tasks` |
 | Execution | `executions`, `execution_steps`, `action_records` |
 | Governance | `policies`, `policy_versions`, `policy_evaluations`, `approvals`, `mandates` |
 | Audit | `audit_events` |
 
-Total 21 tabel aplikasi + `alembic_version`.
+Total 33 tabel aplikasi + `alembic_version`.
 
 ## 2. Keputusan yang perlu dijelaskan
 
@@ -72,11 +89,14 @@ parameter yang sama, dan mandate akan ditolak secara acak.
 
 ### 3.2 `executions`
 
-`idempotency_key` = `mandate_id:action_id:params_hash`, **unik di level database**.
+`idempotency_key` = `mandate_id:action_id:params_digest`, **unik di level database**.
+Kolom `params_digest` menyimpan bagian ketiga kunci itu secara terpisah, dan
+constraint uniknya adalah `(mandate_id, action_id, params_digest)` — satu
+kontrak, tiga penegak yang sejalan (kolom `idempotency_key` unik, constraint
+gabungan, dan kunci yang dibangun service).
 
 Ini bukan hiasan. Pengecekan di aplikasi bisa dilewati bila proses mati di antara
-"cek" dan "tulis"; constraint unik tidak bisa. Ada juga constraint
-`(mandate_id, action_id)` unik sebagai lapisan kedua.
+"cek" dan "tulis"; constraint unik tidak bisa.
 
 Catatan penting dari pengujian: kunci idempotensi **harus** memuat hash parameter.
 Versi pertama hanya memakai `mandate_id:action_id`, dan akibatnya permintaan dengan
@@ -93,6 +113,16 @@ entry_hash = sha256(prev_hash + canonical_json(payload))
 
 `seq` berurutan dan unik. `verify_chain()` merekonstruksi rantai dari awal dan
 melaporkan `broken_at_seq` bila ada baris yang disunting.
+
+**Rantai berversi.** Kolom `chain_version` menentukan bentuk payload yang di-hash:
+
+- `1` — 12 kunci, tanpa `tenant_id`. Semua baris sebelum migrasi `a8c1e5f70b92`.
+- `2` — 13 kunci, `tenant_id` ikut di-hash. Semua baris baru.
+
+Baris lama **tidak** dihitung ulang; verifikasi memilih aturan menurut angka yang
+tersimpan. Mengubah `tenant_id` atau menurunkan `chain_version` memutus rantai dan
+terdeteksi (`tests/integration/test_audit_chain_versioning.py`). `verify_chain()`
+mengembalikan `chain_versions` sehingga campuran v1/v2 terlihat, bukan ditebak.
 
 Hash chaining **tidak** menggantikan izin database. `infra/docker/init/01-audit-permissions.sql`
 mencabut `UPDATE` dan `DELETE` pada tabel ini dari role aplikasi. Keduanya
@@ -125,9 +155,10 @@ daftar tebakan.
 
 | Hal | Status | Konsekuensi |
 |---|---|---|
-| Verifikasi terhadap PostgreSQL | **Belum** | Tidak ada PostgreSQL/Docker di mesin ini. Migrasi dijalankan di SQLite. |
+| Verifikasi terhadap PostgreSQL | **Belum diverifikasi ulang di sesi ini** | Sembilan migrasi (head `g6a3b4c5d6e7` via `27ba08c94572`) terverifikasi di SQLite pada sesi ini (`tests/integration/test_migrations.py` lulus). Klaim lama "PG 16.2, 206 tes lulus di PostgreSQL" **dicabut** tanpa bukti sesi ini. Yang belum: verifikasi PostgreSQL nyata, uji beban, uji failover, dan PostgreSQL terkelola (RDS/Cloud SQL). |
 | `JSONB` | **Belum** | Metadata memakai `TEXT` berisi JSON; tidak bisa diindeks. |
-| Row-level security | **Belum** | Tidak ada pemisahan tenant di level database. |
+| Row-level security | **Belum** | Pemisahan tenant ditegakkan di repository (setiap query menerima `tenant_id`), bukan oleh RLS PostgreSQL. Repository yang lupa memfilter tetap bisa bocor. |
+| Tenant pada audit chain | **Selesai (berversi)** | `tenant_id` ada dan ikut di-hash pada rantai versi 2; baris versi 1 tetap sah tanpa ditulis ulang. Yang belum: filter `tenant_id` pada `GET /audit-events` — rantai sengaja dibaca utuh agar verifikasi tidak bisa dipersempit per tenant. |
 | Retention/partisi audit | **Belum** | Tabel tumbuh tanpa batas; belum ada kebijakan arsip. |
 | Migrasi data dari `data/*.json` | **Belum** | Data dashboard lama belum dipindahkan. |
 | Backup & restore teruji | **Belum** | Belum ada prosedur yang dijalankan. |

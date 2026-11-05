@@ -1,121 +1,207 @@
-/* Views — Login, forbidden, not found. */
+/* Views — Login, forbidden, not found.
+ *
+ * Login memakai backend LIVE POST /api/v1/auth/login via D.api.rest
+ * (cookie + CSRF, api-client.js auth.login). Label "DEMO"/fallback hanya
+ * bila backend tak tercapai. Google: GET /api/v1/auth/google — bila 503
+ * (belum dikonfigurasi) ditampilkan sebagai unavailable jujur, bukan tombol
+ * palsu. Facebook tidak ada endpoint-nya dan tidak ditampilkan.
+ */
 (function () {
   'use strict';
   var D = window.DEXTRA, U = D.util, ui = D.ui, esc = U.esc;
 
   D.views.login = function (root) {
     root.innerHTML =
-      '<div class="auth">' +
-        '<section class="auth__brand">' +
-          '<div class="auth__brandtop"><div class="brand-mark" style="width:38px;height:38px;font-size:19px">D</div>' +
-            '<div class="brand-text"><b style="color:#fff">DEXTRA</b><span style="color:rgba(255,255,255,.62)">Governed AI Workforce</span></div></div>' +
-          '<div class="auth__pitch">' +
-            '<h1>Specialized AI workers.<br>Human-defined authority.<br>Accountable execution.</h1>' +
-            '<p>Setiap tindakan tulis melewati mandat. Setiap keputusan tercatat. Tidak ada jalur dari agen ke executor.</p>' +
-          '</div>' +
-          '<div class="auth__principles">' +
-            [['Membaca otomatis, menulis lewat mandat', 'lock'],
-             ['Persetujuan manusia eksplisit', 'verified_user'],
-             ['Audit append-only', 'receipt_long'],
-             ['Local-only service exposure', 'dns']].map(function (p) {
-              return '<div class="row" style="gap:9px"><span class="material-symbols-outlined" style="font-size:17px;color:rgba(255,255,255,.7)">' + p[1] + '</span>' +
-                '<span style="font-size:12px;color:rgba(255,255,255,.78)">' + esc(p[0]) + '</span></div>';
-            }).join('') +
-          '</div>' +
-          '<div class="auth__foot">Kenari Group · org_kenari · Asia/Jakarta</div>' +
-        '</section>' +
-        '<section class="auth__form">' +
-          '<div class="auth__forminner">' +
-            '<div class="page-head__eyebrow">Masuk ke dashboard</div>' +
-            '<h1 style="font-size:24px;margin-bottom:6px">Autentikasi operator</h1>' +
-            '<p class="small muted" style="margin-bottom:22px">Dashboard ini memakai token ops lokal. Token hanya disimpan di sesi peramban dan tidak pernah ditulis ke halaman.</p>' +
-            '<div id="login-error"></div>' +
-            '<div class="field" style="margin-bottom:14px">' +
-              '<label class="field__label" for="token">Token ops</label>' +
-              '<div class="input-wrap"><span class="material-symbols-outlined">key</span>' +
-                '<input class="input input--icon" id="token" type="password" placeholder="ops-dev-token" autocomplete="current-password"></div>' +
-              '<div class="field__hint">Di lingkungan pengembangan, token default adalah <span class="mono">ops-dev-token</span>. Token ini tidak memberi akses ke data pelanggan nyata.</div>' +
+      '<div class="auth auth--login">' +
+        '<div class="auth__card">' +
+          '<section class="auth__brand">' +
+            '<div class="auth__brandtop"><div class="brand-mark" style="width:38px;height:38px;font-size:19px">D</div>' +
+              '<div class="brand-text"><b style="color:#fff">DEXTRA</b><span style="color:rgba(255,255,255,.62)">Governed AI Workforce</span></div></div>' +
+            '<div class="auth__pitch">' +
+              '<h1>Simplify management with our dashboard</h1>' +
+              '<p>Specialized AI workers, human-defined authority, accountable execution — setiap tindakan tulis melewati mandat dan tercatat.</p>' +
             '</div>' +
-            '<label class="switch" style="margin-bottom:18px"><input type="checkbox" id="remember"><span class="switch__track"></span>' +
-              '<span class="small">Ingat di perangkat ini</span></label>' +
-            '<button class="btn btn--primary btn--lg btn--block" id="signin">Masuk</button>' +
-            '<div class="row" style="margin:18px 0;gap:10px"><span style="flex:1;height:1px;background:var(--border)"></span>' +
-              '<span class="tiny faint">atau</span><span style="flex:1;height:1px;background:var(--border)"></span></div>' +
-            '<button class="btn btn--secondary btn--lg btn--block" id="google"><span class="material-symbols-outlined">login</span>Masuk dengan Google (fondasi)</button>' +
-            '<button class="btn btn--secondary btn--lg btn--block" id="demo"><span class="material-symbols-outlined">science</span>Jelajahi mode demo</button>' +
-            '<p class="tiny faint" style="margin-top:10px;text-align:center;line-height:1.5">Mode demo memakai dataset contoh di peramban. Tidak ada koneksi server, tidak ada tindakan nyata.</p>' +
-            '<div class="banner banner--info" style="margin-top:20px"><span class="material-symbols-outlined">info</span>' +
-              '<div>Server MCP lokal: <span class="mono">127.0.0.1:8765</span>. Jika tidak berjalan, dashboard tetap dapat dijelajahi dalam mode demo.</div></div>' +
-            '<div class="row" style="margin-top:16px;justify-content:center;gap:14px">' +
-              '<a class="tiny muted" href="#/overview" style="text-decoration:underline">Lewati untuk sekarang</a>' +
-              '<span class="tiny faint">·</span>' +
-              '<a class="tiny muted" href="../../docs/PRD.md">Dokumentasi produk</a>' +
+            '<div class="auth__hero">' +
+              '<svg viewBox="0 0 340 180" role="img" aria-label="Ilustrasi agen AI di meja kerja" xmlns="http://www.w3.org/2000/svg">' +
+                '<defs><linearGradient id="desk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".16"/><stop offset="1" stop-color="#ffffff" stop-opacity=".04"/></linearGradient></defs>' +
+                '<rect x="52" y="96" width="236" height="10" rx="5" fill="url(#desk)"/>' +
+                '<rect x="66" y="106" width="10" height="54" rx="4" fill="rgba(255,255,255,.22)"/>' +
+                '<rect x="264" y="106" width="10" height="54" rx="4" fill="rgba(255,255,255,.22)"/>' +
+                '<rect x="80" y="58" width="76" height="52" rx="8" fill="rgba(21,21,42,.55)"/>' +
+                '<rect x="88" y="66" width="60" height="34" rx="4" fill="rgba(255,255,255,.28)"/>' +
+                '<rect x="112" y="110" width="12" height="10" fill="rgba(255,255,255,.3)"/>' +
+                '<rect x="168" y="66" width="66" height="44" rx="6" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.35)"/>' +
+                '<circle cx="201" cy="88" r="10" fill="rgba(255,255,255,.4)"/>' +
+                '<circle cx="238" cy="60" r="16" fill="#ffd9a8"/>' +
+                '<path d="M222 44 a16 16 0 0 1 32 0 l-4 6 h-24 z" fill="#8a5a2b"/>' +
+                '<rect x="218" y="80" width="40" height="16" rx="6" fill="#ffffff"/>' +
+                '<rect x="228" y="96" width="20" height="26" rx="4" fill="#5b3fd6"/>' +
+                '<circle cx="170" cy="130" r="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3"/>' +
+                '<text x="36" y="40" fill="rgba(255,255,255,.85)" font-family="system-ui" font-size="16" font-weight="700">AI</text>' +
+                '<text x="36" y="60" fill="rgba(255,255,255,.6)" font-family="system-ui" font-size="11">mandate</text>' +
+                '<text x="36" y="76" fill="rgba(255,255,255,.6)" font-family="system-ui" font-size="11">approval</text>' +
+              '</svg>' +
+              '<div class="auth__principles auth__principles--card">' +
+                [['verified_user', 'Mandat eksplisit'], ['receipt_long', 'Audit append-only'], ['lock', 'Tanpa jalur agen ke executor']].map(function (p) {
+                  return '<span class="chip"><span class="material-symbols-outlined">' + p[0] + '</span>' + esc(p[1]) + '</span>';
+                }).join('') +
+              '</div>' +
             '</div>' +
-          '</div>' +
-        '</section>' +
+            '<div class="auth__foot">Kenari Group · org_kenari · Asia/Jakarta · 127.0.0.1</div>' +
+          '</section>' +
+          '<section class="auth__form">' +
+            '<div class="auth__forminner">' +
+              '<div class="auth__logo"><span class="brand-mark">D</span><b>DEXTRA</b></div>' +
+              '<h1 class="auth__title">Welcome Back</h1>' +
+              '<p class="auth__sub">Please login to your account</p>' +
+              '<div id="login-error" aria-live="polite"></div>' +
+              '<div class="field" style="margin-bottom:12px">' +
+                '<label class="field__label" for="human-email">Email</label>' +
+                '<input class="input" id="human-email" type="email" placeholder="nama@kenari.co.id" autocomplete="username"></div>' +
+              '<div class="field" style="margin-bottom:4px">' +
+                '<label class="field__label" for="human-password">Password</label>' +
+                '<div class="input-wrap"><span class="material-symbols-outlined">lock</span>' +
+                  '<input class="input input--icon" id="human-password" type="password" placeholder="••••••••" autocomplete="current-password">' +
+                  '<button type="button" class="icon-btn" id="toggle-pass" aria-label="Tampilkan password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%)"><span class="material-symbols-outlined" style="font-size:18px">visibility_off</span></button></div></div>' +
+              '<div class="auth__forgot"><a href="javascript:void 0" id="forgot">Forgot Password</a></div>' +
+              '<div id="human-error" aria-live="polite"></div>' +
+              '<button class="btn btn--primary btn--lg btn--block" id="signin" style="height:46px;border-radius:10px">Login</button>' +
+              '<div class="auth__divider"><span>or Login with</span></div>' +
+              '<div class="auth__social">' +
+                '<button class="btn btn--secondary" id="google" disabled title="Belum dikonfigurasi di backend (503)"><span class="material-symbols-outlined" style="font-size:18px;color:#ea4335">login</span>Google</button>' +
+                '<button class="btn btn--secondary" id="demo"><span class="material-symbols-outlined" style="font-size:18px">science</span>Demo</button>' +
+              '</div>' +
+              '<p class="tiny faint" style="margin-top:12px;text-align:center;line-height:1.5">Mode demo memakai dataset contoh di peramban. Bila backend tak tercapai, halaman ini tetap jujur berlabel DEMO — tidak pernah disamarkan jadi LIVE.</p>' +
+              '<div class="row" style="margin-top:14px;justify-content:center;gap:14px">' +
+                '<a class="tiny muted" href="#/overview" style="text-decoration:underline">Lewati untuk sekarang</a>' +
+                '<span class="tiny faint">·</span>' +
+                '<a class="tiny muted" href="../../docs/PRD.md">Dokumentasi produk</a>' +
+              '</div>' +
+            '</div>' +
+          '</section>' +
+        '</div>' +
       '</div>';
 
-    var input = root.querySelector('#token');
     var err = root.querySelector('#login-error');
+    var humanErr = root.querySelector('#human-error');
+    var emailInput = root.querySelector('#human-email');
+    var passInput = root.querySelector('#human-password');
     var btn = root.querySelector('#signin');
+    var googleBtn = root.querySelector('#google');
+    var toggleBtn = root.querySelector('#toggle-pass');
 
-    function showError(msg) {
-      err.innerHTML = '<div class="banner banner--danger" style="margin-bottom:14px"><span class="material-symbols-outlined">error</span><div>' + esc(msg) + '</div></div>';
+    function showError(el, msg) {
+      el.innerHTML = '<div class="banner banner--danger" style="margin-bottom:12px"><span class="material-symbols-outlined">error</span><div>' + esc(msg) + '</div></div>';
     }
-    function clearError() { err.innerHTML = ''; }
+    function clearError(el) { try { el.innerHTML = ''; } catch (e) { void e; } }
 
-    btn.addEventListener('click', function () {
-      clearError();
-      var t = input.value.trim();
-      if (!t) { showError('Token tidak boleh kosong.'); input.focus(); return; }
-      btn.classList.add('is-loading');
-      btn.textContent = 'Memverifikasi…';
-      fetch(D.api.API || 'http://127.0.0.1:8765', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} })
-      }).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      }).then(function (j) {
-        var tools = (j.result && j.result.tools) || [];
-        if (!tools.length) throw new Error('Token tidak dikenali server.');
-        var names = tools.map(function (x) { return x.name; });
-        if (names.indexOf('execute_action') < 0 && names.indexOf('submit_approval') < 0) {
-          throw new Error('Token ini tidak memiliki wewenang ops.');
-        }
-        D.api.setToken(t, root.querySelector('#remember').checked);
-        ui.toast('Token valid. Memuat data live…', 'success');
-        setTimeout(function () { location.reload(); }, 400);
-      }).catch(function (e) {
-        btn.classList.remove('is-loading');
-        btn.textContent = 'Masuk';
-        if (String(e.message).indexOf('Failed to fetch') > -1 || String(e.name) === 'TypeError') {
-          showError('Server MCP lokal tidak merespons di 127.0.0.1:8765. Jalankan server, atau gunakan mode demo.');
-        } else {
-          showError(e.message || 'Token tidak valid.');
-        }
-      });
+    /* Toggle lihat password */
+    toggleBtn.addEventListener('click', function () {
+      var show = passInput.type === 'password';
+      passInput.type = show ? 'text' : 'password';
+      toggleBtn.querySelector('.material-symbols-outlined').textContent = show ? 'visibility' : 'visibility_off';
+      toggleBtn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
     });
 
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') btn.click(); });
+    /* Forgot password: backend belum menyediakan endpoint reset — unavailable jujur */
+    root.querySelector('#forgot').addEventListener('click', function () {
+      clearError(err); clearError(humanErr);
+      showError(humanErr, 'Reset password belum tersedia di backend (tidak ada endpoint forgot/reset). Silakan hubungi administrator tenant.');
+    });
+
+    /* Google: cek backend; 503 = unavailable jujur */
+    (function probeGoogle() {
+      var api = D.api;
+      var baseUrl = (api && api.restBase) || (api && api.API ? String(api.API).replace(/:8765$/, ':8000') : 'http://127.0.0.1:8000');
+      fetch(baseUrl + '/api/v1/auth/google', { method: 'GET', credentials: 'include' })
+        .then(function (r) {
+          if (r.ok) {
+            googleBtn.disabled = false;
+            googleBtn.removeAttribute('title');
+            googleBtn.addEventListener('click', function () {
+              fetch(baseUrl + '/api/v1/auth/google', { method: 'GET', credentials: 'include' })
+                .then(function (r2) { if (!r2.ok) throw new Error('HTTP ' + r2.status); return r2.json(); })
+                .then(function (j) {
+                  if (j.authorization_url) window.location.href = j.authorization_url;
+                  else showError(err, j.detail || 'Google OAuth belum dikonfigurasi di backend.');
+                })
+                .catch(function (e) { showError(err, 'Backend tidak merespons: ' + (e.message || e)); });
+            });
+            return null;
+          }
+          if (r.status === 503) {
+            googleBtn.disabled = true;
+            googleBtn.title = 'Google OAuth belum dikonfigurasi di backend (503)';
+            return null;
+          }
+          googleBtn.disabled = true;
+          return null;
+        })
+        .catch(function () {
+          /* backend tak tercapai: tetap unavailable jujur */
+          googleBtn.disabled = true;
+          googleBtn.title = 'Backend tak tercapai';
+        });
+    })();
+
+    /* Login manusia LIVE via D.api.rest (api-client.js auth.login) */
+    function doLogin() {
+      clearError(err); clearError(humanErr);
+      var email = (emailInput.value || '').trim();
+      var pass = passInput.value || '';
+      if (!email || !pass) {
+        showError(humanErr, 'Isi email dan password terlebih dahulu.');
+        return;
+      }
+      btn.classList.add('is-loading');
+      btn.textContent = 'Memverifikasi…';
+      var api = D.api;
+      var promise;
+      try {
+        if (api && api.auth && typeof api.auth.login === 'function') {
+          promise = api.auth.login(email, pass);
+        } else if (api && typeof api.rest === 'function') {
+          promise = api.rest('POST', '/api/v1/auth/login', { email: email, password: pass });
+        } else {
+          promise = fetch(((api && api.restBase) || 'http://127.0.0.1:8000') + '/api/v1/auth/login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ email: email, password: pass })
+          }).then(function (r) { if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; } return r.json(); });
+        }
+      } catch (e) {
+        promise = Promise.reject(e);
+      }
+      promise.then(function (res) {
+        btn.classList.remove('is-loading');
+        btn.textContent = 'Login';
+        /* Sukses: backend menerbitkan cookie sesi; muat ulang agar shell memakai sesi baru */
+        if (ui && ui.toast) ui.toast('Login berhasil. Memuat sesi…', 'success');
+        setTimeout(function () { location.reload(); }, 500);
+        void res;
+      }).catch(function (e) {
+        btn.classList.remove('is-loading');
+        btn.textContent = 'Login';
+        var msg = (e && e.message) || 'Login gagal.';
+        if (e && (e.status === 401 || String(msg).indexOf('unauthorized') > -1)) {
+          showError(humanErr, 'Email atau password salah. (Backend: 401)');
+        } else if (String(msg).indexOf('Failed to fetch') > -1 || (e && e.name === 'TypeError')) {
+          showError(humanErr, 'Backend DEXTRA tidak merespons di 127.0.0.1:8000. Jalankan backend, atau gunakan mode demo.');
+        } else if (e && e.status === 422) {
+          showError(humanErr, 'Data yang dikirim tidak valid (422). Periksa format email/password.');
+        } else {
+          showError(humanErr, msg);
+        }
+      });
+    }
+
+    btn.addEventListener('click', doLogin);
+    emailInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+    passInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
 
     root.querySelector('#demo').addEventListener('click', function () {
       D.api.clearToken();
       ui.toast('Masuk dalam mode demo. Data contoh, bukan operasi nyata.', 'info', 4200);
       D.router.go('/overview');
-    });
-
-    root.querySelector('#google').addEventListener('click', function () {
-      var apiBase = (D.api && D.api.API) || 'http://127.0.0.1:8765';
-      var backendBase = apiBase.replace(/:8765$/, ':8000').replace(/\/$/, '');
-      fetch(backendBase + '/api/v1/auth/google', { method: 'GET' })
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (j) {
-          if (j.authorization_url) { window.location.href = j.authorization_url; }
-          else { showError(j.detail || 'Google OAuth belum dikonfigurasi di backend.'); }
-        })
-        .catch(function (e) { showError('Backend tidak merespons: ' + (e.message || e)); });
     });
   };
 

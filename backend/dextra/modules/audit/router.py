@@ -6,6 +6,7 @@ import json
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from ...core.authz import require_tenant
 from ...core.security import CallerContext, require_capability
 from ...database.session import get_db
 from ...repositories import audit as audit_repo
@@ -20,7 +21,8 @@ def list_audit_events(
     db: Session = Depends(get_db),
     caller: CallerContext = Depends(require_capability("view_audit")),
 ) -> dict:
-    events = audit_repo.list_events(db, limit=limit, offset=offset)
+    tenant_id = require_tenant(caller)
+    events = audit_repo.list_events(db, limit=limit, offset=offset, tenant_id=tenant_id)
     return {
         "items": [
             {

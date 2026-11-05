@@ -1,0 +1,383 @@
+/* =========================================================================
+   DEXTRA — Login / auth screens
+   Two-panel card, centred in the viewport.
+
+   Loaded after dashboard.css on purpose: this file owns the auth layout only,
+   so a design-system rewrite cannot silently drop the login alignment again.
+   Identity is unchanged — same violet gradient, same typography, same chips.
+
+   Primitives (btn / input / chip / brand-mark) are provided as a *layered*
+   fallback: when the design system is present its unlayered rules always win.
+   ========================================================================= */
+
+/* ---------- 1. Page shell ---------- */
+
+/* Bare pages (login, forbidden, unavailable, not-found) must not inherit the
+   dashboard chrome. These rules mirror the ones the shell expects and are
+   scoped to body.is-bare, so no dashboard screen is affected. */
+body.is-bare .sidebar,
+body.is-bare .topbar,
+body.is-bare .tabsbar { display: none !important; }
+body.is-bare .main { margin-left: 0 !important; width: 100%; }
+body.is-bare .content { padding: 0; }
+body.is-bare .page { max-width: none; margin: 0; }
+
+/* The copilot panel belongs to the dashboard, not to the login screen. Without
+   this it sits in normal flow under the card and adds scrollable height. */
+body.is-bare .copilot,
+body.is-bare .copilot-scrim { display: none !important; }
+
+/* The UA default body margin would push the card 8px down, so the card centre
+   would sit 8px below the viewport centre. Reset it on bare pages only. */
+body.is-bare { margin: 0; padding: 0; }
+
+/* ---------- 2. Centring wrapper ---------- */
+
+.auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 32px;
+  /* No transform, no negative margin, no absolute positioning: the card is
+     centred by flex alone, so it cannot drift left. */
+  background:
+    radial-gradient(1100px 520px at 12% -10%, var(--brand-050, #f6f3ff), transparent 60%),
+    var(--page, #f5f5fa);
+  /* Same stack as the design system; stated here so the login never falls back
+     to the browser serif if the token layer is unavailable. */
+  font-family: var(--font-sans, "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  color: var(--text, #1b1b2f);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 3. The card: two panels side by side ---------- */
+
+.auth__card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  min-height: 640px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--border, #e6e6ef);
+  border-radius: 22px;
+  background: var(--surface, #ffffff);
+  box-shadow: 0 30px 70px -34px rgba(27, 20, 66, 0.42);
+}
+
+/* ---------- 4. Left panel — brand ---------- */
+
+.auth__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 40px 44px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(160deg, #2b1d63 0%, #3c2a92 45%, #5b3fd6 100%);
+}
+
+.auth__brand::after {
+  content: "";
+  position: absolute;
+  right: -120px;
+  bottom: -140px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 65%);
+  pointer-events: none;
+}
+
+.auth__brandtop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth__brand .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.auth__brand .brand-text b { font-size: 14px; letter-spacing: 0.06em; }
+.auth__brand .brand-text span { font-size: 10.5px; }
+
+.auth__pitch { position: relative; z-index: 1; margin-top: 4vh; }
+
+.auth__pitch h1 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
+  font-size: 28px;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+
+.auth__pitch p {
+  margin: 14px 0 0;
+  max-width: 42ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.auth__hero { position: relative; z-index: 1; display: grid; gap: 14px; }
+.auth__hero svg { display: block; width: 100%; max-width: 340px; height: auto; }
+
+.auth__principles--card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth__principles--card .chip {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.auth__foot {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- 5. Right panel — form ---------- */
+
+.auth__form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 40px;
+  background: var(--surface, #ffffff);
+}
+
+.auth__forminner { width: 100%; max-width: 360px; }
+
+.auth__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--text, #1b1b2f);
+}
+
+.auth__title {
+  margin: 0;
+  font-family: var(--font-display, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text, #1b1b2f);
+}
+
+.auth__sub {
+  margin: 6px 0 20px;
+  font-size: 13px;
+  color: var(--muted, #5c5c72);
+}
+
+.auth__forgot { margin: 6px 0 18px; text-align: right; font-size: 12px; }
+.auth__forgot a { color: var(--brand-600, #5b3fd6); text-decoration: none; }
+.auth__forgot a:hover { text-decoration: underline; }
+
+.auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  font-size: 11px;
+  color: var(--faint, #9a9ab0);
+}
+
+.auth__divider::before,
+.auth__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border, #e6e6ef);
+}
+
+.auth__social { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.auth__social .btn { width: 100%; }
+
+/* ---------- 6. Single-panel screens (forbidden / unavailable / 404) ---------- */
+
+.auth--single .auth__form {
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
+  padding: 40px 32px;
+  border: 1px solid var(--border, #e6e6ef);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -34px rgba(27, 20, 66, 0.35);
+}
+
+.auth--single .auth__forminner { max-width: none; }
+
+/* ---------- 7. Responsive ---------- */
+
+/* Tablet / mobile: panels stack, branding is simplified, the form stays intact.
+   Both panels remain present — the card is never reduced to a single column. */
+@media (max-width: 900px) {
+  .auth { padding: 16px; align-items: center; }
+
+  .auth__card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    max-width: 520px;
+  }
+
+  .auth__brand {
+    gap: 14px;
+    padding: 24px 24px 22px;
+  }
+
+  .auth__pitch { margin-top: 0; }
+  .auth__pitch h1 { font-size: 21px; }
+  .auth__pitch p { margin-top: 8px; font-size: 12px; line-height: 1.55; }
+
+  /* The illustration and principle chips are the first things to go: they cost
+     height without helping the person log in. */
+  .auth__hero { display: none; }
+  .auth__foot { display: none; }
+
+  .auth__form { padding: 28px 24px 32px; }
+  .auth__forminner { max-width: none; }
+  .auth__title { font-size: 23px; }
+}
+
+@media (max-width: 420px) {
+  .auth { padding: 12px; }
+  .auth__brand { padding: 20px 20px 18px; }
+  .auth__pitch h1 { font-size: 19px; }
+  .auth__form { padding: 24px 20px 28px; }
+}
+
+/* ---------- 8. Primitive fallback (only if the design system is absent) ---------- */
+
+@layer auth-fallback {
+  .auth .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--brand-600, #5b3fd6);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .auth .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--border, #e6e6ef);
+    border-radius: 10px;
+    background: var(--surface, #fff);
+    color: var(--text, #1b1b2f);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .auth .btn--primary { border-color: transparent; background: var(--brand-600, #5b3fd6); color: #fff; }
+  .auth .btn--lg { height: 46px; }
+  .auth .btn--block { width: 100%; }
+  .auth .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .auth .field__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted, #5c5c72);
+  }
+
+  .auth .input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--border, #e6e6ef);
+    border-radius: 10px;
+    background: var(--surface, #fff);
+    color: var(--text, #1b1b2f);
+    font: inherit;
+    font-size: 13.5px;
+    box-sizing: border-box;
+  }
+
+  .auth .input--icon { padding-left: 38px; }
+  .auth .input-wrap { position: relative; display: flex; align-items: center; }
+  .auth .input-wrap > .material-symbols-outlined {
+    position: absolute;
+    left: 12px;
+    font-size: 18px;
+    color: var(--faint, #9a9ab0);
+    pointer-events: none;
+  }
+
+  .auth .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--muted, #5c5c72);
+    cursor: pointer;
+  }
+
+  .auth .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--border, #e6e6ef);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .auth .chip .material-symbols-outlined { font-size: 14px; }
+
+  .auth .row { display: flex; align-items: center; }
+  .auth .tiny { font-size: 11px; }
+  .auth .muted { color: var(--muted, #5c5c72); }
+  .auth .faint { color: var(--faint, #9a9ab0); }
+
+  .auth .empty__icon {
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--surface-3, #f2f2f8);
+  }
+
+  .auth h1, .auth p { margin: 0; }
+
+  /* Toasts are overlays. If the design system is unavailable they land in
+     normal flow under the card and add a scrollbar to the login screen. */
+  body.is-bare .toast-host {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 90;
+  }
+}

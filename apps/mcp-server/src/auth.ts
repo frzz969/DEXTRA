@@ -33,12 +33,23 @@ function readToken(name: 'DEXTRA_AGENT_TOKEN' | 'DEXTRA_OPS_TOKEN', fallback: st
   return value === undefined || value === '' ? fallback : value;
 }
 
+const DEV_AGENT='agent-dev-token', DEV_OPS='ops-dev-token';
+function warnDevToken(name: string) {
+  if (process.env.DEXTRA_ENV === 'production') {
+    throw new Error(`${name} memakai nilai default dev di production mode — set ${name} eksplisit atau startup gagal`);
+  }
+  console.warn(`[dextra] WARNING: ${name} memakai default dev (${name==='DEXTRA_AGENT_TOKEN'?DEV_AGENT:DEV_OPS}). Wajib diganti di luar pengembangan lokal.`);
+}
 export function agentToken(): string {
-  return readToken('DEXTRA_AGENT_TOKEN', 'agent-dev-token');
+  const v = readToken('DEXTRA_AGENT_TOKEN', DEV_AGENT);
+  if (v === DEV_AGENT) warnDevToken('DEXTRA_AGENT_TOKEN');
+  return v;
 }
 
 export function opsToken(): string {
-  return readToken('DEXTRA_OPS_TOKEN', 'ops-dev-token');
+  const v = readToken('DEXTRA_OPS_TOKEN', DEV_OPS);
+  if (v === DEV_OPS) warnDevToken('DEXTRA_OPS_TOKEN');
+  return v;
 }
 
 /**

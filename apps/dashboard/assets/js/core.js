@@ -768,29 +768,38 @@
     store.hydrateDemo();
     return api.health().then(function (ok) {
       if (!ok) { store.mode = 'demo'; return; }
-      if (!api.token()) { store.mode = 'demo'; return; }
-      /*
-       * Ask the server who we are before drawing anything. The scope it reports
-       * is the only thing that decides which capabilities the UI may show; the
-       * hardcoded persona never does.
-       */
-      return api.call('get_caller_context', {}).then(function (ctx) {
-        session.applyServerContext(ctx);
-        return store.hydrateLive().then(function () { store.mode = 'live'; });
-      }).catch(function (err) {
-        session.applyServerContext(null);
-        store.mode = 'demo';
-        store.hydrateDemo();
-        /*
-         * A rejected credential must not quietly become a demo session that
-         * looks normal. Drop the token and send the operator back to sign in.
-         * Anything else (server vanished mid-boot) keeps the demo fallback.
-         */
-        if (String((err && err.message) || '').toLowerCase().indexOf('unauthorized') >= 0) {
-          api.clearToken();
-          D.authRejected = true;
-          if (location.hash !== '#/login') location.hash = '#/login';
+      /* Dua jalur masuk, JANGAN dicampur:
+       * - REST (cookie httpOnly): ada sesi manusia bila GET /auth/session lolos.
+       * - MCP (bearer :8765): ada token ops bila sessionStorage punya token.
+       * Salah satu cukup untuk live; keduanya gagal -> demo. */
+      var hasBearer = !!api.token();
+      return api.auth.getSession().then(function (sess) {
+        if (sess && sess.user) {
+          session.applyServerContext({ capabilities: sess.capabilities || [] });
         }
+        return api.call('get_caller_context', {}).then(function (ctx) {
+          session.applyServerContext(ctx);
+          return store.hydrateLive().then(function () { store.mode = 'live'; });
+        }).catch(function (err) {
+          if (hasBearer) throw err;
+          return store.hydrateLive().then(function () { store.mode = 'live'; });
+        });
+      }).catch(function (err) {
+        if (!hasBearer) { store.mode = 'demo'; return null; }
+        return api.call('get_caller_context', {}).then(function (ctx) {
+          session.applyServerContext(ctx);
+          return store.hydrateLive().then(function () { store.mode = 'live'; });
+        }).catch(function (err2) {
+          session.applyServerContext(null);
+          store.mode = 'demo';
+          store.hydrateDemo();
+          if (String((err2 && err2.message) || '').toLowerCase().indexOf('unauthorized') >= 0) {
+            api.clearToken();
+            D.authRejected = true;
+            if (location.hash !== '#/login') location.hash = '#/login';
+          }
+          return null;
+        });
       });
     });
   };

@@ -209,6 +209,62 @@
         { id: 'ig.mock', label: 'Integrasi mana yang masih mock?', kind: 'answer', compute: 'integrations' }
       ] },
 
+    { route: '/account', label: 'Akun & Keamanan', domain: 'Akses', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router auth, backend/dextra/main.py:67) punya POST /api/v1/auth/login, /logout, /mfa/*, /password, /sessions/*; jembatan enterprise/api.js probe-aware (live bila GET /api/v1/auth/session berhasil, demo bila backend tak tercapai). Halaman ini berlabel DEMO jelas bila demo; mutasi demo hanya di tab ini. Google OAuth dicabut eksplisit (503) sampai sesi bisa diterbitkan.',
+      intents: [
+        { id: 'p8.gap', label: 'Kenapa Akun & Keamanan masih DEMO?', kind: 'answer', compute: 'humanAuthGap' }
+      ] },
+
+    { route: '/access', label: 'Access Management', domain: 'Administrasi', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router identity, 16 router di main.py:67) punya GET /api/v1/users & /api/v1/roles; jembatan enterprise/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo. Keputusan otorisasi nyata tetap di server.',
+      intents: [
+        { id: 'p9.gap', label: 'Kenapa Access Management masih DEMO?', kind: 'answer', compute: 'accessMgmtGap' }
+      ] },
+
+    { route: '/tokens', label: 'API Tokens', domain: 'Administrasi', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router tokens, 16 router di main.py:67) punya GET/POST /api/v1/tokens, /{id}/revoke, /{id}/rotate; jembatan enterprise/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo; mutasi demo hanya mengubah tab ini.',
+      intents: [
+        { id: 'p10.gap', label: 'Kenapa API Tokens masih DEMO?', kind: 'answer', compute: 'apiTokensGap' }
+      ] },
+
+    { route: '/data-management', label: 'Data Management', domain: 'Administrasi', state: 'demo',
+      tools: [], modules: [],
+      note: 'Tidak ada router P7 di backend (16 router di backend/dextra/main.py:67 tanpa database/health/tenants); persistensi backend v2 memakai PostgreSQL (klaim versi+tabel tidak terverifikasi dari kode). Dashboard tetap memakai data/*.json lewat MCP server lokal — halaman ini fixture DEMO tanpa koneksi database.',
+      intents: [
+        { id: 'p7.gap', label: 'Kenapa Data Management masih DEMO?', kind: 'answer', compute: 'pBackendGap' }
+      ] },
+
+    { route: '/service-identities', label: 'Service Identity', domain: 'Administrasi', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router service_accounts, 16 router di main.py:67) punya GET/POST /api/v1/service-accounts, /{id}, /{id}/revoke; jembatan service-identity/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',
+      intents: [
+        { id: 'p11.gap', label: 'Kenapa Service Identity masih DEMO?', kind: 'answer', compute: 'serviceIdentityGap' }
+      ] },
+
+    { route: '/security-center', label: 'Security Center (P12)', domain: 'Tata kelola', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router security_center, 16 router di main.py:67) punya GET /api/v1/security/overview, /events, /login-history, /sessions, /tokens, /service-identities, /mfa-status; jembatan security-center/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',
+      intents: [
+        { id: 'p12.gap', label: 'Kenapa Security Center masih DEMO?', kind: 'answer', compute: 'securityCenterGap' }
+      ] },
+
+    { route: '/skills', label: 'Skill Registry', domain: 'Intelligence', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router skills, 16 router di main.py:67) punya GET/POST /api/v1/skills, /{slug}, /{slug}/versions, /{slug}/status; jembatan skills/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',
+      intents: [
+        { id: 'skills.gap', label: 'Kenapa Skill Registry masih DEMO?', kind: 'answer', compute: 'skillsGap' }
+      ] },
+
+    { route: '/workflow', label: 'Workflow Orchestration', domain: 'Intelligence', state: 'demo',
+      tools: [], modules: [],
+      note: 'Backend v2 (router workflows, 16 router di main.py:67) punya GET/POST /api/v1/workflows, /{id}/activate, /{id}/runs, /runs, /runs/{id}/gates/{step_id}/approve, /runs/{id}/resume; jembatan workflow/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',
+      intents: [
+        { id: 'workflow.gap', label: 'Kenapa Workflow Orchestration masih DEMO?', kind: 'answer', compute: 'workflowGap' }
+      ] },
+
     { route: '/settings', label: 'Settings', domain: 'Administrasi', state: 'partial',
       tools: ['get_org_rules'], modules: ['store', 'policy-engine'],
       note: 'Profil organisasi dari aturan server; penyimpanan preferensi masih lokal.',

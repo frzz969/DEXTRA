@@ -279,7 +279,8 @@
         '<div class="card" style="margin-top:16px"><div class="card__head"><div><h2>Sesi saat ini</h2></div></div><div class="card__body">' +
           '<dl class="def-list"><dt>Peran</dt><dd>' + esc(D.session.roleLabel()) + '</dd>' +
           '<dt>Mode data</dt><dd>' + (store.mode === 'live' ? 'Live · MCP lokal' : 'Demo · dataset lokal') + '</dd>' +
-          '<dt>Token ops</dt><dd>' + (D.api.token() ? 'ada di sesi' : 'belum diisi') + '</dd>' +
+          '<dt>Token ops (MCP)</dt><dd>' + (D.api.token() ? 'ada di sessionStorage' : 'belum diisi') + '</dd>' +
+          '<dt>Sesi manusia (REST)</dt><dd>cookie httpOnly (dihapus server saat logout)</dd>' +
           '<dt>Jalur</dt><dd class="mono tiny">' + esc(D.api.mode === 'live' ? '127.0.0.1:8765' : 'peramban saja') + '</dd></dl>' +
           '<button class="btn btn--danger-soft btn--sm" id="logout" style="margin-top:12px"><span class="material-symbols-outlined">logout</span>Keluar dari sesi</button>' +
         '</div></div>';
@@ -363,9 +364,13 @@
       if (tab === 'security') {
         var lo = root.querySelector('#logout');
         if (lo) lo.addEventListener('click', function () {
-          D.api.clearToken();
-          ui.toast('Token sesi dihapus.', 'success');
-          D.router.go('/login');
+          var done = function () { D.api.clearToken(); D.router.go('/login'); };
+          if (D.api.auth && typeof D.api.auth.logout === 'function') {
+            Promise.resolve().then(function () { return D.api.auth.logout(); })
+              .then(function () { ui.toast('Anda telah keluar. Sesi server sudah dicabut.', 'success'); })
+              .catch(function (err) { ui.toast('Logout server gagal: ' + ((err && err.message) || 'network'), 'warning'); })
+              .then(done);
+          } else { done(); }
         });
       }
       if (tab === 'data') {

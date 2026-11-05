@@ -1,8 +1,11 @@
 """Eksekusi: jejak, langkah, idempotensi.
 
-`idempotency_key` unik per (mandate_id, action_id) — inilah yang mencegah aksi
-yang sama dijalankan dua kali karena retry. Unik di level database, bukan di
-level aplikasi, karena aplikasi bisa mati di antara dua pengecekan.
+Satu kontrak idempotensi: `idempotency_key = mandate_id:action_id:params_digest`
+dan ia unik di level database (kolom unik + UniqueConstraint
+(mandate_id, action_id, params_digest) — ketiganya sejalan). Retry dengan
+params yang sama mengembalikan baris yang sudah ada; retry dengan params yang
+berubah mendapat kunci berbeda dan ditolak oleh validasi ulang mandate
+(PARAMS_CHANGED), bukan diam-diam mengembalikan hasil lama.
 """
 from __future__ import annotations
 
@@ -19,16 +22,39 @@ EXECUTION_STATUSES = ("pending", "running", "succeeded", "failed", "blocked", "s
 class Execution(Base, IdMixin, TimestampMixin):
     __tablename__ = "executions"
     __table_args__ = (
-        UniqueConstraint("mandate_id", "action_id", name="execution_mandate_action"),
+        # SATU kontrak: kunci idempotensi = (mandate_id, action_id, params_digest).
+        # Constraint ini, kolom idempotency_key yang unik, dan kunci yang dibangun
+        # service harus selalu sejalan — tidak ada dua definisi yang berbeda.
+        UniqueConstraint(
+            "mandate_id", "action_id", "params_digest", name="execution_mandate_action_params"
+        ),
     )
 
     plan_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     mandate_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    #: Tenant pemilik eksekusi. Diwarisi dari mandate, tidak dari klien.
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     action_id: Mapped[str] = mapped_column(String(64), nullable=False)
     agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    adapter: Mapped[str] = mapped_column(String(32), default="mcp", nullable=False)
+    #: Adapter yang benar-benar dipakai. Satu-satunya penulis adalah
+    #: execution/service.py ("mock"); default kolom disamakan di sini agar tidak
+    #: ada huruf kedua yang membawa nilai yang berbeda.
+    adapter: Mapped[str] = mapped_column(String(32), default="mock", nullable=False)
     status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False, index=True)
     idempotency_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
+    #: params_digest(params) — bagian ketiga idempotency_key, disimpan terpisah
+    #: supaya constraint (mandate_id, action_id, params_digest) bisa ditegakkan
+    #: di level database.
+    params_digest: Mapped[str | None] = mapped_column(
+        String(128),
+        # Backfill: baris lama sudah terlanjur ada; jangan paksakan NOT NULL di model
+        # agar fresh DB=dari-model tetap jalan. Migrasi 27ba08c94572 mengisi nilai
+        # lama dari idempotency_key; baris tanpa itu ditandai dan dicatat.
+        nullable=True,
+        index=True,
+    )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)

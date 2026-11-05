@@ -45,12 +45,21 @@ class IssueRequest:
     recipient_scope: str = ""
     agent_id: str | None = None
     ttl_minutes: int = 30
+    #: Tenant pemilik mandate. Diwarisi dari approval, bukan dari klien.
+    tenant_id: str | None = None
 
 
 def issue(db: Session, request: IssueRequest, now: datetime | None = None) -> Mandate:
     approval = db.get(Approval, request.approval_id)
     if approval is None:
         raise MandateError("APPROVAL_NOT_FOUND", "Approval tidak ditemukan.")
+    # Approval dan mandate harus berada di tenant yang sama. Approval tanpa
+    # tenant (baris lama) tidak boleh menerbitkan mandate bertuan.
+    if request.tenant_id is not None and approval.tenant_id != request.tenant_id:
+        raise MandateError(
+            "APPROVAL_TENANT_MISMATCH",
+            "Approval ini bukan milik tenant pemanggil.",
+        )
     if approval.decision != "approved":
         raise MandateError(
             "APPROVAL_NOT_APPROVED",
@@ -73,6 +82,7 @@ def issue(db: Session, request: IssueRequest, now: datetime | None = None) -> Ma
         id=f"mnd_{secrets.token_hex(8)}",
         plan_id=request.plan_id,
         approval_id=request.approval_id,
+        tenant_id=request.tenant_id,
         agent_id=request.agent_id,
         action_id=request.action_id,
         action_type=request.action_type,

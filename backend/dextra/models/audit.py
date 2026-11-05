@@ -25,16 +25,30 @@ class AuditEvent(Base, IdMixin):
     event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     #: agent | ops | dashboard | executor | service — label peran, bukan orang.
     actor: Mapped[str] = mapped_column(String(32), nullable=False)
-    scope: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
-    action: Mapped[str] = mapped_column(String(64), default="", nullable=False)
-    resource: Mapped[str] = mapped_column(String(160), default="", nullable=False)
-    decision: Mapped[str] = mapped_column(String(16), default="", nullable=False)
-    plan_id: Mapped[str] = mapped_column(String(64), default="", nullable=False, index=True)
-    mandate_id: Mapped[str] = mapped_column(String(64), default="", nullable=False, index=True)
-    execution_id: Mapped[str] = mapped_column(String(64), default="", nullable=False, index=True)
-    correlation_id: Mapped[str] = mapped_column(String(64), default="", nullable=False, index=True)
-    detail_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
-    prev_hash: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    scope: Mapped[str] = mapped_column(String(16), default="none", server_default="none", nullable=False)
+    action: Mapped[str] = mapped_column(String(64), default="", server_default="", nullable=False)
+    resource: Mapped[str] = mapped_column(String(160), default="", server_default="", nullable=False)
+    decision: Mapped[str] = mapped_column(String(16), default="", server_default="", nullable=False)
+    plan_id: Mapped[str] = mapped_column(String(64), default="", server_default="", nullable=False, index=True)
+    mandate_id: Mapped[str] = mapped_column(String(64), default="", server_default="", nullable=False, index=True)
+    execution_id: Mapped[str] = mapped_column(String(64), default="", server_default="", nullable=False, index=True)
+    correlation_id: Mapped[str] = mapped_column(
+        String(64), default="", server_default="", nullable=False, index=True
+    )
+    detail_json: Mapped[str] = mapped_column(Text, default="{}", server_default="{}", nullable=False)
+    #: Atribusi tenant. Ditambahkan pada rantai versi 2 — lihat `chain_version`.
+    #: Sengaja tanpa foreign key: audit tidak boleh ikut terhapus saat tenant
+    #: dihapus, dan baris audit harus tetap terbaca setelah tenant-nya tiada.
+    tenant_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    #: Bentuk payload yang di-hash.
+    #: 1 = payload sebelum atribusi tenant (12 kunci, tanpa `tenant_id`).
+    #: 2 = payload dengan `tenant_id` ikut di-hash.
+    #: Verifikasi memilih aturan menurut angka ini, sehingga rantai lama tetap
+    #: sah tanpa menulis ulang hash historis.
+    #: Default model disamakan ke "2" agar fresh DB=dari-model (baris baru selalu
+    #: versi 2; baris lama sudah tercatat 1 di DB dan tidak ditulis ulang).
+    chain_version: Mapped[int] = mapped_column(Integer, default=2, server_default="2", nullable=False)
+    prev_hash: Mapped[str] = mapped_column(String(64), default="", server_default="", nullable=False)
     entry_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
     @staticmethod

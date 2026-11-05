@@ -61,6 +61,13 @@ export const TOOL_CAPABILITY = {
   list_executions: 'view_all',
   get_status: 'view_all',
   get_audit_log: 'view_audit',
+  /*
+   * Export writes a file, but it reads the audit log — and the audit log is
+   * exactly what  governs. A separate capability would be a new
+   * authorization concept for the same authority, and the brief for P4 forbids
+   * changing the authorization model.
+   */
+  export_audit: 'view_audit',
   list_alerts: 'view_audit',
   get_caller_context: 'view_own',
   list_specialists: 'view_all',

@@ -109,6 +109,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   list_executions: 'List execution results, newest first. Optional mandate filter and limit.',
   get_status: 'Read execution status for a mandate+action.',
   get_audit_log: 'Read the audit log (dashboard only).',
+  export_audit: 'Write a verifiable JSONL export of the audit log plus a manifest. Read-only with respect to the log itself; the artifact is written under data/exports and can be checked offline with the audit-export verifier.',
   list_alerts: 'Read alert deliveries: status per alert, attempts, and provider. Read-only; sending is not exposed as a tool.',
   list_specialists: 'Read the specialist roster from workbuddy/agents/*.md: name, role, limits, tools.',
 };
@@ -130,6 +131,10 @@ const TOOL_SCHEMAS: Record<string, any> = {
   list_executions: { type: 'object', properties: { mandate_id: { type: 'string' }, limit: { type: 'number', minimum: 1, maximum: 500 }, offset: { type: 'number', minimum: 0 }, q: { type: 'string', maxLength: 200 } } },
   get_status: { type: 'object', properties: { mandate_id: { type: 'string' }, action_id: { type: 'string' } }, required: ['mandate_id', 'action_id'] },
   get_audit_log: { type: 'object', properties: { limit: { type: 'number', minimum: 1, maximum: 500 }, offset: { type: 'number', minimum: 0 }, q: { type: 'string', maxLength: 200 } } },
+  /* No arguments on purpose: an export always covers the whole log. A range
+     parameter would be a filter that the manifest does not describe, and a
+     partial export that looks complete is worse than no export. */
+  export_audit: { type: 'object', properties: {} },
   list_alerts: { type: 'object', properties: { kind: { type: 'string' }, status: { type: 'string' }, limit: { type: 'number', minimum: 1, maximum: 500 }, offset: { type: 'number', minimum: 0 } } },
   list_specialists: { type: 'object', properties: {} },
 };
@@ -151,6 +156,9 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
   list_executions: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_status: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_audit_log: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  /* Writes a new artifact, so not read-only; it never modifies the log, so not
+     destructive; two runs produce two exports, so not idempotent. */
+  export_audit: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   list_alerts: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   list_specialists: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
 };

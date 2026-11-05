@@ -34,5 +34,12 @@ data/audit.checkpoint.json
 # Lockfile antar-proses (open 'wx'); sisa proses yang mati tidak boleh masuk repo.
 data/*.lock
 
+# Artefak ekspor audit. Hasil, bukan sumber: tiap ekspor punya id sendiri, dan
+# meng-commit-nya berarti membawa potret audit ke mesin yang auditnya berbeda.
+data/exports/
+
 # Sisa kompilasi TypeScript
 *.tsbuildinfo
+
+# Artefak sesi browser (Playwright MCP)
+.playwright-mcp/

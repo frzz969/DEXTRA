@@ -34,8 +34,12 @@ MANDATE_STATUSES = (
 
 class Policy(Base, IdMixin, TimestampMixin):
     __tablename__ = "policies"
+    __table_args__ = (UniqueConstraint("tenant_id", "slug", name="policy_tenant_slug"),)
 
-    slug: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    slug: Mapped[str] = mapped_column(String(64), nullable=False)
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     scope: Mapped[str] = mapped_column(String(64), default="organization", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -63,6 +67,9 @@ class PolicyEvaluation(Base, IdMixin):
     __tablename__ = "policy_evaluations"
 
     plan_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     policy_slug: Mapped[str] = mapped_column(String(64), nullable=False)
     decision: Mapped[str] = mapped_column(String(16), nullable=False)  # allow | deny | review
     reason_code: Mapped[str] = mapped_column(String(64), default="", nullable=False)
@@ -74,6 +81,11 @@ class Approval(Base, IdMixin, TimestampMixin):
     __tablename__ = "approvals"
 
     plan_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    #: Tenant pemilik keputusan. NULL berarti baris lama dari sebelum P9; baris
+    #: seperti itu tidak terlihat oleh pemanggil yang terikat tenant.
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     #: String dari klien. Server mencatatnya dan TIDAK memverifikasinya.
     approver_id: Mapped[str] = mapped_column(String(64), nullable=False)
     decision: Mapped[str] = mapped_column(String(16), nullable=False)  # approved | rejected | revision
@@ -86,6 +98,10 @@ class Mandate(Base, IdMixin, TimestampMixin):
     __tablename__ = "mandates"
 
     plan_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    #: Tenant pemilik mandate. Wajib cocok dengan tenant pemanggil saat dipakai.
+    tenant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     approval_id: Mapped[str | None] = mapped_column(
         ForeignKey("approvals.id", ondelete="SET NULL"), nullable=True
     )
