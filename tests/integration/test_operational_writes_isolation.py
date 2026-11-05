@@ -658,3 +658,85 @@ def test_seed_is_idempotent():
             count = conn.execute(text(f"select count(*) from {table}")).scalar_one()
             assert count == expected, f"{table}: {count} != {expected}"
     engine.dispose()
+
+
+# ---------------------------------------------------------------- integritas relasi
+
+
+def test_assignment_uniqueness_is_enforced_by_database(client, _clean_throttle):
+    """Pemeriksaan di kode bisa kalah balapan; constraint tidak."""
+    alpha = _make_tenant_user("operator", slug_prefix="alpha")
+    a = _seed(alpha["tenant_id"], slug="alpha-agent")
+    _login(client, alpha)
+    created = client.post(
+        f"/api/v1/tasks/{a['task_id']}/assignments",
+        json={"agent_slug": "alpha-agent"},
+        headers={"X-CSRF-Token": client.cookies.get("dextra_csrf") or ""},
+    )
+    assert created.status_code == 201
+
+    from sqlalchemy.exc import IntegrityError
+
+    with pytest.raises(IntegrityError):
+        with session_scope() as db:
+            db.add(
+                AgentAssignment(
+                    id=new_id("asg"),
+                    task_id=a["task_id"],
+                    agent_id=a["agent_id"],
+                    role="executor",
+                    tenant_id=alpha["tenant_id"],
+                )
+            )
+
+    with session_scope() as db:
+        rows = db.scalars(
+            select(AgentAssignment).where(AgentAssignment.task_id == a["task_id"])
+        ).all()
+        assert len(rows) == 1
+
+
+def test_deleting_agent_removes_its_assignments_and_clears_task(client, _clean_throttle):
+    alpha = _make_tenant_user("admin", slug_prefix="alpha")
+    a = _seed(alpha["tenant_id"], slug="alpha-agent")
+    _login(client, alpha)
+    headers = {"X-CSRF-Token": client.cookies.get("dextra_csrf") or ""}
+    created = client.post(
+        f"/api/v1/tasks/{a['task_id']}/assignments",
+        json={"agent_slug": "alpha-agent"},
+        headers=headers,
+    )
+    assignment_id = created.json()["id"]
+
+    assert client.delete(f"/api/v1/agents/{a['agent_slug']}", headers=headers).status_code == 200
+
+    with session_scope() as db:
+        assert db.get(AgentAssignment, assignment_id) is None
+        assert db.get(Task, a["task_id"]).assigned_agent_id is None
+
+
+def test_deleting_task_removes_its_assignments(client, _clean_throttle):
+    alpha = _make_tenant_user("operator", slug_prefix="alpha")
+    a = _seed(alpha["tenant_id"], slug="alpha-agent")
+    _login(client, alpha)
+    headers = {"X-CSRF-Token": client.cookies.get("dextra_csrf") or ""}
+    created = client.post(
+        f"/api/v1/tasks/{a['task_id']}/assignments",
+        json={"agent_slug": "alpha-agent"},
+        headers=headers,
+    )
+    assignment_id = created.json()["id"]
+
+    assert client.delete(f"/api/v1/tasks/{a['task_id']}", headers=headers).status_code == 200
+
+    with session_scope() as db:
+        assert db.get(AgentAssignment, assignment_id) is None
+
+
+def test_security_sessions_still_resolve_member_email(client, _clean_throttle):
+    """Pencarian pengguna dipersempit ke tenant, tetapi email tetap terisi."""
+    alpha = _make_tenant_user("admin", slug_prefix="alpha")
+    _login(client, alpha)
+    body = client.get("/api/v1/security/sessions").json()
+    assert body["items"], "admin seharusnya melihat sesinya sendiri"
+    assert all(item["user_email"] == alpha["email"] for item in body["items"])

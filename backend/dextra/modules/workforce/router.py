@@ -15,7 +15,8 @@ from sqlalchemy.orm import Session
 from ...core.authz import require_tenant, scope_to_tenant
 from ...core.security import CallerContext, get_caller, require_capability
 from ...database.session import get_db
-from ...models.workforce import Agent
+from ...models.tasks import Task
+from ...models.workforce import Agent, AgentAssignment
 
 router = APIRouter(tags=["workforce"])
 
@@ -124,6 +125,17 @@ def delete_agent(
     require_tenant(caller)
     agent = _resolve(db, slug, caller)
     agent_id = agent.id
+
+    #: Bersihkan rujukan sebelum agen dihapus. Di PostgreSQL FK menangani ini,
+    #: tetapi SQLite tidak menegakkan FK secara default — tanpa langkah ini
+    #: penugasan dan `assigned_agent_id` menjadi yatim di salah satu dialek.
+    for assignment in db.scalars(
+        select(AgentAssignment).where(AgentAssignment.agent_id == agent_id)
+    ).all():
+        db.delete(assignment)
+    for task in db.scalars(select(Task).where(Task.assigned_agent_id == agent_id)).all():
+        task.assigned_agent_id = None
+
     db.delete(agent)
     db.commit()
     return {"deleted": True, "slug": slug, "id": agent_id}

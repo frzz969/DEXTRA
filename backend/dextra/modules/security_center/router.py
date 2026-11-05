@@ -135,7 +135,16 @@ def tenant_sessions(
         )
         .order_by(SessionRow.issued_at.desc())
     ).all()
-    users = {user.id: user for user in db.scalars(select(User)).all()}
+    #: Hanya pengguna yang muncul di sesi tenant ini. `select(User)` tanpa filter
+    #: membaca seluruh pengguna di database — tidak bocor hari ini karena hasilnya
+    #: hanya dipakai sebagai peta, tetapi itu kebiasaan yang menjadi kebocoran
+    #: begitu seseorang memakainya untuk hal lain.
+    user_ids = {row.user_id for row in rows}
+    users = (
+        {user.id: user for user in db.scalars(select(User).where(User.id.in_(user_ids))).all()}
+        if user_ids
+        else {}
+    )
     return {
         "items": [
             {

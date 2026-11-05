@@ -60,6 +60,12 @@ class AgentVersion(Base, IdMixin, TimestampMixin):
 
 class AgentAssignment(Base, IdMixin, TimestampMixin):
     __tablename__ = "agent_assignments"
+    #: Satu agen tidak bisa ditugaskan dua kali dengan peran yang sama pada task
+    #: yang sama. Ditegakkan database, bukan hanya oleh pemeriksaan di kode:
+    #: dua permintaan assign yang berjalan bersamaan sama-sama lolos pemeriksaan.
+    __table_args__ = (
+        UniqueConstraint("task_id", "agent_id", "role", name="agent_assignment_unique"),
+    )
 
     agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
     task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)

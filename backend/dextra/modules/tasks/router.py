@@ -16,6 +16,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ...core.authz import require_tenant, scope_to_tenant
@@ -79,6 +80,22 @@ def _serialize_task(task: Task) -> dict:
         "status": task.status,
         "assigned_agent_id": task.assigned_agent_id,
     }
+
+
+def _drop_assignments(db: Session, task_ids: list[str]) -> None:
+    """Hapus penugasan milik task yang akan ikut terhapus.
+
+    Foreign key `ON DELETE CASCADE` menanganinya di PostgreSQL, tetapi SQLite
+    tidak menegakkan FK secara default. Menghapusnya eksplisit membuat kedua
+    dialek berperilaku sama, bukan bergantung pada pengaturan server.
+    """
+    if not task_ids:
+        return
+    rows = db.scalars(
+        select(AgentAssignment).where(AgentAssignment.task_id.in_(task_ids))
+    ).all()
+    for row in rows:
+        db.delete(row)
 
 
 def _task_id(db: Session, package: WorkPackage) -> str:
@@ -158,6 +175,7 @@ def delete_work_package(
 ) -> dict:
     require_tenant(caller)
     package = _resolve_package(db, package_id, caller)
+    _drop_assignments(db, [task.id for task in package.tasks])
     db.delete(package)
     db.commit()
     return {"deleted": True, "id": package_id}
@@ -226,6 +244,7 @@ def delete_task(
 ) -> dict:
     require_tenant(caller)
     task = _resolve_task(db, task_id, caller)
+    _drop_assignments(db, [task.id])
     db.delete(task)
     db.commit()
     return {"deleted": True, "id": task_id}
@@ -294,7 +313,28 @@ def assign_agent(
     )
     db.add(assignment)
     task.assigned_agent_id = agent.id
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Permintaan lain menang balapan dan sudah menulis baris yang sama.
+        # Itu hasil yang diinginkan, bukan kegagalan: kembalikan baris itu.
+        db.rollback()
+        existing = db.scalar(
+            select(AgentAssignment).where(
+                AgentAssignment.task_id == task.id,
+                AgentAssignment.agent_id == agent.id,
+                AgentAssignment.role == payload.role,
+            )
+        )
+        if existing is None:
+            raise
+        return {
+            "id": existing.id,
+            "task_id": existing.task_id,
+            "agent_id": existing.agent_id,
+            "role": existing.role,
+            "created": False,
+        }
     return {
         "id": assignment.id,
         "task_id": assignment.task_id,

@@ -333,7 +333,8 @@ Rules specific to each:
   `pending_approval`, `approved`, `executing`, `completed`, `rejected`, `revoked`,
   `failed`, `cancelled`), otherwise `422`.
 - **Assignment** is idempotent: the same `agent_slug` + `role` returns the existing row
-  with `created: false`. Both the task and the agent must belong to the caller's tenant;
+  with `created: false`. Uniqueness is enforced by a database constraint on
+  `(task_id, agent_id, role)`, so two concurrent requests cannot both create a row. Both the task and the agent must belong to the caller's tenant;
   a foreign agent is `404` and no assignment row is written. Assigning sets the task's
   `assigned_agent_id`; unassigning clears it when it pointed at that agent.
 - **Policy** writes never overwrite history: supplying `rules_json` appends a
