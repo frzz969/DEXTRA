@@ -1,0 +1,9 @@
+# Entrypoint untuk `docker compose up` dari root repo.
+#
+# Definisi layanan ada di infra/docker/docker-compose.yml (struktur §28 menaruh
+# infra di infra/). Berkas ini hanya menyertakannya, bukan menyalin ulang —
+# salinan kedua akan menyimpang dari yang pertama.
+#
+# Membutuhkan Docker Compose >= 2.20 (dukungan `include`).
+include:
+  - path: infra/docker/docker-compose.yml

@@ -1,0 +1,42 @@
+{
+  "plan_id": "plan_003",
+  "org_id": "org_kenari",
+  "request_id": "req_003",
+  "created_at": "2026-11-01T11:00:00+07:00",
+  "status": "READY",
+  "intent": "Jadwalkan rapat koordinasi tim pada Jumat siang.",
+  "actions": [
+    {
+      "action_id": "action_001",
+      "action_type": "create_calendar_event",
+      "target": {
+        "contact_id": "c_tim_ops",
+        "display_name": "Tim Operasional",
+        "channel": "calendar",
+        "masked_address": "t***@kenari.co.id"
+      },
+      "schedule": {
+        "start_at": "2026-11-06T12:00:00+07:00",
+        "end_at": "2026-11-06T13:00:00+07:00",
+        "timezone": "Asia/Jakarta",
+        "all_day": false
+      },
+      "content": {
+        "subject": "Rapat koordinasi mingguan",
+        "body": "Agenda: evaluasi mingguan dan rencana pekan depan.",
+        "locale": "id-ID"
+      },
+      "risk": "low"
+    }
+  ],
+  "findings": [
+    {
+      "code": "FRIDAY_PRAYER_CONFLICT",
+      "severity": "warning",
+      "action_id": "action_001",
+      "message": "Jadwal bertabrakan dengan waktu salat Jumat (11:30-13:00) di zona Asia/Jakarta."
+    }
+  ],
+  "plan_hash": "sha256:4c5a65e42d75d4e57a7a4d377ab04e37c7748c6ffbad96c759baae37f945fd6a",
+  "contract_version": "1.0.0"
+}

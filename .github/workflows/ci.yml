@@ -1,0 +1,71 @@
+name: CI
+
+# Satu tempat yang menjalankan semua pemeriksaan yang sudah ada.
+# Tanpa ini, "113 tes lulus" adalah klaim dari mesin pengembang, bukan fakta repo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Node + Python (unit, kontrak, paritas)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Pasang dependency (npm workspaces)
+        run: npm ci
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Pasang backend + pytest
+        run: pip install -e ".[dev]"
+
+      # Urutan pemeriksaan ada di scripts/test-all.mjs, bukan diulang di sini.
+      # Kalau urutannya berubah, ubah satu tempat itu.
+      - name: Semua pemeriksaan
+        run: node scripts/test-all.mjs
+
+  web:
+    name: Next.js (apps/web) build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # apps/web sengaja di luar npm workspaces (symlink gagal di Windows),
+    # jadi ia punya lockfile sendiri. Ia di-build terpisah supaya tidak diam-diam rusak.
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build

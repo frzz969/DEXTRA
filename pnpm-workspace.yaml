@@ -1,0 +1,11 @@
+# Paritas dengan struktur target PRD v2.0.0 §11.
+#
+# Package manager aktif di repo ini adalah **pnpm** (workspace di `D:\dextra`).
+# Semua dependensi (termasuk `apps/*`, `packages/*`, dan `apps/mcp-server`)
+# dipasang melalui `pnpm install` di root repo. Lockfile: `pnpm-lock.yaml`.
+#
+# Berkas ini mendefinisikan workspace yang dicakup pnpm. Symlink workspace
+# berfungsi pada drive NTFS `D:` (`D:\dextra`), termasuk `apps/web`.
+packages:
+  - "packages/*"
+  - "apps/*"

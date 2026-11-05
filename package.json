@@ -1,0 +1,35 @@
+{
+  "name": "dextra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DEXTRA — agen AI kantor dengan eksekusi berbasis mandat",
+  "workspaces": [
+    "packages/*",
+    "apps/mcp-server",
+    "apps/telegram-adapter"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "node scripts/verify-packages.mjs && node scripts/verify-workbuddy.mjs && npm run test --workspaces --if-present",
+    "test:all": "node scripts/test-all.mjs",
+    "test:inproc": "node --test --experimental-strip-types \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
+    "test:e2e": "cd apps/web && npm run test:e2e",
+    "test:http": "node --test --experimental-strip-types \"apps/mcp-server/tests/http-verification.verify.ts\"",
+    "test:contracts": "npm run test --workspace @dextra/contracts",
+    "sync:packages": "node scripts/sync-packages.mjs",
+    "verify:packages": "node scripts/verify-packages.mjs",
+    "check:syntax": "node scripts/check-syntax.mjs",
+    "lint": "npm run typecheck && node scripts/check-syntax.mjs",
+    "demo:seed": "node --experimental-strip-types packages/store/src/seed.ts",
+    "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset",
+    "demo:flow": "node scripts/demo-flow.mjs",
+    "dev:mcp": "node --experimental-strip-types apps/mcp-server/src/index.ts",
+    "dev:web": "./scripts/dev-web.sh",
+    "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
+    "audit:verify": "node --experimental-strip-types packages/audit-export/src/cli.ts"
+  }
+}

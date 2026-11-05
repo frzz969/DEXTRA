@@ -1,0 +1,21 @@
+{
+  "name": "@dextra/mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "node --experimental-strip-types src/index.ts",
+    "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@dextra/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  },
+  "engines": { "node": ">=24" }
+}
+

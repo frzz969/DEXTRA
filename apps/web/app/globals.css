@@ -1,0 +1,87 @@
+/* Token dan komponen berasal dari packages/design-system.
+   Salinan di bawah ini dibuat oleh scripts/sync-packages.mjs dan diverifikasi
+   oleh scripts/verify-packages.mjs — jangan disunting langsung. */
+@import "./dextra-design-system.css";
+
+/* App-specific additions only.
+ *
+ * The design system above owns the shell (.sidebar / .main / .content),
+ * KPI cards, page headers, banners, and responsive behaviour
+ * (sidebar hides <=1080px, grid collapses at its own breakpoints).
+ * Do NOT re-declare those classes here — previous overrides caused a
+ * double sidebar offset (grid .shell + fixed .sidebar + .main margin).
+ *
+ * This single rule only guards against horizontal page overflow from
+ * long unbreakable tokens. `clip` (unlike `hidden`) does not create a
+ * scroll container, so sticky topbars/rails keep working. */
+html, body { overflow-x: clip; }
+
+/* Copilot — panel AI global. Satu AI dengan halaman /assistant. */
+.copilot-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 70;
+  height: 46px;
+  width: 46px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--brand-600);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+}
+.copilot-fab:hover { background: var(--brand-700); }
+.copilot-fab .material-symbols-outlined { font-size: 22px; }
+
+.copilot-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 76px;
+  z-index: 70;
+  width: min(380px, calc(100vw - 36px));
+  height: min(640px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.copilot-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.copilot-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.copilot-panel__foot {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+.copilot-panel__foot form { display: flex; gap: 8px; align-items: flex-end; }
+.copilot-panel__foot textarea { flex: 1; min-height: 38px; max-height: 110px; resize: vertical; }
+.copilot-panel__foot .btn { height: 38px; }
+@media (max-width: 640px) {
+  .copilot-panel {
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    width: calc(100vw - 24px);
+    height: min(70vh, calc(100vh - 24px));
+  }
+  .copilot-fab { right: 12px; bottom: 12px; }
+}
