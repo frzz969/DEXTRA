@@ -46,7 +46,7 @@ describe('auth scoping', () => {
      * sama: ekspor memuat SELURUH log, jadi agent yang hanya punya `view_all`
      * tidak boleh mendapatkannya.
      */
-    assert.equal(OPS_TOOLS.size, 19);
+    assert.equal(OPS_TOOLS.size, 20);
     assert.equal(AGENT_TOOLS.size, 12);
   });
 

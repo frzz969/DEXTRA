@@ -104,6 +104,8 @@ export function parseStrictOrigin(value: string): string | null {
 
 export function defaultAllowedOrigins(port: number): string[] {
   const ports = new Set<number>([port, DASHBOARD_PORT, STATIC_DASHBOARD_PORT]);
+  const envPort = Number(process.env.DEXTRA_DASHBOARD_PORT);
+  if (Number.isInteger(envPort) && envPort > 0 && envPort <= 65535) ports.add(envPort);
   const origins: string[] = [];
   for (const p of ports) {
     origins.push(`http://127.0.0.1:${p}`, `http://localhost:${p}`);

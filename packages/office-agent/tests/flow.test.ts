@@ -21,6 +21,22 @@ function requestId(): string {
   return `req_flow${String(seq).padStart(2, '0')}`;
 }
 
+/**
+ * D-04: approvals now require a server-issued one-time challenge. Tests that
+ * already hold a plan can mint one through the same store API the server uses;
+ * the six-digit code is not needed here because the store-issued token carries
+ * it.
+ */
+async function approvalTokenFor(plan: { plan_id: string; plan_hash: string }): Promise<string> {
+  const principal = process.env.DEXTRA_OPS_PRINCIPAL ?? 'usr_nadia';
+  const created = await store.createApprovalChallenge({
+    planId: plan.plan_id,
+    planHash: plan.plan_hash,
+    approverPrincipalId: principal,
+  });
+  return created.approval_token;
+}
+
 function doc(content: string, filename = 'notulen.md') {
   return { filename, content };
 }
@@ -76,7 +92,7 @@ test('alur penuh: dokumen → klarifikasi → plan → persetujuan → mandate �
   /* 3. Persetujuan manusia mengikat hash plan. */
   const approved = await handleTool(
     'submit_approval',
-    { plan_id: plan.plan_id, plan_hash: plan.plan_hash, decision: 'approve', approval_token: 'apt_flow_test_1' },
+    { plan_id: plan.plan_id, plan_hash: plan.plan_hash, decision: 'approve', approval_token: await approvalTokenFor(plan) },
     'ops',
   );
   assert.equal(approved.ok, true, JSON.stringify(approved));
@@ -224,7 +240,7 @@ test('eksekusi sebagian meninggalkan action lain tetap bisa dijalankan', async (
 
   const approved = await handleTool(
     'submit_approval',
-    { plan_id: plan.plan!.plan_id, plan_hash: plan.plan!.plan_hash, decision: 'approve', approval_token: 'apt_partial_flow_1' },
+    { plan_id: plan.plan!.plan_id, plan_hash: plan.plan!.plan_hash, decision: 'approve', approval_token: await approvalTokenFor(plan.plan!) },
     'ops',
   );
   assert.equal(approved.ok, true);
@@ -252,7 +268,7 @@ test('office agent tidak punya jalan memanggil adapter secara langsung', async (
     /* Menyebut nama tool di dokumentasi tidak apa-apa; memanggilnya tidak. */
     assert.ok(!/executeAction\s*\(|handleTool\(\s*'execute_action'/.test(source), `${file} memanggil eksekusi`);
   }
-  assert.equal(OFFICE_AGENT_CAPABILITY, 'create_plan');
+  assert.equal(OFFICE_AGENT_CAPABILITY, 'create_request');
 });
 
 test('handler integrasi menolak permintaan tanpa principal terikat', async () => {

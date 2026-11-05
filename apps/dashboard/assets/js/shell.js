@@ -241,12 +241,17 @@
     var host = document.getElementById('topbar');
     if (!host) return;
     var mode = store.mode;
-    var envLabel = mode === 'live' ? 'Live · local MCP' : 'Demo data';
+    /* Label mengikuti transport yang benar-benar menjawab, bukan yang diharapkan:
+     * sesi REST tanpa token ops bukan "Live · local MCP". */
+    var envLabel = mode !== 'live'
+      ? 'Demo data'
+      : (store.transport === 'mcp' ? 'Live · local MCP' : 'Sesi API · data v1 belum terhubung');
+    var envState = mode !== 'live' ? 'demo' : (store.transport === 'mcp' ? 'live' : 'offline');
     host.innerHTML =
       '<div class="topbar__left">' +
         '<button class="icon-btn menu-btn" id="mobile-menu" aria-label="Buka navigasi"><span class="material-symbols-outlined">menu</span></button>' +
         '<nav class="breadcrumbs" id="crumbs"></nav>' +
-        '<span class="env-pill" id="env-pill" data-state="' + (mode === 'live' ? 'live' : 'demo') + '"><i class="dot"></i>' + envLabel + '</span>' +
+        '<span class="env-pill" id="env-pill" data-state="' + envState + '"><i class="dot"></i>' + esc(envLabel) + '</span>' +
       '</div>' +
       '<div class="topbar__right">' +
         '<button class="copilot-trigger" id="copilot-trigger" title="Copilot (Ctrl+J)" aria-label="Buka Copilot">' +
@@ -403,6 +408,29 @@
     paintActive();
   }
 
+  /* Sesi REST aktif tetapi gateway MCP belum menerima token ops. Tanpa
+   * pernyataan ini, halaman work package/mandat/eksekusi/audit tampak "kosong"
+   * padahal sebabnya bukan tidak ada pekerjaan — melainkan tidak ada sumber. */
+  function paintV1Banner() {
+    var root = document.getElementById('view-root');
+    if (!root) return;
+    var page = root.querySelector('.page');
+    if (!page) return;
+    var existing = document.getElementById('v1-banner');
+    var needs = store.mode === 'live' && store.transport !== 'mcp';
+    if (!needs) { if (existing) existing.remove(); return; }
+    if (existing) return;
+    var el = document.createElement('div');
+    el.id = 'v1-banner';
+    el.className = 'banner banner--warning';
+    el.innerHTML = '<span class="material-symbols-outlined">link_off</span><div>' +
+      '<b>Data v1 belum terhubung.</b> Sesi API aktif, tetapi gateway MCP (127.0.0.1:8765) belum menerima token ops, ' +
+      'jadi work package, mandat, eksekusi, dan audit tidak terbaca. Angka kosong di halaman ini berarti ' +
+      '<i>tidak ada sumber</i>, bukan berarti tidak ada pekerjaan. ' +
+      '<a href="#/login" style="text-decoration:underline">Pasang token ops di halaman masuk</a>.</div>';
+    page.insertBefore(el, page.firstChild);
+  }
+
   var shell = {
     nav: NAV,
     init: function () {
@@ -423,6 +451,7 @@
       var bare = !!(route && route.bare);
       document.body.classList.toggle('is-bare', bare);
       if (!bare) paintActive();
+      if (!bare) paintV1Banner();
       /* The panel is mounted once and survives navigation; sync() only re-scopes
          it to the new route and closes it on bare pages (login, errors). */
       if (D.copilotPanel) {

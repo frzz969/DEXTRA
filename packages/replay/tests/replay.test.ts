@@ -48,7 +48,7 @@ describe('decision replay', () => {
     const { plan } = await setupPlan();
     const approval = ApprovalSchema.parse({
       approval_id: 'appr_r', plan_id: plan.plan_id, plan_hash: plan.plan_hash,
-      decision: 'approve', approver_id: 'user_001', approval_token: 'apt_r',
+      decision: 'approve', approver_id: 'user_001', approval_token: 'apc_0123456789abcdef.000000',
       issued_at: '2026-11-01T10:05:00+07:00', expires_at: '2026-11-01T10:20:00+07:00', status: 'granted',
     });
     const { saveApproval } = await import('../../store/src/index.ts');
@@ -124,7 +124,7 @@ describe('decision replay', () => {
     const { plan } = await setupPlan();
     const approval = ApprovalSchema.parse({
       approval_id: 'appr_rev', plan_id: plan.plan_id, plan_hash: plan.plan_hash,
-      decision: 'approve', approver_id: 'user_001', approval_token: 'apt_r',
+      decision: 'approve', approver_id: 'user_001', approval_token: 'apc_0123456789abcdef.000000',
       issued_at: '2026-11-01T10:05:00+07:00', expires_at: '2026-11-01T10:20:00+07:00', status: 'granted',
     });
     const { saveApproval, saveMandate, appendAudit } = await import('../../store/src/index.ts');

@@ -33,6 +33,19 @@ export {
   summarizeAlertDeliveries,
 } from './alerts.ts';
 
+export {
+  ApprovalChallengeSchema,
+  consumeApprovalChallenge,
+  createApprovalChallenge,
+  listApprovalChallenges,
+} from './approval-challenges.ts';
+export type {
+  ApprovalChallenge,
+  ConsumeChallengeResult,
+  CreateChallengeInput,
+  CreatedChallenge,
+} from './approval-challenges.ts';
+
 export { getPrincipal, listPrincipals } from './principals.ts';
 export type { Principal } from '../../contracts/src/identity.ts';
 

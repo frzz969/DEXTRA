@@ -16,6 +16,10 @@ TOOL_CAPABILITY: Final[dict[str, str]] = {
     "validate_plan": "create_request",
     "get_plan": "view_all",
     "list_plans": "view_all",
+    # Challenge sekali pakai sebelum submit_approval: kodenya dicetak ke terminal
+    # server, tidak pernah dikembalikan ke peramban. Kewenangannya sama dengan
+    # menyetujui, karena ia hanya menerbitkan kode untuk keputusan yang sama.
+    "request_approval_challenge": "approve",
     "submit_approval": "approve",
     "get_mandate": "view_all",
     "list_mandates": "view_all",

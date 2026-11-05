@@ -47,30 +47,40 @@
                 }).join('') +
               '</div>' +
             '</div>' +
-            '<div class="auth__foot">Kenari Group · org_kenari · Asia/Jakarta · 127.0.0.1</div>' +
+            '<div class="auth__foot">Instans lokal · 127.0.0.1 · Asia/Jakarta</div>' +
           '</section>' +
           '<section class="auth__form">' +
             '<div class="auth__forminner">' +
               '<div class="auth__logo"><span class="brand-mark">D</span><b>DEXTRA</b></div>' +
-              '<h1 class="auth__title">Welcome Back</h1>' +
-              '<p class="auth__sub">Please login to your account</p>' +
+              '<h1 class="auth__title">Selamat datang kembali</h1>' +
+              '<p class="auth__sub">Masuk untuk melanjutkan ke workspace</p>' +
               '<div id="login-error" aria-live="polite"></div>' +
               '<div class="field" style="margin-bottom:12px">' +
                 '<label class="field__label" for="human-email">Email</label>' +
-                '<input class="input" id="human-email" type="email" placeholder="nama@kenari.co.id" autocomplete="username"></div>' +
+                '<input class="input" id="human-email" type="email" placeholder="nama@perusahaan.co.id" autocomplete="username"></div>' +
               '<div class="field" style="margin-bottom:4px">' +
                 '<label class="field__label" for="human-password">Password</label>' +
                 '<div class="input-wrap"><span class="material-symbols-outlined">lock</span>' +
                   '<input class="input input--icon" id="human-password" type="password" placeholder="••••••••" autocomplete="current-password">' +
                   '<button type="button" class="icon-btn" id="toggle-pass" aria-label="Tampilkan password" style="position:absolute;right:8px;top:50%;transform:translateY(-50%)"><span class="material-symbols-outlined" style="font-size:18px">visibility_off</span></button></div></div>' +
-              '<div class="auth__forgot"><a href="javascript:void 0" id="forgot">Forgot Password</a></div>' +
+              '<div class="auth__forgot"><a href="#/login" id="forgot">Lupa password?</a></div>' +
               '<div id="human-error" aria-live="polite"></div>' +
-              '<button class="btn btn--primary btn--lg btn--block" id="signin" style="height:46px;border-radius:10px">Login</button>' +
-              '<div class="auth__divider"><span>or Login with</span></div>' +
+              '<button class="btn btn--primary btn--lg btn--block" id="signin" style="height:46px;border-radius:10px">Masuk</button>' +
+              '<div class="auth__divider"><span>atau masuk dengan</span></div>' +
               '<div class="auth__social">' +
                 '<button class="btn btn--secondary" id="google" disabled title="Belum dikonfigurasi di backend (503)"><span class="material-symbols-outlined" style="font-size:18px;color:#ea4335">login</span>Google</button>' +
                 '<button class="btn btn--secondary" id="demo"><span class="material-symbols-outlined" style="font-size:18px">science</span>Demo</button>' +
               '</div>' +
+              '<details class="auth__ops" id="ops-panel" style="margin-top:16px;border:1px solid var(--border);border-radius:10px;padding:10px 12px">' +
+                '<summary style="cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted)">Token ops (gateway v1 · MCP 127.0.0.1:8765)</summary>' +
+                '<p class="tiny faint" style="margin:8px 0 10px;line-height:1.5">Data v1 (work package, mandat, eksekusi, audit) dibaca lewat gateway MCP dan butuh bearer token ops. Token disimpan hanya di sessionStorage tab ini.</p>' +
+                '<div class="field" style="margin-bottom:8px"><label class="field__label" for="ops-token">Token ops</label>' +
+                  '<input class="input" id="ops-token" type="password" placeholder="ops-…" autocomplete="off"></div>' +
+                '<div id="ops-error" aria-live="polite"></div>' +
+                '<button class="btn btn--secondary btn--block" id="ops-connect">Hubungkan token</button>' +
+                '<div class="row" style="margin-top:8px;gap:8px"><button class="btn btn--ghost tiny" id="ops-clear" type="button">Lepas token</button>' +
+                  '<span class="tiny faint" id="ops-state">—</span></div>' +
+              '</details>' +
               '<p class="tiny faint" style="margin-top:12px;text-align:center;line-height:1.5">Mode demo memakai dataset contoh di peramban. Bila backend tak tercapai, halaman ini tetap jujur berlabel DEMO — tidak pernah disamarkan jadi LIVE.</p>' +
               '<div class="row" style="margin-top:14px;justify-content:center;gap:14px">' +
                 '<a class="tiny muted" href="#/overview" style="text-decoration:underline">Lewati untuk sekarang</a>' +
@@ -173,14 +183,19 @@
       }
       promise.then(function (res) {
         btn.classList.remove('is-loading');
-        btn.textContent = 'Login';
-        /* Sukses: backend menerbitkan cookie sesi; muat ulang agar shell memakai sesi baru */
-        if (ui && ui.toast) ui.toast('Login berhasil. Memuat sesi…', 'success');
-        setTimeout(function () { location.reload(); }, 500);
+        btn.textContent = 'Masuk';
+        /* Sukses: backend menerbitkan cookie sesi; muat ulang agar shell memakai sesi baru. */
+        if (ui && ui.toast) ui.toast('Masuk berhasil. Memuat workspace…', 'success');
         void res;
+        /* Tanpa ini layar tetap di /login setelah muat ulang: formulir kosong
+         * terlihat seperti login yang gagal. Arahkan ke halaman tujuan dulu. */
+        var next = U.qs('next', null);
+        var target = next && next.charAt(0) === '/' ? next : '/overview';
+        try { history.replaceState(null, '', '#' + target); } catch (e) { void e; }
+        setTimeout(function () { location.reload(); }, 400);
       }).catch(function (e) {
         btn.classList.remove('is-loading');
-        btn.textContent = 'Login';
+        btn.textContent = 'Masuk';
         var msg = (e && e.message) || 'Login gagal.';
         if (e && (e.status === 401 || String(msg).indexOf('unauthorized') > -1)) {
           showError(humanErr, 'Email atau password salah. (Backend: 401)');
@@ -202,6 +217,56 @@
       D.api.clearToken();
       ui.toast('Masuk dalam mode demo. Data contoh, bukan operasi nyata.', 'info', 4200);
       D.router.go('/overview');
+    });
+
+    /* ---------------- token ops (jalur data v1 / MCP) ----------------
+     * Tanpa bearer ini, halaman work package, mandat, eksekusi, dan audit
+     * tidak punya sumber: gateway menolak panggilan anonim. Dulu layar hanya
+     * menawarkan email+password (jalur v2), sehingga data v1 tidak pernah bisa
+     * dijangkau dari UI sama sekali. Panel ini mengembalikan jalur itu, dan
+     * memverifikasi token lewat get_caller_context sebelum menyimpannya. */
+    var opsInput = root.querySelector('#ops-token');
+    var opsBtn = root.querySelector('#ops-connect');
+    var opsErr = root.querySelector('#ops-error');
+    var opsState = root.querySelector('#ops-state');
+    var opsClear = root.querySelector('#ops-clear');
+
+    function describeOps() {
+      var t = D.api.token();
+      opsState.textContent = t ? ('token terpasang · ' + t.slice(0, 4) + '…') : 'belum ada token';
+    }
+    describeOps();
+
+    function connectOps() {
+      clearError(opsErr);
+      var token = (opsInput.value || '').trim();
+      if (!token) { showError(opsErr, 'Isi token ops terlebih dahulu.'); return; }
+      opsBtn.disabled = true;
+      opsBtn.textContent = 'Memverifikasi…';
+      var previous = D.api.token();
+      D.api.setToken(token);
+      D.api.call('get_caller_context', {}).then(function (ctx) {
+        opsBtn.disabled = false;
+        opsBtn.textContent = 'Hubungkan token';
+        D.session.applyServerContext(ctx || null);
+        describeOps();
+        ui.toast('Token ops diterima: scope ' + ((ctx && ctx.scope) || '?') + '. Memuat data v1…', 'success');
+        history.replaceState(null, '', '#/overview');
+        setTimeout(function () { location.reload(); }, 400);
+      }).catch(function (e) {
+        D.api.setToken(previous);
+        opsBtn.disabled = false;
+        opsBtn.textContent = 'Hubungkan token';
+        showError(opsErr, 'Token ditolak gateway: ' + ((e && e.message) || 'tidak diketahui') + '. Token tidak disimpan.');
+        describeOps();
+      });
+    }
+    opsBtn.addEventListener('click', connectOps);
+    opsInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') connectOps(); });
+    opsClear.addEventListener('click', function () {
+      D.api.clearToken();
+      describeOps();
+      ui.toast('Token ops dilepas dari tab ini. Data v1 tidak lagi terbaca.', 'info');
     });
   };
 

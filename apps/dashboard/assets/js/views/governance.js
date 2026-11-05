@@ -412,7 +412,14 @@
       D.router.render();
     };
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
+      D.api.call('request_approval_challenge', { plan_id: p.plan_id, plan_hash: p.plan_hash })
+        .then(function (ch) {
+          var code = window.prompt('Kode persetujuan 6 digit (tercetak di terminal server) untuk ' + p.plan_id + ':', '');
+          if (code === null) throw new Error('Persetujuan dibatalkan.');
+          var cleaned = String(code).trim();
+          if (!/^\\d{6}$/.test(cleaned)) throw new Error('Kode harus 6 digit.');
+          return D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'approve', approver_id: D.session.identityId(), approval_token: ch.challenge_id + '.' + cleaned });
+        })
         .then(function (r) {
           p.mandate_id = r.mandate_id || mandateId;
           ui.toast('Mandat diterbitkan oleh server: ' + p.mandate_id, 'success');
@@ -426,7 +433,11 @@
 
   function doReject(p, reason) {
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
+      D.api.call('request_approval_challenge', { plan_id: p.plan_id, plan_hash: p.plan_hash }).then(function (ch) {
+        var code = window.prompt('Kode persetujuan 6 digit (tercetak di terminal server):', '');
+        if (code === null) throw new Error('Persetujuan dibatalkan.');
+        return D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'reject', approver_id: D.session.identityId(), approval_token: ch.challenge_id + '.' + String(code).trim() });
+      })
         .then(function () { ui.toast('Work package ditolak.', 'success'); D.router.go('/approvals'); })
         .catch(function (e) { ui.toast('Gagal: ' + e.message, 'error'); });
       return;
@@ -442,7 +453,11 @@
 
   function doRevise(p, reason) {
     if (store.mode === 'live') {
-      D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'revise', approver_id: D.session.identityId(), approval_token: 'apt_' + Date.now() })
+      D.api.call('request_approval_challenge', { plan_id: p.plan_id, plan_hash: p.plan_hash }).then(function (ch) {
+        var code = window.prompt('Kode persetujuan 6 digit (tercetak di terminal server):', '');
+        if (code === null) throw new Error('Persetujuan dibatalkan.');
+        return D.api.call('submit_approval', { plan_id: p.plan_id, plan_hash: p.plan_hash, decision: 'revise', approver_id: D.session.identityId(), approval_token: ch.challenge_id + '.' + String(code).trim() });
+      })
         .then(function () { ui.toast('Permintaan revisi dikirim.', 'success'); })
         .catch(function (e) { ui.toast('Gagal: ' + e.message, 'error'); });
       return;

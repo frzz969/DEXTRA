@@ -244,6 +244,7 @@ export async function ensureStoreFiles(): Promise<void> {
     [paths.principals, '[]\n'],
     [paths.mandates, '[]\n'],
     [paths.approvals, '[]\n'],
+    [paths.approvalChallenges, '[]\n'],
     [paths.executions, '[]\n'],
     [paths.alerts, '[]\n'],
     [paths.audit, ''],

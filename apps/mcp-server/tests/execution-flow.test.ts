@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 const dataDir = await mkdtemp(join(tmpdir(), 'dextra-exec-'));
 process.env.DEXTRA_DATA_DIR = dataDir;
 
-const { seed } = await import('../../../packages/store/src/index.ts');
+const { seed, createApprovalChallenge } = await import('../../../packages/store/src/index.ts');
 const { handleTool } = await import('../src/handlers.ts');
 
 const PLAN_ARGS = {
@@ -31,6 +31,16 @@ const PLAN_ARGS = {
 };
 
 let planSequence = 0;
+
+/** D-04: approvals require a server-issued, single-use challenge. */
+async function approvalTokenFor(plan: { plan_id: string; plan_hash: string }): Promise<string> {
+  const created = await createApprovalChallenge({
+    planId: plan.plan_id,
+    planHash: plan.plan_hash,
+    approverPrincipalId: process.env.DEXTRA_OPS_PRINCIPAL ?? 'usr_nadia',
+  });
+  return created.approval_token;
+}
 
 async function approvedPlan() {
   /*
@@ -55,7 +65,7 @@ async function approvedPlan() {
       plan_hash: plan.plan_hash,
       decision: 'approve',
       approver_id: 'user_001',
-      approval_token: `apt_${Date.now()}`,
+      approval_token: await approvalTokenFor(plan),
     },
     'ops',
   );
@@ -171,7 +181,7 @@ test('list_executions reflects a real execution, newest first', async () => {
   assert.ok(scoped.data.executions.every((e: any) => e.mandate_id === mandateId));
 });
 
-test('a weak approval token cannot issue a mandate', async () => {
+test('a client-minted approval token cannot issue a mandate', async () => {
   const created = await handleTool('create_plan', PLAN_ARGS, 'ops');
   const plan = created.data.plan;
   const res = await handleTool(
@@ -186,5 +196,6 @@ test('a weak approval token cannot issue a mandate', async () => {
     'ops',
   );
   assert.equal(res.ok, false);
-  assert.match(res.error.message, /demo approval token/i);
+  assert.equal(res.error.code, 'APPROVAL_CHALLENGE_MISSING');
+  assert.match(res.error.message, /server-issued challenge/i);
 });

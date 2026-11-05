@@ -44,7 +44,7 @@ function makeApproval(plan: Plan, overrides: Partial<Approval> = {}): Approval {
     plan_hash: plan.plan_hash,
     decision: 'approve',
     approver_id: 'user_001',
-    approval_token: 'apt_abc123',
+    approval_token: 'apc_0123456789abcdef.000000',
     issued_at: '2026-11-01T10:05:00+07:00',
     expires_at: '2026-11-01T10:20:00+07:00',
     status: 'granted',

@@ -63,7 +63,7 @@ function approval(overrides: Partial<Approval> = {}): Approval {
     plan_hash: `sha256:${'a'.repeat(64)}`,
     decision: 'approve',
     approver_id: 'nadia',
-    approval_token: 'apt_token',
+    approval_token: 'apc_0123456789abcdef.000000',
     issued_at: minutesAgo(10),
     expires_at: minutesFromNow(60),
     status: 'pending',

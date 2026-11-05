@@ -39,6 +39,7 @@ export function getStorePaths(): StorePaths {
     principals: resolve(dataDir, 'principals.json'),
     mandates: resolve(dataDir, 'mandates.json'),
     approvals: resolve(dataDir, 'approvals.json'),
+    approvalChallenges: resolve(dataDir, 'approval-challenges.json'),
     executions: resolve(dataDir, 'executions.json'),
     alerts: resolve(dataDir, 'alerts.json'),
     audit: resolve(dataDir, 'audit.jsonl'),

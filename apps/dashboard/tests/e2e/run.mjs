@@ -213,9 +213,12 @@ async function main() {
   }
 
   const spawned = [];
-  spawned.push(track(spawn(process.execPath, ['--experimental-strip-types', 'apps/mcp-server/src/index.ts'], {
-    cwd: ROOT, stdio: 'ignore', env: { ...process.env, DEXTRA_DATA_DIR: dataDir },
-  })));
+  let mcpStdout = '';
+  const mcpProc = spawn(process.execPath, ['--experimental-strip-types', 'apps/mcp-server/src/index.ts'], {
+    cwd: ROOT, stdio: ['ignore','pipe','ignore'], env: { ...process.env, DEXTRA_DATA_DIR: dataDir },
+  });
+  mcpProc.stdout.on('data', (c) => { mcpStdout += c.toString(); });
+  spawned.push(track(mcpProc));
   spawned.push(track(spawn(process.execPath, ['scripts/serve-dashboard.mjs'], {
     cwd: ROOT, stdio: 'ignore', env: { ...process.env, DEXTRA_DASHBOARD_PORT: String(DASH_PORT) },
   })));
@@ -335,11 +338,12 @@ async function main() {
           }]
         });
         var plan = created.plan;
+        var ch = await api.call('request_approval_challenge', { plan_id: plan.plan_id, plan_hash: plan.plan_hash });
         var appr = await api.call('submit_approval', {
           plan_id: plan.plan_id,
           plan_hash: plan.plan_hash,
           decision: 'approve',
-          approval_token: 'apt_e2e_' + stamp
+          approval_token: ch.approval_token
         });
         var exec = await api.call('execute_action', {
           mandate_id: appr.mandate_id,

@@ -17,7 +17,7 @@ export const ApprovalSchema = z
     plan_hash: PlanHashSchema,
     decision: DecisionSchema,
     approver_id: z.string().min(1),
-    approval_token: z.string().regex(/^apt_[a-z0-9_]+$/),
+    approval_token: z.string().regex(/^apc_[a-z0-9]+\.[0-9]{6}$/),
     issued_at: IsoDateTimeSchema,
     expires_at: IsoDateTimeSchema,
     status: ApprovalStatusSchema,

@@ -52,6 +52,7 @@ export const TOOL_CAPABILITY = {
   validate_plan: 'create_request',
   get_plan: 'view_all',
   list_plans: 'view_all',
+  request_approval_challenge: 'approve',
   submit_approval: 'approve',
   get_mandate: 'view_all',
   list_mandates: 'view_all',

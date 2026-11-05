@@ -306,6 +306,12 @@
         return 'Terautentikasi sebagai scope ' + this.scope +
           '. Tidak ada identitas per orang: token membawa wewenang, bukan nama.';
       }
+      /* No server context. Say which one is missing instead of calling an
+       * authenticated session a "demo persona". */
+      if (D.store && D.store.mode === 'live') {
+        return 'Sesi server aktif, tetapi gateway MCP (v1) belum menerima token: ' +
+          'data work package, mandat, eksekusi, dan audit tidak terbaca.';
+      }
       return 'Mode demo: persona contoh, bukan identitas terautentikasi.';
     }
   };
@@ -343,6 +349,14 @@
   /* ---------------- store (demo + live overlay) ---------------- */
   var store = {
     mode: 'demo',
+    /* Which transport actually answered, not which one we hoped for:
+     *   'demo' — no server authority at all
+     *   'mcp'  — gateway v1 accepted this tab's ops token (data v1 terbaca)
+     *   'rest' — FastAPI session authenticated, but no ops token: halaman v1
+     *            kosong dan harus dinyatakan, bukan diisi angka contoh
+     */
+    transport: 'demo',
+    mcpAuthorized: false,
     plans: [], mandates: [], audit: [], executions: [], policies: [], org: null,
     executionSummary: null,
     auditIntegrity: null,
@@ -368,6 +382,20 @@
       this.capabilities = s.capabilities;
       this.permMatrix = s.permMatrix;
       this.assistantThread = s.assistantThread.slice();
+    },
+
+    /* Kosongkan hanya data yang sumbernya gateway v1. Dipakai saat sesi REST
+     * aktif tanpa token ops: layar harus kosong dan menyatakan sebabnya,
+     * bukan menampilkan angka contoh sebagai keadaan workspace. */
+    clearV1Data: function () {
+      this.plans = [];
+      this.mandates = [];
+      this.audit = [];
+      this.executions = [];
+      this.policies = [];
+      this.specialists = [];
+      this.executionSummary = null;
+      this.auditIntegrity = null;
     },
 
     /* live: list_plans / list_mandates are the primary source; the audit-derived
@@ -766,34 +794,73 @@
   D.boot = function () {
     theme.apply(theme.get());
     store.hydrateDemo();
-    return api.health().then(function (ok) {
-      if (!ok) { store.mode = 'demo'; return; }
-      /* Dua jalur masuk, JANGAN dicampur:
-       * - REST (cookie httpOnly): ada sesi manusia bila GET /auth/session lolos.
-       * - MCP (bearer :8765): ada token ops bila sessionStorage punya token.
-       * Salah satu cukup untuk live; keduanya gagal -> demo. */
-      var hasBearer = !!api.token();
-      return api.auth.getSession().then(function (sess) {
-        if (sess && sess.user) {
-          session.applyServerContext({ capabilities: sess.capabilities || [] });
-        }
-        return api.call('get_caller_context', {}).then(function (ctx) {
-          session.applyServerContext(ctx);
-          return store.hydrateLive().then(function () { store.mode = 'live'; });
+    /* Tiga sumber wewenang yang berbeda, jangan dicampur:
+     *   1. gateway MCP (:8765) + token ops  -> data v1 (plan, mandat, eksekusi, audit)
+     *   2. FastAPI (:8000) + cookie sesi    -> identitas manusia, capability, modul v2
+     *   3. tidak ada keduanya              -> mode demo, dinyatakan di layar
+     *
+     * Dulu probe-nya berurutan: bila MCP mati, seluruh boot langsung jatuh ke
+     * demo walau sesi REST sehat — dan bila sesi REST sehat tanpa token ops,
+     * capability tidak pernah dipasang sehingga UI memakai matriks contoh dan
+     * menampilkan wewenang persona fiktif untuk operator sungguhan. */
+    var hasBearer = !!api.token();
+    var mcpUpP = api.health();
+    var sessP = api.auth.getSession().catch(function () { return null; });
+    return Promise.all([mcpUpP, sessP]).then(function (res) {
+      var mcpUp = !!res[0];
+      var sessionInfo = res[1];
+      var authenticated = !!(sessionInfo && sessionInfo.authenticated);
+
+      if (!mcpUp && !authenticated) {
+        store.mode = 'demo';
+        store.transport = 'demo';
+        store.mcpAuthorized = false;
+        return null;
+      }
+
+      /* Konteks capability dari server. /permissions memuat principal, scope,
+       * capabilities, dan daftar capability tanpa penegak — bentuk yang sama
+       * dengan get_caller_context MCP, jadi satu normalizer cukup. */
+      var restCtxP = authenticated
+        ? api.rest('GET', '/api/v1/permissions')
+          .then(function (ctx) { return ctx || sessionInfo; })
+          .catch(function () { return sessionInfo; })
+        : Promise.resolve(null);
+
+      return restCtxP.then(function (restCtx) {
+        if (restCtx) session.applyServerContext(restCtx);
+
+        var mcpCtxP = mcpUp
+          ? api.call('get_caller_context', {}).then(function (ctx) {
+            if (ctx && (ctx.scope || ctx.principal)) {
+              /* Gateway v1 menjawab: ia yang paling dekat dengan eksekusi, jadi
+               * ia yang dipakai untuk gating UI. */
+              session.applyServerContext(ctx);
+              store.mcpAuthorized = true;
+            }
+            return store.hydrateLive();
+          }).catch(function (err) {
+            if (hasBearer) throw err;
+            return null;
+          })
+          : Promise.resolve(null);
+
+        return mcpCtxP.then(function () {
+          store.mode = 'live';
+          if (store.mcpAuthorized) { store.transport = 'mcp'; return null; }
+          store.transport = 'rest';
+          /* Tanpa otoritas MCP, jangan biarkan dataset contoh mengisi halaman
+           * v1 seolah itu data nyata. Kosongkan dan biarkan layar menyatakan
+           * sumbernya tidak terhubung. */
+          store.clearV1Data();
+          return null;
         }).catch(function (err) {
-          if (hasBearer) throw err;
-          return store.hydrateLive().then(function () { store.mode = 'live'; });
-        });
-      }).catch(function (err) {
-        if (!hasBearer) { store.mode = 'demo'; return null; }
-        return api.call('get_caller_context', {}).then(function (ctx) {
-          session.applyServerContext(ctx);
-          return store.hydrateLive().then(function () { store.mode = 'live'; });
-        }).catch(function (err2) {
           session.applyServerContext(null);
+          store.mcpAuthorized = false;
           store.mode = 'demo';
+          store.transport = 'demo';
           store.hydrateDemo();
-          if (String((err2 && err2.message) || '').toLowerCase().indexOf('unauthorized') >= 0) {
+          if (String((err && err.message) || '').toLowerCase().indexOf('unauthorized') >= 0) {
             api.clearToken();
             D.authRejected = true;
             if (location.hash !== '#/login') location.hash = '#/login';

@@ -123,6 +123,7 @@ export interface StorePaths {
   principals: string;
   mandates: string;
   approvals: string;
+  approvalChallenges: string;
   executions: string;
   alerts: string;
   audit: string;

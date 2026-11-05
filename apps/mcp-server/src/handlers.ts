@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { getOrgRules, getPlan, savePlan, insertPlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listApprovals, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries, getStorePaths } from '../../../packages/store/src/index.ts';
+import { getOrgRules, getPlan, savePlan, insertPlan, getMandate, saveMandate, getExecution, getApproval, saveApproval, appendAudit, listAudit, findPrecedents, getContactIds, listPlans, listMandates, listExecutions, listSpecialists, getPrincipal, summarizeExecutions, listAuditWithIntegrity, listAlertDeliveries, summarizeAlertDeliveries, getStorePaths, createApprovalChallenge, consumeApprovalChallenge } from '../../../packages/store/src/index.ts';
 import { AuditExportError, exportAuditLog } from '../../../packages/audit-export/src/index.ts';
 import { createPlan as buildPlan, validatePlan as runValidate } from '../../../packages/plan/src/index.ts';
 import { issueMandate } from '../../../packages/mandate-engine/src/issue.ts';
@@ -377,23 +377,55 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         },
       };
     }
-    case 'submit_approval': {
+    case 'request_approval_challenge': {
+      /*
+       * D-04: approval tokens used to be minted by the dashboard
+       * (`apt_<timestamp>`), which meant the server could not tell an issued
+       * token from any other string. The server now issues a one-time
+       * challenge bound to (plan, plan_hash, approver), prints the six-digit
+       * code to the server terminal, and stores only its hash.
+       */
       const plan = await getPlan(args.plan_id);
       if (!plan) return { ok: false, error: { code: 'INVALID_PLAN', message: 'Plan not found.' } };
       if (plan.plan_hash !== args.plan_hash) {
         return { ok: false, error: { code: 'PLAN_HASH_MISMATCH', message: 'Plan hash mismatch.' } };
       }
-      const token = String(args.approval_token ?? '').trim();
-      if (token.length < 8) {
-        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Approval token missing or too short.' } };
+      const principal = await resolvePrincipal(scope as Scope);
+      if (!principal) {
+        return {
+          ok: false,
+          error: { code: 'UNAUTHORIZED', message: 'No principal is bound to this token; an approval must be attributable.' },
+        };
       }
-      if (token.toLowerCase() === 'apt_demo') {
-        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Weak demo approval token is not accepted.' } };
+      const created = await createApprovalChallenge({
+        planId: plan.plan_id,
+        planHash: plan.plan_hash,
+        approverPrincipalId: principal.principal_id,
+      });
+      // Terminal-only disclosure: the dashboard must ask the human for this code.
+      console.log(
+        `[dextra] approval challenge ${created.challenge_id} for plan ${plan.plan_id}: ` +
+          `${created.code} (expires ${created.expires_at})`,
+      );
+      const data: any = {
+        challenge_id: created.challenge_id,
+        expires_at: created.expires_at,
+        plan_id: plan.plan_id,
+        plan_hash: plan.plan_hash,
+      };
+      // In non-production mode the code is also returned to enable automated
+      // tests and local development without scraping the server terminal.
+      // Production keeps the code terminal-only (human confirmation).
+      if (process.env.DEXTRA_ENV !== 'production') {
+        data.approval_token = created.approval_token;
       }
-      // reuse check: same approval_token must not be used twice
-      const existingApprovals = await listApprovals();
-      if (existingApprovals.some((a) => a.approval_token === token)) {
-        return { ok: false, error: { code: 'INVALID_PLAN', message: 'Approval token already used.' } };
+      return { ok: true, data };
+    }
+    case 'submit_approval': {
+      const plan = await getPlan(args.plan_id);
+      if (!plan) return { ok: false, error: { code: 'INVALID_PLAN', message: 'Plan not found.' } };
+      if (plan.plan_hash !== args.plan_hash) {
+        return { ok: false, error: { code: 'PLAN_HASH_MISMATCH', message: 'Plan hash mismatch.' } };
       }
       const decision = args.decision;
       const principal = await resolvePrincipal(scope as Scope);
@@ -411,6 +443,15 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         };
       }
       const approverId = principal.principal_id;
+      const consumed = await consumeApprovalChallenge({
+        token: String(args.approval_token ?? ''),
+        planId: plan.plan_id,
+        planHash: plan.plan_hash,
+        approverPrincipalId: approverId,
+      });
+      if (!consumed.ok) {
+        return { ok: false, error: { code: consumed.code, message: consumed.message } };
+      }
       const approval: Approval = {
         approval_id: `appr_${Date.now()}` as any,
         plan_id: plan.plan_id,
@@ -439,7 +480,7 @@ export async function handleTool(name: string, args: any, scope: string): Promis
         });
         await saveMandate(mandate);
         await appendAudit({
-          event_id: `evt_${Date.now()}`,
+          event_id: nextEventId(),
           at: new Date().toISOString(),
           type: 'approval_granted',
           actor: 'dashboard',
@@ -452,13 +493,13 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       }
       if (decision === 'reject') {
         await appendAudit({
-          event_id: `evt_${Date.now()}`,
+          event_id: nextEventId(),
           at: new Date().toISOString(),
           type: 'approval_rejected',
           actor: 'dashboard',
           plan_id: plan.plan_id,
           plan_hash: plan.plan_hash,
-          detail: { approver: args.approver_id },
+          detail: { approver: approverId },
         } as any);
         return { ok: true, data: { approval_id: approval.approval_id, status: 'rejected' } };
       }

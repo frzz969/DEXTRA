@@ -20,7 +20,7 @@ const dataDir = await mkdtemp(join(tmpdir(), 'dextra-resource-scope-'));
 process.env.DEXTRA_DATA_DIR = dataDir;
 process.env.DEXTRA_OPS_TOKEN = 'ops-dev-token';
 
-const { seed } = await import('../../../packages/store/src/index.ts');
+const { seed, createApprovalChallenge } = await import('../../../packages/store/src/index.ts');
 const { handleTool } = await import('../src/handlers.ts');
 
 const previousPrincipal = process.env.DEXTRA_OPS_PRINCIPAL;
@@ -55,7 +55,6 @@ const PLAN_ARGS = {
   ],
 };
 
-let tokenCounter = 0;
 async function planApprovedBy(requesterId: string, approverId: string) {
   await seed({ reset: true });
 
@@ -64,12 +63,17 @@ async function planApprovedBy(requesterId: string, approverId: string) {
   const plan = created.data.plan;
   assert.equal(plan.requester_id, requesterId, 'requester_id harus datang dari principal, bukan argumen klien');
 
-  tokenCounter += 1;
+  // D-04: the challenge is issued server-side and bound to the approver.
+  const challenge = await createApprovalChallenge({
+    planId: plan.plan_id,
+    planHash: plan.plan_hash,
+    approverPrincipalId: approverId,
+  });
   const approved = await as(approverId, 'submit_approval', {
     plan_id: plan.plan_id,
     plan_hash: plan.plan_hash,
     decision: 'approve',
-    approval_token: `apt_scope_${tokenCounter}_${Date.now()}`,
+    approval_token: challenge.approval_token,
   });
   assert.equal(approved.ok, true, JSON.stringify(approved));
 
