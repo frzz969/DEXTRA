@@ -1,11 +1,22 @@
 # Paritas dengan struktur target PRD v2.0.0 §11.
 #
+<<<<<<< HEAD
 # Package manager aktif di repo ini adalah **pnpm** (workspace di `D:\dextra`).
 # Semua dependensi (termasuk `apps/*`, `packages/*`, dan `apps/mcp-server`)
 # dipasang melalui `pnpm install` di root repo. Lockfile: `pnpm-lock.yaml`.
 #
 # Berkas ini mendefinisikan workspace yang dicakup pnpm. Symlink workspace
 # berfungsi pada drive NTFS `D:` (`D:\dextra`), termasuk `apps/web`.
+=======
+# Package manager yang berlaku di repo ini tetap **npm** — ada package-lock.json
+# dan semua skrip di README memakai npm. Berkas ini disediakan agar struktur
+# workspace bisa dibaca oleh tooling yang mengharapkan pnpm, dan agar migrasi ke
+# pnpm (bila dibutuhkan) tidak menuntut penemuan ulang daftar workspace.
+#
+# Catatan: daftar di bawah adalah target pnpm, bukan keadaan npm sekarang. Di npm,
+# `apps/web`, `apps/api`, dan `apps/worker` sengaja tidak menjadi workspace
+# (symlink workspace gagal di Windows dengan EISDIR); lihat docs/MONOREPO-MAP.md §1.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 packages:
   - "packages/*"
   - "apps/*"

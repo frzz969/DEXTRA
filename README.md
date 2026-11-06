@@ -10,6 +10,7 @@ An office agent that acts only on human-approved mandates.
 
 > Baca boleh otomatis, tulis harus lewat mandat.
 
+<<<<<<< HEAD
 ## Visi & Konsep Produk
 
 DEXTRA adalah platform asisten operasional dan manajemen pekerjaan berbasis Artificial Intelligence (AI) yang dirancang untuk membantu individu maupun organisasi menjalankan aktivitas kantor, mengelola komunikasi, mengatur pekerjaan, dan mengoordinasikan tenaga kerja AI dalam satu ekosistem terintegrasi.
@@ -142,14 +143,21 @@ DEXTRA adalah satu ekosistem kerja yang menghubungkan manusia dan organisasi, AI
 
 DEXTRA bukan sekadar chatbot. DEXTRA adalah pusat koordinasi antara manusia, AI, komunikasi, dan operasional organisasi.
 
+=======
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 ## Struktur
 
 ```
 dextra/
 ├── apps/
+<<<<<<< HEAD
 │   ├── web/                # FRONTEND UTAMA (v2): Next.js 16, terhubung FastAPI /api/v1,
 │   │                       # login sesi nyata, 25 rute, Explorer via MCP gateway
 │   ├── dashboard/          # v1 SPA — DIGANTIKAN oleh apps/web (referensi historis, tidak dilayani)
+=======
+│   ├── dashboard/          # SPA operasional v1 (produksi): 24 rute, tanpa build step
+│   ├── web/                # Next.js 16 (v2): Overview + Workforce, data dari /api/v1
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 │   ├── api/                # Entrypoint ASGI -> backend/dextra/main.py
 │   ├── worker/             # Pemeliharaan: expire mandate, rekap eksekusi macet
 │   ├── mcp-server/         # Gateway JSON-RPC v1 di 127.0.0.1:8765
@@ -187,8 +195,13 @@ dextra/
 
 | Jalur | Status | Bukti |
 | --- | --- | --- |
+<<<<<<< HEAD
 | **v2 Python + apps/web** (`backend/dextra` FastAPI `/api/v1` + Next.js 16) | **PRODUCTION** — frontend utama; 25 rute terhubung backend nyata; login sesi + CSRF; Explorer via MCP gateway | `cd apps/web && pnpm run build` · `cd apps/web && pnpm run test:e2e` (regression Playwright) |
 | **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`) | **DIGANTIKAN** — dashboard v1 digantikan apps/web; MCP gateway **tetap** dipakai apps/web (Explorer, audit) | `pnpm run dev:mcp` (untuk Explorer & mode demo), `apps/dashboard/README.md` |
+=======
+| **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`, JSON-RPC 127.0.0.1:8765, `data/*.json`) | **PRODUCTION** — yang melayani dashboard hari ini | `npm run typecheck`, `npm run lint`, `node scripts/check-syntax.mjs` |
+| **v2 Python** (`backend/dextra`, FastAPI `/api/v1`, 16 router di `backend/dextra/main.py:67-85`, 33 tabel, 9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) | **FONDASI NON-PROD** — ada, dashboard v1 TIDAK memanggilnya; belum ada cutover. PostgreSQL **belum diverifikasi ulang di sesi ini** (klaim PG 16.2 / 206 tes lama tidak disertakan tanpa bukti sesi ini; suite SQLite dijalankan di sini) | `py -m pytest tests/integration/test_migrations.py -q`, `grep __tablename__ backend/dextra/models`, `docs/DATABASE_SCHEMA.md` |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 Klaim basi yang diperbaiki (A6-A9): FastAPI **16 router** (`main.py:67-85`, bukan 9);
 skema **33 tabel** (`grep __tablename__ backend/dextra/models`, bukan 21); Alembic
@@ -216,8 +229,13 @@ tanpa bukti sesi ini. `packages/office-agent` kini masuk daftar package (baris d
 
 | Jalur | Status | Bukti |
 | --- | --- | --- |
+<<<<<<< HEAD
 | **v2 Python + apps/web** (`backend/dextra` FastAPI `/api/v1` + Next.js 16) | **PRODUCTION** — frontend utama; 25 rute terhubung backend nyata; login sesi + CSRF; Explorer via MCP gateway | `cd apps/web && pnpm run build` · `cd apps/web && pnpm run test:e2e` (regression Playwright) |
 | **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`) | **DIGANTIKAN** — dashboard v1 digantikan apps/web; MCP gateway **tetap** dipakai apps/web (Explorer, audit) | `pnpm run dev:mcp` (untuk Explorer & mode demo), `apps/dashboard/README.md` |
+=======
+| **v1 TypeScript** (`apps/dashboard` + `apps/mcp-server`, JSON-RPC 127.0.0.1:8765, `data/*.json`) | **PRODUCTION** — yang melayani dashboard hari ini | `npm run typecheck`, `npm run lint`, `node scripts/check-syntax.mjs` |
+| **v2 Python** (`backend/dextra`, FastAPI `/api/v1`, 16 router di `backend/dextra/main.py:67-85`, 33 tabel, 9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) | **FONDASI NON-PROD** — ada, dashboard v1 TIDAK memanggilnya; belum ada cutover. PostgreSQL **belum diverifikasi ulang di sesi ini** (klaim PG 16.2 / 206 tes lama tidak disertakan tanpa bukti sesi ini; suite SQLite dijalankan di sini) | `py -m pytest tests/integration/test_migrations.py -q`, `grep __tablename__ backend/dextra/models`, `docs/DATABASE_SCHEMA.md` |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 Klaim basi yang diperbaiki (A6-A9): FastAPI **16 router** (`main.py:67-85`, bukan 9);
 skema **33 tabel** (`grep __tablename__ backend/dextra/models`, bukan 21); Alembic
@@ -244,6 +262,7 @@ tanpa bukti sesi ini. `packages/office-agent` kini masuk daftar package (baris d
 ## Menjalankan
 
 Butuh **Node.js >= 20** (dipakai untuk `--experimental-strip-types`, jadi tanpa langkah build).
+<<<<<<< HEAD
 Instalasi dependensi sekali di root (paket manajer aktif: **pnpm**; lokasi kerja: `D:\dextra`):
 
 ```bash
@@ -278,6 +297,33 @@ pnpm run dev:mcp
 
 Produksi: `cd apps/web && pnpm run build && pnpm run start`. Cutover selesai:
 **apps/web adalah frontend utama**; dashboard v1 digantikan. Peta rute ada di `docs/MIGRATION_MAP.md`.
+=======
+Instalasi dependensi sekali di root:
+
+```bash
+npm install
+```
+
+**1. MCP server** — gateway yang memegang aturan, mandat, dan eksekusi:
+
+```bash
+npm start --workspace @dextra/mcp-server
+# http://127.0.0.1:8765
+```
+
+**2. Dashboard** — SPA statis, tidak butuh server aplikasi:
+
+```bash
+cd apps/dashboard
+python -m http.server 8899
+# http://127.0.0.1:8899/index.html
+```
+
+Dashboard berjalan tanpa dependensi runtime dan tanpa CDN. Kalau MCP server mati, dashboard
+turun ke mode demo dan **menyatakan** bahwa datanya demo. Peta rute lengkap ada di
+`apps/dashboard/README.md`; peta monorepo (aktual vs target arsitektur) ada di
+`docs/MONOREPO-MAP.md`.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 ## Menjalankan DEXTRA v2 (FastAPI + PostgreSQL + Next.js)
 
@@ -294,18 +340,30 @@ python database/seeds/seed.py
 # 2. API
 ./scripts/dev-api.sh            # http://127.0.0.1:8000/docs
 
+<<<<<<< HEAD
 # 3. Web (butuh pnpm install di apps/web, lihat catatan di bawah)
+=======
+# 3. Web (butuh npm install di apps/web, lihat catatan di bawah)
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 ./scripts/dev-web.sh            # http://127.0.0.1:3000
 
 # 4. Pemeriksaan
 ./scripts/test-all.sh
 ```
 
+<<<<<<< HEAD
 `apps/web` ikut pnpm workspace root: symlink workspace berfungsi di NTFS drive
 `D:` (`D:\dextra`), jadi dependensinya dipasang bersama di root:
 
 ```bash
 pnpm install
+=======
+`apps/web` **tidak** ikut npm workspace root: pembuatan symlink workspace gagal
+di Windows (`EISDIR`), jadi dependensinya dipasang sendiri:
+
+```bash
+cd apps/web && npm install
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 ```
 
 Catatan jujur: PostgreSQL belum berjalan di mesin pengembangan (tidak terpasang,
@@ -361,6 +419,7 @@ bisa diperiksa sendiri. Angka ini dihitung dari `sources.js`, bukan dari ingatan
 ## Tes
 
 ```bash
+<<<<<<< HEAD
 pnpm test          # seluruh workspace, terisolasi per paket — 349 tes
 pnpm run test:inproc  # semua tes dalam satu proses — 349 tes
 pnpm run test:http    # verifikasi batas HTTP (origin policy, token, tools/list) — 16 tes
@@ -369,6 +428,16 @@ pnpm run test:e2e      # e2e dashboard via Chrome headless + CDP (tanpa dependen
 ```
 
 E2E (`pnpm run test:e2e`, `apps/dashboard/tests/e2e/run.mjs`): butuh Chrome/Chromium
+=======
+npm test          # seluruh workspace, terisolasi per paket — 349 tes
+npm run test:inproc  # semua tes dalam satu proses — 349 tes
+npm run test:http    # verifikasi batas HTTP (origin policy, token, tools/list) — 16 tes
+npm run lint          # typecheck semua workspace + node --check seluruh JS (66 berkas)
+npm run test:e2e      # e2e dashboard via Chrome headless + CDP (tanpa dependensi)
+```
+
+E2E (`npm run test:e2e`, `apps/dashboard/tests/e2e/run.mjs`): butuh Chrome/Chromium
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 terpasang; tanpa Chrome ia mencetak `LEWATI` dan exit 0. Set `DEXTRA_CHROME` untuk
 path eksplisit. Ia menjalankan MCP server sendiri di direktori data sementara,
 port 8765/8899/9333 — hentikan proses lain di port itu dulu. Lihat header run.mjs.
@@ -410,8 +479,15 @@ Ini didokumentasikan, bukan disembunyikan:
   karena capability-nya belum punya backend.
 - **Workforce registry & specialist** masih demo: belum ada sumber data server, dan tidak
   dibangun dari prosa Markdown.
+<<<<<<< HEAD
 - **Status produksi (A6-A9 → cutover):** v2 FastAPI + apps/web = PRODUCTION;
   dashboard v1 digantikan; migration `data/*.json` ke database belum dilakukan — lihat `docs/MIGRATION_MAP.md`.
+=======
+- **Status produksi** (A6-A9): v1 TS = production; v2 Python (16 router, 33 tabel,
+  9 revisi Alembic head `g6a3b4c5d6e7` via `27ba08c94572`) = fondasi non-prod, belum cutover.
+  PostgreSQL **belum diverifikasi ulang di sesi ini**. Data lama
+  `data/*.json` belum dimigrasi — lihat `docs/MIGRATION_MAP.md`.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 ## Dokumen rujukan
 

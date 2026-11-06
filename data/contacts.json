@@ -1,0 +1,88 @@
+[
+  {
+    "contact_id": "c_budi_fin",
+    "display_name": "Budi Santoso",
+    "department": "Keuangan",
+    "masked_address": "b***@kenari.co.id",
+    "tags": [
+      "budi",
+      "keuangan",
+      "internal"
+    ],
+    "email": "budi.finance@kenari.co.id",
+    "phone": "+6281211102233",
+    "nik": "3174091200010001",
+    "address": "Jl. Kenari Raya No. 12, Jakarta Pusat"
+  },
+  {
+    "contact_id": "c_budi_ops",
+    "display_name": "Budi Prakoso",
+    "department": "Operasional",
+    "masked_address": "b***@kenari.co.id",
+    "tags": [
+      "budi",
+      "operasional",
+      "internal"
+    ],
+    "email": "budi.ops@kenari.co.id",
+    "phone": "+6281299987766",
+    "nik": "3174091200020002",
+    "address": "Jl. Melati No. 4, Jakarta Selatan"
+  },
+  {
+    "contact_id": "c_sari_hr",
+    "display_name": "Sari Wulandari",
+    "department": "Sumber Daya Manusia",
+    "masked_address": "s***@kenari.co.id",
+    "tags": [
+      "hr",
+      "internal"
+    ],
+    "email": "sari.hr@kenari.co.id",
+    "phone": "+6281312345678",
+    "nik": "3174091200030003",
+    "address": "Jl. Anggrek No. 8, Jakarta Barat"
+  },
+  {
+    "contact_id": "c_andi_mkt",
+    "display_name": "Andi Prasetyo",
+    "department": "Pemasaran",
+    "masked_address": "a***@kenari.co.id",
+    "tags": [
+      "marketing",
+      "internal"
+    ],
+    "email": "andi.marketing@kenari.co.id",
+    "phone": "+6281455566778",
+    "nik": "3174091200040004",
+    "address": "Jl. Cempaka No. 21, Depok"
+  },
+  {
+    "contact_id": "c_rina_legal",
+    "display_name": "Rina Kusuma",
+    "department": "Legal",
+    "masked_address": "r***@kenari.co.id",
+    "tags": [
+      "legal",
+      "internal"
+    ],
+    "email": "rina.legal@kenari.co.id",
+    "phone": "+6281566677889",
+    "nik": "3174091200050005",
+    "address": "Jl. Dahlia No. 3, Tangerang"
+  },
+  {
+    "contact_id": "c_tim_ops",
+    "display_name": "Tim Operasional",
+    "department": "Operasional",
+    "masked_address": "t***@kenari.co.id",
+    "tags": [
+      "grup",
+      "internal"
+    ],
+    "email": "tim.ops@kenari.co.id",
+    "phone": "+6281200000001",
+    "nik": "3174091200060006",
+    "address": "Jl. Kenari Raya No. 12, Jakarta Pusat"
+  }
+]

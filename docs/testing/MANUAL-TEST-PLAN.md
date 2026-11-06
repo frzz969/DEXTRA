@@ -2,7 +2,11 @@
 
 ## Prasyarat
 - MCP server: `npm start` di apps/mcp-server (port 8765).
+<<<<<<< HEAD
 - Frontend: `npm run dev:web` di root (apps/web, port 3000).
+=======
+- Dashboard: static server di port 3000 (`npx serve apps/dashboard -p 3000`).
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 - Data: `npm run demo:reset`.
 
 ## TC-001 — Instruksi Suara dan Penerima Ambigu

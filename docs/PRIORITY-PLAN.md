@@ -48,7 +48,11 @@ Gate setelah P0-9: **G2 â€” review keamanan** (Oracle, sekali). Tidak ada p
 
 | # | Modul | Isi | Bergantung pada | Test | Est. |
 | --- | --- | --- | --- | --- | --- |
+<<<<<<< HEAD
 | P1-1 | `apps/web` — Approval Center (`/approvals`) | Penerima, waktu, isi, hash, blast radius, tombol setujui/tolak | P0-7 | TC-003 | 3 j |
+=======
+| P1-1 | `apps/dashboard` â€” Approval Center | Penerima, waktu, isi, hash, blast radius, tombol setujui/tolak | P0-7 | TC-003 | 3 j |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | P1-2 | Klarifikasi ambiguitas | Dua Budi ditampilkan dengan bukti; pengguna memilih | P0-3 | TC-001 | 1,5 j |
 | P1-3 | Revocation window | Jeda kirim + tombol batalkan; bukan menarik email terkirim | P0-5 | TC-005 | 1,5 j |
 | P1-4 | Audit Center | Urutan kejadian, alasan berhasil/gagal | P0-6 | TC-004â€“008 | 1,5 j |
@@ -82,7 +86,11 @@ Gate **G3 â€” review desain** setelah P1-4.
 **P1 lulus jika:**
 
 - [ ] Alur demo 7 menit berjalan tanpa intervensi manual di terminal.
+<<<<<<< HEAD
 - [ ] Setiap tombol di `apps/web` berfungsi.
+=======
+- [ ] Setiap tombol di dashboard berfungsi.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 - [ ] Batalkan eksekusi benar-benar mencegah pengiriman.
 
 **P2 lulus jika:** tidak merusak P0/P1.

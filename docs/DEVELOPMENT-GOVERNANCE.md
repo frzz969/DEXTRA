@@ -33,7 +33,11 @@ DEXTRA memiliki visi jangka panjang sebagai Governed Enterprise AI Workforce & C
 | **Orchestrator** | Sesi utama | Perencanaan, pembagian lane, integrasi, kontrol scope | Tidak menulis implementasi besar sendiri jika ada lane aktif |
 | **Explorer** | subagent | Riset repo, dokumentasi, kompatibilitas | Tidak menulis kode |
 | **Oracle** | subagent | Evaluasi arsitektur dan keamanan | Maks 2 pemanggilan sepanjang proyek |
+<<<<<<< HEAD
 | **Designer** | subagent | Alur UI dan approval | Maks 1 pemanggilan, setelah kontrak dibekukan |
+=======
+| **Designer** | subagent | Alur dashboard dan approval UI | Maks 1 pemanggilan, setelah kontrak dibekukan |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | **Fixer** | subagent | Implementasi sesuai kontrak | Tidak mengubah kontrak, tidak memutuskan arsitektur |
 | **Debugger** | subagent | Pengujian independen, diagnosis | Tidak memperbaiki; hanya melaporkan |
 | **Reviewer** | subagent | Review desain dan konsistensi | Maks 2 pemanggilan (hari 5 dan hari 6) |
@@ -108,7 +112,11 @@ Dua lane tidak boleh menulis pada path yang sama. Jika terpaksa, kerjakan beruru
 | `packages/mock-services/**` | Lane B | |
 | `apps/mcp-server/src/tools/**` | Lane A | |
 | `apps/mcp-server/src/executor/**` | Lane A | |
+<<<<<<< HEAD
 | `apps/web/**` | Lane B | |
+=======
+| `apps/dashboard/**` | Lane B | |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | `workbuddy/**` | Human / Orchestrator | Prompt dan manifest |
 | `docs/**` | Orchestrator | |
 
@@ -273,9 +281,15 @@ Skill OpenCode adalah alat **proses pengembangan**, bukan komponen produk. Karen
 | Menulis atau memperbaiki test | `testing-best-practices` | Debugger |
 | Ada test gagal, bug, atau perilaku tak terduga | `systematic-debugging` | Debugger |
 | Review kode pada G3 dan G4 | `code-review` | Reviewer |
+<<<<<<< HEAD
 | Desain UI dan approval center | `ui-ux-pro-max` | Designer |
 | Implementasi komponen UI | `ui-styling` | Designer |
 | Token warna, spacing, tipografi | `design-system` | Designer |
+=======
+| Desain dashboard dan approval center | `ui-ux-pro-max` | Designer |
+| Implementasi komponen UI | `ui-styling` | Designer |
+| Token warna, spacing, tipografi dashboard | `design-system` | Designer |
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | Menulis accountability sheet, product sharing, deskripsi submission | `anti-ai-slop-writing` | Orchestrator |
 | Merapikan prosa dokumen agar tidak terasa AI | `humanize-skill` | Orchestrator |
 | Pesan commit | `commit-natural` | Semua |

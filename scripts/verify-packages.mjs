@@ -1,9 +1,18 @@
 #!/usr/bin/env node
+<<<<<<< HEAD
 /* Verifikasi bahwa salinan di apps/web/app/ benar-benar sama dengan sumbernya
  * di packages/. Gagal (exit 1) jika ada yang menyimpang.
  *
  * Ini bukan formalitas: tanpa pemeriksaan ini, packages/ bisa jadi duplikat
  * yang perlahan basi sementara halaman React memakai versi lain.
+=======
+/* Verifikasi bahwa salinan di apps/dashboard benar-benar sama dengan sumbernya
+ * di packages/. Gagal (exit 1) jika ada yang menyimpang.
+ *
+ * Ini bukan formalitas: tanpa pemeriksaan ini, packages/ bisa jadi duplikat
+ * yang perlahan basi sementara dashboard memakai versi lain — persis masalah
+ * yang ingin dicegah dengan memindahkan sumber ke packages/.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
  *
  * Jalankan: node scripts/verify-packages.mjs
  */

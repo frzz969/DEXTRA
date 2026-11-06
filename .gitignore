@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# Dependencies
 node_modules/
 pnpm-store/
@@ -42,3 +43,50 @@ out.txt
 .pytest_cache/
 __pycache__/
 *.pyc
+=======
+﻿node_modules/
+*.log
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# Data kerja agen (catatan sesi lokal), bukan bagian dari produk
+.workbuddy-ai/
+
+# Next.js
+apps/web/.next/
+apps/web/next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Database lokal hasil pengembangan/uji (bukan data produk)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Keadaan runtime, bukan data produk.
+# Checkpoint hanya bermakna bila dibaca bersama audit.jsonl di mesin yang sama;
+# meng-commit-nya berarti membawa klaim "ini event terakhir" ke mesin lain,
+# yang justru memicu truncated palsu.
+data/audit.checkpoint.json
+# Lockfile antar-proses (open 'wx'); sisa proses yang mati tidak boleh masuk repo.
+data/*.lock
+
+# Artefak ekspor audit. Hasil, bukan sumber: tiap ekspor punya id sendiri, dan
+# meng-commit-nya berarti membawa potret audit ke mesin yang auditnya berbeda.
+data/exports/
+
+# Sisa kompilasi TypeScript
+*.tsbuildinfo
+
+# Artefak sesi browser (Playwright MCP)
+.playwright-mcp/
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1

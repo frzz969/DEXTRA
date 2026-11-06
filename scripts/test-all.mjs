@@ -5,8 +5,13 @@
  * Versi sebelumnya hanya ada sebagai shell script (`test-all.sh`), dan di mesin
  * pengembangan Windows tidak ada `sh`, jadi skrip itu tidak pernah benar-benar
  * dijalankan. Akibatnya `verify-packages.mjs` diam-diam gagal sejak commit
+<<<<<<< HEAD
  * 8154736: salinan `ui.js` menyimpang dari sumber kanonik, dan tidak ada yang
  * tahu sampai CI ditambahkan.
+=======
+ * 8154736: salinan `ui.js` di dashboard menyimpang dari sumber kanonik, dan
+ * tidak ada yang tahu sampai CI ditambahkan.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
  *
  * Karena itu urutannya ditulis di sini, sekali, dalam Node yang pasti ada di
  * repo ini. `test-all.sh` hanya meneruskan ke berkas ini.
@@ -73,7 +78,21 @@ run('sintaks JavaScript dapat di-parse', 'node', ['scripts/check-syntax.mjs']);
 run('salinan paket tidak menyimpang', 'node', ['scripts/verify-packages.mjs']);
 run('typecheck semua workspace', 'npm', ['run', 'typecheck']);
 run('tes paket + gateway', 'npm', ['test']);
+<<<<<<< HEAD
 run('tes HTTP gateway', 'npm', ['run', 'test:http']);
 run('tes Python', python, ['-m', 'pytest', 'tests', '-q']);
+=======
+run('kontrak dashboard', 'npm', ['run', 'test:dashboard']);
+run('tes HTTP gateway', 'npm', ['run', 'test:http']);
+run('tes Python', python, ['-m', 'pytest', 'tests', '-q']);
+/*
+ * Terakhir, karena paling lambat (~25 detik) dan butuh Chrome. Skrip ini
+ * membuka dashboard sungguhan: ia menangkap kelas kerusakan yang lolos dari
+ * parse dan dari tes berbasis regex — misalnya core.js yang sintaksnya benar
+ * tetapi gagal saat dijalankan. Di mesin tanpa Chrome ia menyatakan LEWATI dan
+ * tidak menggagalkan gerbang.
+ */
+run('rute dashboard dirender di peramban', 'npm', ['run', 'test:e2e']);
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 console.log('\nSemua pemeriksaan lulus.');

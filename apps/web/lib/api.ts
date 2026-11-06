@@ -1,6 +1,7 @@
 /**
  * Klien API DEXTRA untuk apps/web.
  *
+<<<<<<< HEAD
  * Dua jalur otentikasi, dipilih otomatis di server:
  * 1. Sesi pengguna (cookie `dextra_session` + CSRF) bila cookie ada —
  *    wewenang mengikuti role pengguna di sesi. Cookie TIDAK pernah dikirim
@@ -12,6 +13,12 @@
  * data contoh. Halaman harus menampilkan keadaan "tidak tersedia" apa adanya.
  */
 import { cookies } from "next/headers";
+=======
+ * Token dibaca di server dari environment, tidak pernah dikirim ke browser.
+ * Kalau API tidak tersedia, fungsi ini mengembalikan `{ ok: false }` — bukan
+ * data contoh. Halaman harus menampilkan keadaan "tidak tersedia" apa adanya.
+ */
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 export type OverviewKpi = {
   active_agents: number;
@@ -34,6 +41,7 @@ export type ApiResult<T> =
 
 const BASE_URL = process.env.DEXTRA_API_URL ?? "http://127.0.0.1:8000";
 const TOKEN = process.env.DEXTRA_API_TOKEN ?? "";
+<<<<<<< HEAD
 const SESSION_COOKIE = process.env.DEXTRA_SESSION_COOKIE ?? "dextra_session";
 const CSRF_COOKIE = process.env.DEXTRA_CSRF_COOKIE ?? "dextra_csrf";
 
@@ -69,12 +77,25 @@ export async function apiGet<T>(path: string): Promise<ApiResult<T>> {
   try {
     headers = await authHeaders();
   } catch {
+=======
+
+export async function apiGet<T>(path: string): Promise<ApiResult<T>> {
+  if (!TOKEN) {
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
     return { ok: false, error: "DEXTRA_API_TOKEN belum diisi; UI tidak boleh mengarang data." };
   }
   try {
     const response = await fetch(`${BASE_URL}/api/v1${path}`, {
+<<<<<<< HEAD
       headers,
       // Tanpa cache: angka basi lebih berbahaya daripada pesan "tidak tersedia".
+=======
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      // Tanpa cache. Dashboard operasional yang menampilkan angka lama saat API
+      // mati lebih berbahaya daripada dashboard yang jujur bilang "tidak
+      // tersedia" — dan dengan revalidate, halaman tetap menyajikan data basi
+      // sampai 30 detik setelah API berhenti.
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
       cache: "no-store"
     });
     if (!response.ok) {
@@ -87,6 +108,7 @@ export async function apiGet<T>(path: string): Promise<ApiResult<T>> {
   }
 }
 
+<<<<<<< HEAD
 /** Tulis ke API dengan otentikasi yang sama. Body JSON, respons diparse bila ada. */
 export async function apiWrite<T>(
   method: "POST" | "PATCH" | "PUT" | "DELETE",
@@ -149,3 +171,8 @@ export async function apiRootGet<T>(path: string): Promise<ApiResult<T>> {
     return { ok: false, error: message };
   }
 }
+=======
+export async function getOverview(): Promise<ApiResult<Overview>> {
+  return apiGet<Overview>("/overview");
+}
+>>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
