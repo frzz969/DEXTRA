@@ -89,7 +89,7 @@ export default function Copilot({ aiConfigured }: { aiConfigured: boolean }) {
             </button>
           </div>
 
-          <div className="copilot-panel__body" ref={bodyRef} aria-live="polite">
+          <div className="copilot-panel__body" ref={bodyRef} role="log" aria-live="polite" aria-label="Riwayat Copilot">
             {notConfigured ? (
               <div className="banner banner--warning" role="alert">
                 <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
@@ -134,12 +134,15 @@ export default function Copilot({ aiConfigured }: { aiConfigured: boolean }) {
 
           <div className="copilot-panel__foot">
             <form onSubmit={(event) => { event.preventDefault(); send(input); }}>
+              <label className="sr-only" htmlFor="copilot-composer">Pesan untuk Copilot</label>
               <textarea
                 className="textarea"
                 id="copilot-composer"
-                aria-label="Pesan untuk Copilot"
                 rows={1}
-                placeholder="Tanyakan apa pun… (Shift+Enter baris baru)"
+                placeholder={notConfigured ? "AI belum dikonfigurasi" : "Tanyakan apa pun… (Shift+Enter baris baru)"}
+                style={{ minHeight: 44 }}
+                disabled={notConfigured}
+                maxLength={8000}
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
@@ -149,7 +152,7 @@ export default function Copilot({ aiConfigured }: { aiConfigured: boolean }) {
                   }
                 }}
               />
-              <button type="submit" className="btn btn--primary" disabled={sending || !input.trim()} aria-label="Kirim">
+              <button type="submit" className="btn btn--primary" style={{ minHeight: 44, minWidth: 44 }} disabled={sending || notConfigured || !input.trim()} aria-label="Kirim pesan" aria-busy={sending}>
                 <span className="material-symbols-outlined" aria-hidden="true">{sending ? "hourglass_top" : "send"}</span>
               </button>
             </form>

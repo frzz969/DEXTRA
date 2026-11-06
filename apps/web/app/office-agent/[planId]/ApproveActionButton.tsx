@@ -20,7 +20,7 @@ export default function ApproveActionButton({
 
   const decide = (decision: "approved" | "rejected") => {
     startTransition(async () => {
-      const out = await approveOfficeAction({ plan_id: planId, action_id: actionId, decision, reason });
+      const out = await approveOfficeAction({ plan_id: planId, action_id: actionId, decision, reason: reason.trim() });
       setResult(out);
       if (out.ok) router.refresh();
     });
@@ -31,28 +31,30 @@ export default function ApproveActionButton({
       <div role="status">
         <span className="badge badge--success">{result.decision}</span>
         <div className="cell-sub mono" title={result.approval_id}>approval: {result.approval_id}</div>
-        {result.mandate_id && (
-          <div className="cell-sub mono" title={result.mandate_id}>mandate: {result.mandate_id}</div>
-        )}
+        {result.mandate_id && <div className="cell-sub mono" title={result.mandate_id}>mandate: {result.mandate_id}</div>}
       </div>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 220 }}>
+      <label className="sr-only" htmlFor={`reason-${actionId}`}>Alasan keputusan untuk {actionType}</label>
       <input
         className="input"
-        placeholder="Alasan (opsional, untuk audit)…"
+        id={`reason-${actionId}`}
+        placeholder="Alasan (opsional, untuk audit)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        aria-label={`Alasan keputusan untuk ${actionType}`}
+        disabled={pending}
+        maxLength={500}
+        style={{ minHeight: 44 }}
       />
-      <div style={{ display: "flex", gap: 6 }}>
-        <button type="button" className="btn btn--primary btn--sm" onClick={() => decide("approved")} disabled={pending}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button type="button" className="btn btn--primary" style={{ minHeight: 44 }} onClick={() => decide("approved")} disabled={pending} aria-busy={pending}>
           <span className="material-symbols-outlined" aria-hidden="true">check</span>
           {pending ? "Mengirim…" : "Setujui"}
         </button>
-        <button type="button" className="btn btn--danger btn--sm" onClick={() => decide("rejected")} disabled={pending}>
+        <button type="button" className="btn btn--danger" style={{ minHeight: 44 }} onClick={() => decide("rejected")} disabled={pending}>
           <span className="material-symbols-outlined" aria-hidden="true">block</span>
           Tolak
         </button>

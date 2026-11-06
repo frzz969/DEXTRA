@@ -390,6 +390,48 @@ export const getGovernanceApprovals = () =>
 export const getOfficePlans = () =>
   apiGet<{ items: OfficePlan[] }>("/office-agent/plans");
 
+export const getOfficePlan = (planId: string) =>
+  apiGet<OfficePlan>(`/office-agent/plans/${encodeURIComponent(planId)}`);
+
+export type OfficePlanCreatePayload = {
+  request_id: string;
+  plan_id: string;
+  source: Record<string, unknown>;
+  document: Record<string, unknown>;
+  actions: Array<{ action_id: string; action_type: string; params: Record<string, unknown>; source_ref: Record<string, unknown> }>;
+  findings: Array<Record<string, unknown>>;
+  validation: Record<string, unknown>;
+};
+
+export const createOfficePlan = (payload: OfficePlanCreatePayload) =>
+  apiWrite<OfficePlan>("POST", "/office-agent/plans", payload);
+
+export type ServiceAccount = {
+  id: string;
+  name: string;
+  kind: string;
+  description: string;
+  status: string;
+  scopes: string[];
+  token_count?: number;
+  revoked_at: string | null;
+  revoke_reason: string | null;
+  created_at: string;
+};
+
+export type ServiceAccountDetail = ServiceAccount & {
+  tokens: Array<{ id: string; name: string; prefix: string; status: string; last_used_at: string | null }>;
+};
+
+export const getServiceAccounts = () =>
+  apiGet<{ items: ServiceAccount[]; kinds: string[] }>("/service-accounts");
+
+export const getServiceAccount = (id: string) =>
+  apiGet<ServiceAccountDetail>(`/service-accounts/${encodeURIComponent(id)}`);
+
+export const revokeServiceAccount = (id: string, reason: string) =>
+  apiWrite<ServiceAccountDetail>("POST", `/service-accounts/${encodeURIComponent(id)}/revoke`, { reason });
+
 export const getMandates = () => apiGet<{ items: MandateItem[] }>("/mandates");
 
 export const getMandate = (id: string) =>
@@ -430,6 +472,128 @@ export function approvePlanAction(
  * Endpoint yang tidak berada di bawah `/api/v1` (mis. `/health`). Publik —
  * tanpa Authorization. Hanya untuk endpoint yang memang publik.
  */
+/* ---------- P3a — administration (read + write via API resmi) ----------
+ * Semua fungsi di bawah memanggil endpoint :8000 yang benar-benar ada.
+ * Endpoint yang tidak ada (status konektor, pengaturan, seed/reset/export,
+ * mutasi anggota) TIDAK dibuatkan getter: halamannya menampilkan banner
+ * jujur, bukan data contoh. */
+
+export type PermissionsResponse = {
+  scope: string;
+  principal: Record<string, unknown> | null;
+  capabilities: string[];
+  enforced_capabilities: string[];
+  unbacked_capabilities: string[];
+  all_capabilities: string[];
+  scope_capabilities: Record<string, string[]>;
+  note?: string;
+};
+
+export type MemberItem = {
+  id: string;
+  email: string;
+  display_name: string;
+  role: string;
+  status: string;
+  is_default?: boolean;
+  joined_at: string;
+};
+
+export type RoleItem = {
+  id: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  capabilities: string[];
+};
+
+export type TokenItem = {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  status: string;
+  owner: string;
+  owner_id: string | null;
+  created_at?: string;
+  expires_at: string | null;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  rotated_from_id?: string | null;
+};
+
+/** Secret hanya muncul sekali pada respons buat/rotasi. Jangan disimpan. */
+export type CreatedToken = TokenItem & { token: string; note?: string };
+
+export type ServiceAccountItem = {
+  id: string;
+  name: string;
+  kind: string;
+  description?: string;
+  status: string;
+  scopes?: string[];
+  token_count: number;
+  created_at: string;
+  revoked_at?: string | null;
+  revoke_reason?: string | null;
+};
+
+export type MetaResponse = {
+  api_prefix: string;
+  capabilities: string[];
+  enforced_capabilities: string[];
+  unbacked_capabilities: string[];
+  auth_kind: string;
+};
+
+export type HealthResponse = {
+  ok: boolean;
+  service: string;
+  version: string;
+  database: { ok: boolean };
+  environment: string;
+};
+
+export const getPermissions = () => apiGet<PermissionsResponse>("/permissions");
+export const getMembers = () =>
+  apiGet<{ items: MemberItem[]; tenant_id?: string }>("/users");
+export const getRoles = () => apiGet<{ items: RoleItem[] }>("/roles");
+export const getTokens = () =>
+  apiGet<{ items: TokenItem[]; tenant_id?: string }>("/tokens");
+// getServiceAccounts + revokeServiceAccount sudah ada di atas (P2) — jangan diduplikasi.
+export const getMeta = () => apiGet<MetaResponse>("/meta");
+export const getHealth = () => apiRootGet<HealthResponse>("/health");
+
+export type CreateTokenInput = {
+  name: string;
+  scopes: string[];
+  service_account_id?: string;
+  expires_in_days?: number;
+};
+
+export const createToken = (body: CreateTokenInput) =>
+  apiWrite<CreatedToken>("POST", "/tokens", body);
+
+export const revokeToken = (tokenId: string, reason = "") =>
+  apiWrite<TokenItem>("POST", `/tokens/${encodeURIComponent(tokenId)}/revoke`, { reason });
+
+export const rotateToken = (tokenId: string, expiresInDays?: number) =>
+  apiWrite<CreatedToken>("POST", `/tokens/${encodeURIComponent(tokenId)}/rotate`, {
+    expires_in_days: expiresInDays,
+  });
+
+export type CreateServiceAccountInput = {
+  name: string;
+  kind: string;
+  description: string;
+  scopes: string[];
+};
+
+export const createServiceAccount = (body: CreateServiceAccountInput) =>
+  apiWrite<ServiceAccountItem>("POST", "/service-accounts", body);
+
+// revokeServiceAccount memakai definisi P2 di atas (POST .../revoke dengan { reason }).
+
 export async function apiRootGet<T>(path: string): Promise<ApiResult<T>> {
   try {
     const response = await fetch(`${BASE_URL}${path}`, { cache: "no-store" });

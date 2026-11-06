@@ -2,10 +2,26 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const STORAGE_KEY = "dextra-theme";
+
+function applyTheme(dark: boolean) {
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  try {
+    localStorage.setItem(STORAGE_KEY, dark ? "dark" : "light");
+  } catch {
+    /* penyimpanan tidak tersedia — tema tetap berlaku sesi ini */
+  }
+}
+
 export default function Topbar() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    const saved = localStorage.getItem("dextra-theme");
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      saved = null;
+    }
     const prefers = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const next = saved ? saved === "dark" : prefers;
     setDark(next);
@@ -14,8 +30,7 @@ export default function Topbar() {
   const toggle = () => {
     setDark((d) => {
       const next = !d;
-      document.documentElement.dataset.theme = next ? "dark" : "light";
-      localStorage.setItem("dextra-theme", next ? "dark" : "light");
+      applyTheme(next);
       return next;
     });
   };
@@ -34,9 +49,19 @@ export default function Topbar() {
           <span className="label">Cari…</span><kbd>⌘K</kbd>
         </Link>
         <span className="env-pill" data-state="demo" title="Sumber data: Python API :8000, MCP :8765"><span className="dot" />Lokal</span>
-        <button type="button" className="icon-btn" onClick={toggle} aria-label={dark ? "Mode terang" : "Mode gelap"}>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={toggle}
+          aria-pressed={dark}
+          aria-label={dark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}
+          title={dark ? "Mode gelap aktif" : "Mode terang aktif"}
+        >
           <span className="material-symbols-outlined" aria-hidden="true">{dark ? "light_mode" : "dark_mode"}</span>
         </button>
+        <span className="sr-only" role="status" aria-live="polite">
+          {dark ? "Tema gelap aktif" : "Tema terang aktif"}
+        </span>
         <Link className="icon-btn" href="/approvals" aria-label="Persetujuan menunggu">
           <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
         </Link>

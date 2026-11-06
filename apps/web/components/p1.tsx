@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Unavailable } from "@/components/states";
 
 export function fmtDate(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -33,12 +34,8 @@ export function Badge({ value, tone }: { value: string; tone?: string }) {
 }
 
 export function UnavailableBanner({ title, error }: { title: string; error: string }) {
-  return (
-    <div className="banner banner--warning" role="alert">
-      <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
-      <span><strong>{title} belum terhubung.</strong> {error} Halaman ini tidak menampilkan angka contoh.</span>
-    </div>
-  );
+  // Satu implementasi dengan states.Unavailable — copy & role konsisten.
+  return <Unavailable title={title} error={error} />;
 }
 
 export function FilterForm({ action, fields, submitLabel = "Terapkan" }: {
@@ -49,15 +46,15 @@ export function FilterForm({ action, fields, submitLabel = "Terapkan" }: {
   return (
     <form method="get" action={action} className="card card--pad" style={{ display: "flex", flexWrap: "wrap", gap: "var(--s-3)", alignItems: "flex-end", marginBottom: "var(--s-4)" }} aria-label="Filter">
       {fields.map((f) => (
-        <label key={f.name} className="field" style={{ minWidth: 160, flex: "1 1 160px" }}>
+        <label key={f.name} className="field" htmlFor={`filter-${f.name}`} style={{ minWidth: 160, flex: "1 1 160px" }}>
           <span className="field__label">{f.label}</span>
           {f.type === "select" || f.options ? (
-            <select name={f.name} defaultValue={f.value ?? ""} className="select" style={{ minHeight: 44 }}>
+            <select id={`filter-${f.name}`} name={f.name} defaultValue={f.value ?? ""} className="select" style={{ minHeight: 44 }} aria-label={f.label}>
               <option value="">Semua</option>
               {f.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           ) : (
-            <input name={f.name} defaultValue={f.value ?? ""} className="input" style={{ minHeight: 44 }} placeholder={f.label} />
+            <input id={`filter-${f.name}`} name={f.name} defaultValue={f.value ?? ""} className="input" style={{ minHeight: 44 }} placeholder={f.label} aria-label={f.label} />
           )}
         </label>
       ))}

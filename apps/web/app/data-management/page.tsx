@@ -1,75 +1,52 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { apiGet } from "@/lib/api";
+import Link from "next/link";
+import { apiGet, getExecutions } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-const REPO_ROOT = resolve(process.cwd(), "..", "..");
-const DATA_DIR = join(REPO_ROOT, "data");
-
 type VerifyResult = { ok: boolean; checked: number; broken_at_seq?: number; chain_versions?: number[] };
-type AnyItems<T = unknown> = { items: T[] };
+type Counted = { items: unknown[] };
 
-function legacyFiles(): { name: string; bytes: number; modified: string; lines: number | null }[] {
-  if (!existsSync(DATA_DIR)) return [];
-  return readdirSync(DATA_DIR)
-    .filter((name) => name.endsWith(".json") || name.endsWith(".jsonl"))
-    .sort()
-    .map((name) => {
-      const path = join(DATA_DIR, name);
-      const stat = statSync(path);
-      let lines: number | null = null;
-      try {
-        const raw = readFileSync(path, "utf8");
-        lines = raw.trim().length === 0 ? 0 : raw.trim().split("\n").length;
-      } catch {
-        lines = null;
-      }
-      return {
-        name,
-        bytes: stat.size,
-        modified: stat.mtime.toISOString(),
-        lines
-      };
-    });
-}
-
-function fmtBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+/* Seed/reset/export tidak punya endpoint. Halaman ini hanya memakai API yang
+ * benar-benar ada: audit verify, counts, dan executions. Tidak ada tombol
+ * seed/reset/export karena tidak ada endpoint-nya. */
 
 export default async function DataManagementPage() {
-  const [verify, packages, tasks] = await Promise.all([
+  const [verify, packages, tasks, executions, audit] = await Promise.all([
     apiGet<VerifyResult>("/audit-events/verify"),
-    apiGet<AnyItems>("/work-packages"),
-    apiGet<AnyItems>("/tasks")
+    apiGet<Counted>("/work-packages"),
+    apiGet<Counted>("/tasks"),
+    getExecutions(1),
+    apiGet<Counted>("/audit-events?limit=1"),
   ]);
-  const files = legacyFiles();
+
+  function count(result: { ok: boolean; data?: Counted }): string {
+    return result.ok && result.data ? String(result.data.items.length) : "?";
+  }
 
   return (
     <>
       <header className="page-head">
         <div className="page-head__text">
           <h1>Data Management</h1>
-          <p>Status migrasi data apa adanya: yang sudah di DB, yang masih artefak legacy, dan apa yang belum bisa diverifikasi.</p>
+          <p>Bukti data dari API saja. Tidak ada tombol seed, reset, atau export.</p>
         </div>
       </header>
 
-      <div className="banner banner--warning" role="status" style={{ marginBottom: "var(--s-4)" }}>
-        <span className="material-symbols-outlined" aria-hidden="true">warning</span>
+      <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
+        <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
         <span>
-          Backend v2 (FastAPI) sudah berjalan, tetapi <strong>data belum dimigrasikan</strong>: file di{" "}
-          <code className="mono">data/</code> masih menjadi sumber tooling lama. Tidak ada endpoint untuk menelusuri
-          tabel — verifikasi end-to-end hanya lewat audit chain di bawah ini.
+          <strong>Seed, reset, dan export belum tersedia.</strong> Backend tidak menyediakan endpoint untuk
+          ketiganya. Migrasi data tetap lewat Alembic CLI. UI tidak akan mengarang tombol yang endpoint-nya
+          tidak ada.
         </span>
       </div>
 
       <h2 style={{ fontSize: 15, margin: "0 0 var(--s-3)" }}>Integritas audit (satu-satunya bukti end-to-end)</h2>
       {verify.ok ? (
         <div className={`banner ${verify.data.ok ? "banner--success" : "banner--danger"}`} role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">{verify.data.ok ? "verified_user" : "gpp_bad"}</span>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            {verify.data.ok ? "verified_user" : "gpp_bad"}
+          </span>
           <span>
             Rantai audit {verify.data.ok ? "utuh" : "RUSAK"} — {verify.data.checked ?? 0} entri diperiksa
             {verify.data.broken_at_seq !== undefined && <> · terputus di seq #{verify.data.broken_at_seq}</>}.
@@ -78,48 +55,69 @@ export default async function DataManagementPage() {
       ) : (
         <div className="banner banner--warning" role="alert">
           <span className="material-symbols-outlined" aria-hidden="true">error</span>
-          <span><strong>Verifikasi rantai tidak tersedia.</strong> {verify.error}</span>
+          <span>
+            <strong>Verifikasi rantai tidak tersedia.</strong> {verify.error}
+          </span>
         </div>
       )}
 
-      <h2 style={{ fontSize: 15, margin: "var(--s-5) 0 var(--s-3)" }}>Konten kerja di database</h2>
+      <h2 style={{ fontSize: 15, margin: "var(--s-5) 0 var(--s-3)" }}>Isi database menurut API</h2>
       <section className="grid grid--2" aria-label="Isi database">
-        <div className="card kpi"><div className="kpi__top"><span className="kpi__label">Work package</span></div><div className="kpi__value">{packages.ok ? packages.data.items.length : "?"}</div></div>
-        <div className="card kpi"><div className="kpi__top"><span className="kpi__label">Task</span></div><div className="kpi__value">{tasks.ok ? tasks.data.items.length : "?"}</div></div>
-      </section>
-
-      <h2 style={{ fontSize: 15, margin: "var(--s-5) 0 var(--s-3)" }}>Artefak legacy ({files.length})</h2>
-      {files.length === 0 ? (
-        <div className="banner"><span className="material-symbols-outlined" aria-hidden="true">inventory_2</span><span>Tidak ada file data legacy di repo ini.</span></div>
-      ) : (
-        <>
-          <div className="table-wrap">
-            <table className="table table--compact">
-              <thead><tr><th>File</th><th className="num">Ukuran</th><th className="num">Baris</th><th>Diubah</th></tr></thead>
-              <tbody>
-                {files.map((file) => (
-                  <tr key={file.name}>
-                    <td className="mono">{file.name}</td>
-                    <td className="num">{fmtBytes(file.bytes)}</td>
-                    <td className="num">{file.lines ?? "—"}</td>
-                    <td className="mono">{new Date(file.modified).toLocaleDateString("id-ID", { dateStyle: "medium" })}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="card kpi">
+          <div className="kpi__top">
+            <span className="kpi__label">Work package</span>
           </div>
-          <p className="field__hint" style={{ marginTop: "var(--s-2)" }}>
-            Artefak ini dipakai tooling lama dan tidak dibaca aplikasi v2. Jangan dihapus sebelum cutover terverifikasi.
-          </p>
-        </>
+          <div className="kpi__value">{count(packages)}</div>
+          <div className="kpi__foot">
+            <span className="mono">GET /work-packages</span>
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi__top">
+            <span className="kpi__label">Task</span>
+          </div>
+          <div className="kpi__value">{count(tasks)}</div>
+          <div className="kpi__foot">
+            <span className="mono">GET /tasks</span>
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi__top">
+            <span className="kpi__label">Event audit terakhir</span>
+          </div>
+          <div className="kpi__value">{count(audit)}</div>
+          <div className="kpi__foot">
+            <span className="mono">GET /audit-events</span>
+          </div>
+        </div>
+        <div className="card kpi">
+          <div className="kpi__top">
+            <span className="kpi__label">Eksekusi (sampel 1)</span>
+          </div>
+          <div className="kpi__value">{executions.ok ? String(executions.data.items.length) : "?"}</div>
+          <div className="kpi__foot">
+            <span className="mono">GET /executions</span>
+          </div>
+        </div>
+      </section>
+      {(!packages.ok || !tasks.ok || !audit.ok) && (
+        <div className="banner banner--warning" role="status" style={{ marginTop: "var(--s-3)" }}>
+          <span className="material-symbols-outlined" aria-hidden="true">error</span>
+          <span>
+            {[!packages.ok && packages.error, !tasks.ok && tasks.error, !audit.ok && audit.error]
+              .filter(Boolean)
+              .join(" ")}
+          </span>
+        </div>
       )}
 
-      <h2 style={{ fontSize: 15, margin: "var(--s-5) 0 var(--s-3)" }}>Yang belum, dan sengaja tidak disembunyikan</h2>
+      <h2 style={{ fontSize: 15, margin: "var(--s-5) 0 var(--s-3)" }}>Yang belum ada endpoint</h2>
       <ul className="small muted" style={{ lineHeight: 1.8 }}>
-        <li>PostgreSQL belum terverifikasi di mesin ini — development memakai SQLite; keduanya harus diuji sebelum cutover.</li>
-        <li>Isi <code className="mono">data/*.json</code> belum diimpor ke database; tidak ada yang memigrasikannya otomatis.</li>
-        <li>Tidak ada endpoint untuk mendaftar tabel atau menjalankan migrasi — migrasi lewat Alembic CLI, bukan UI.</li>
-        <li>Konsistensi kontrak dibaca lewat audit chain dan <a href="/security">Security Center</a>, bukan lewat dump skema.</li>
+        <li>Mendaftar tabel database: tidak ada endpoint.</li>
+        <li>Menjalankan migrasi dari UI: tidak ada endpoint. Pakai Alembic CLI.</li>
+        <li>Ekspor data ke file: tidak ada endpoint.</li>
+        <li>Reset atau seed data: tidak ada endpoint.</li>
+        <li>Konsistensi kontrak dibaca lewat audit chain dan <Link href="/security">Security Center</Link>.</li>
       </ul>
     </>
   );

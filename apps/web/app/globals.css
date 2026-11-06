@@ -16,6 +16,47 @@
  * scroll container, so sticky topbars/rails keep working. */
 html, body { overflow-x: clip; }
 
+/* P4 polish transversal — hanya state lintas-halaman, bukan shell
+ * (.sidebar/.main tetap milik design system). */
+
+/* Kontras: --faint bawaan design system terlalu terang untuk teks
+ * kecil di kedua tema (gagal 4.5:1). Naikkan tanpa mengubah palet. */
+:root { --faint: #6b6b82; --muted: #5f5f78; }
+[data-theme="dark"] { --faint: #9c9cb4; --muted: #a5a5bb; }
+
+/* Target sentuh >= 44px untuk kontrol ikon & tab di layar kecil. */
+.icon-btn, .tab__x { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
+.tab__x { min-width: 36px; min-height: 36px; }
+.btn, .input, .select, .textarea { min-height: 44px; }
+
+/* Tabsbar: scroll horizontal dalam wadah, bukan halaman. */
+.tabsbar { overflow-x: auto; scrollbar-width: none; }
+.tabsbar::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 auto; }
+
+/* Topbar ringkas di 360px: sembunyikan label pencarian & meta user. */
+@media (max-width: 640px) {
+  .search-trigger .label, .search-trigger kbd, .env-pill, .user-chip__meta { display: none; }
+  .search-trigger { padding: 0 10px; }
+  .topbar { gap: 8px; }
+}
+
+/* Tabel: .table-wrap (design system) sudah scroll horizontal;
+ * body overflow-x: clip di atas mencegah scroll halaman. */
+
+/* Skeleton: hormati reduced-motion, tanpa layout shift (tinggi tetap). */
+.skeleton-line { min-height: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* Focus terlihat di kedua tema. */
+:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; border-radius: var(--r-xs); }
+
+/* Teks sr-only untuk pengumuman aria-live tanpa memengaruhi layout. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
 /* Copilot — panel AI global. Satu AI dengan halaman /assistant. */
 .copilot-fab {
   position: fixed;

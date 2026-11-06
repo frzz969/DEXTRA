@@ -72,7 +72,7 @@ export default function AssistantChat({ aiConfigured, model }: { aiConfigured: b
         </span>
       </div>
 
-      <div className="assistant-scroll" ref={scrollRef} aria-live="polite">
+      <div className="assistant-scroll" ref={scrollRef} role="log" aria-live="polite" aria-label="Riwayat percakapan">
         {notConfigured ? (
           <div className="banner banner--warning" role="alert" style={{ margin: "var(--s-4)" }}>
             <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
@@ -127,7 +127,7 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
       <div style={{ borderTop: "1px solid var(--border)", padding: "14px 16px" }}>
         <div className="row" style={{ gap: 6, flexWrap: "wrap", marginBottom: 9 }} aria-label="Saran pertanyaan">
           {SUGGESTIONS.map((suggestion) => (
-            <button key={suggestion} type="button" className="chip" onClick={() => send(suggestion)} disabled={sending}>
+            <button key={suggestion} type="button" className="chip" style={{ minHeight: 44 }} onClick={() => send(suggestion)} disabled={sending || notConfigured}>
               {suggestion}
             </button>
           ))}
@@ -137,14 +137,17 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
           style={{ gap: 8, alignItems: "flex-end" }}
           onSubmit={(event) => { event.preventDefault(); send(input); }}
         >
+          <label className="sr-only" htmlFor="assistant-composer">Pesan untuk asisten</label>
           <textarea
             className="textarea"
             id="assistant-composer"
-            aria-label="Pesan untuk asisten"
             rows={2}
-            placeholder="Tulis permintaan dalam bahasa biasa…"
+            placeholder={notConfigured ? "AI belum dikonfigurasi — pengiriman dinonaktifkan" : "Tulis permintaan dalam bahasa biasa…"}
             style={{ minHeight: 44, maxHeight: 120, flex: 1 }}
             value={input}
+            disabled={notConfigured}
+            maxLength={8000}
+            aria-describedby="assistant-composer-hint"
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -153,7 +156,7 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
               }
             }}
           />
-          <button type="submit" className="btn btn--primary" disabled={sending || !input.trim()}>
+          <button type="submit" className="btn btn--primary" style={{ minHeight: 44 }} disabled={sending || notConfigured || !input.trim()} aria-busy={sending}>
             <span className="material-symbols-outlined" aria-hidden="true">{sending ? "hourglass_top" : "send"}</span>
             {sending ? "Mengirim…" : "Kirim"}
           </button>
@@ -164,9 +167,14 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
             {error}
           </div>
         )}
-        <div className="tiny faint" style={{ marginTop: 7 }}>
-          Enter mengirim · Shift+Enter baris baru · Rencana yang disusun lewat <Link href="/office-agent">Office Agent</Link> tetap berhenti di persetujuan manusia.
+        <div className="tiny faint" id="assistant-composer-hint" style={{ marginTop: 7 }}>
+          Enter mengirim · Shift+Enter baris baru · Maks 8000 karakter · Rencana lewat <Link href="/office-agent">Office Agent</Link> tetap berhenti di persetujuan manusia.
         </div>
+        {messages.length > 0 && (
+          <button type="button" className="btn btn--ghost" style={{ minHeight: 44, marginTop: 6 }} onClick={() => { setMessages([]); setError(null); }} disabled={sending}>
+            <span className="material-symbols-outlined" aria-hidden="true">delete</span>Hapus percakapan di tab ini
+          </button>
+        )}
       </div>
 
       <div style={{ padding: "0 16px 14px" }}>
