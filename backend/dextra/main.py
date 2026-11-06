@@ -23,6 +23,10 @@ from .core.security import (
     unbacked_capabilities,
 )
 from .database.session import database_health
+from .modules.analytics.router import router as analytics_router
+from .modules.integrations.router import router as integrations_router
+from .modules.search.router import router as search_router
+from .modules.settings.router import router as settings_router
 from .modules.approvals.router import router as approvals_router
 from .modules.audit.router import router as audit_router
 from .modules.auth.router import router as auth_router
@@ -87,6 +91,10 @@ def create_app() -> FastAPI:
         workflows_router,
         office_agent_router,
         conversations_router,
+        integrations_router,
+        settings_router,
+        analytics_router,
+        search_router,
     ):
         app.include_router(router, prefix=API_PREFIX)
 

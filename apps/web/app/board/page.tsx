@@ -52,9 +52,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
         { name: "wp", label: "Work package", value: sp.wp, type: "select", options: wpRes.ok ? wpRes.data.items.map((p) => ({ value: p.id, label: p.title })) : [] }
       ]} />
 
-      {!tasksRes.ok ? <UnavailableBanner title="Papan tugas" error={tasksRes.error} /> : tasks.length === 0 ? (
-        <div className="banner"><span className="material-symbols-outlined" aria-hidden="true">view_kanban</span><span>Belum ada tugas untuk ditampilkan.</span></div>
-      ) : (
+      {!tasksRes.ok ? <UnavailableBanner title="Papan tugas" error={tasksRes.error} /> : (
         <div className="kanban" aria-label="Papan tugas" style={{ overflowX: "auto" }}>
           {COLUMNS.map((col) => {
             const rows = tasks.filter((t) => col.statuses.includes(t.status));

@@ -135,6 +135,36 @@ def list_work_packages(
     }
 
 
+@router.get("/work-packages/{package_id}")
+def get_work_package(
+    package_id: str,
+    db: Session = Depends(get_db),
+    caller: CallerContext = Depends(get_caller),
+) -> dict:
+    package = _resolve_package(db, package_id, caller)
+    return {
+        "id": package.id,
+        "title": package.title,
+        "status": package.status,
+        "priority": package.priority,
+        "org_id": package.org_id,
+        "tenant_id": package.tenant_id,
+        "due_at": package.due_at.isoformat() if package.due_at else None,
+        "created_at": package.created_at.isoformat() if package.created_at else None,
+        "tasks": [
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "status": task.status,
+                "assigned_agent_id": task.assigned_agent_id,
+                "sort_order": task.sort_order,
+            }
+            for task in package.tasks
+        ],
+    }
+
+
 @router.patch("/work-packages/{package_id}")
 def update_work_package(
     package_id: str,

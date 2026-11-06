@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { getExecutions } from "@/lib/api";
+import { apiGet, getExecutions } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+type IntegrationStatus = {
+  items: Array<{ channel: string; configured: boolean; adapter: string | null; status: string; evidence: string | null }>;
+};
 
 type ExecutionItem = {
   id: string;
@@ -64,7 +68,7 @@ function fmtAt(iso: string | null): string {
 }
 
 export default async function IntegrationsPage() {
-  const executions = await getExecutions(20);
+  const [executions, status] = await Promise.all([getExecutions(20), apiGet<IntegrationStatus>("/integrations/status")]);
   const recent: ExecutionItem[] = executions.ok ? executions.data.items : [];
   const succeeded = recent.filter((item) => item.status === "succeeded" || item.status === "completed").length;
 
@@ -77,14 +81,28 @@ export default async function IntegrationsPage() {
         </div>
       </header>
 
-      <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
-        <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
-        <span>
-          <strong>Status konektor belum terhubung.</strong> Backend tidak menyediakan endpoint status konektor,
-          jadi halaman ini tidak menampilkan badge terhubung untuk kanal mana pun. Menampilkan “terhubung”
-          tanpa endpoint hanya akan menipu.
-        </span>
-      </div>
+      {status.ok ? (
+        <div className="table-wrap" style={{ marginBottom: "var(--s-4)" }}>
+          <table className="table table--compact">
+            <thead><tr><th>Kanal</th><th>Adapter</th><th>Status</th><th>Bukti</th></tr></thead>
+            <tbody>
+              {status.data.items.map((it) => (
+                <tr key={it.channel}>
+                  <td>{it.channel}</td>
+                  <td className="mono">{it.adapter ?? "—"}</td>
+                  <td><span className={`badge ${it.configured ? "badge--success" : "badge--outline"}`}>{it.status}</span></td>
+                  <td>{it.evidence ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
+          <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+          <span><strong>Status konektor belum terhubung.</strong> {status.error}</span>
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: "var(--s-4)" }}>
         <div className="card__head">

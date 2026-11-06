@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { getHealth, getMeta, getPermissions } from "@/lib/api";
+import { apiGet, getHealth, getMeta, getPermissions } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+type SettingsData = { settings: Record<string, unknown>; tenant_id?: string };
 
 /* Tidak ada endpoint konfigurasi di backend. Halaman ini menampilkan hanya
  * data nyata yang bisa dibaca: /health (publik), /meta, /permissions.
  * Tidak ada form pengaturan karena tidak ada endpoint untuk menyimpannya. */
 
 export default async function SettingsPage() {
-  const [health, meta, permissions] = await Promise.all([getHealth(), getMeta(), getPermissions()]);
+  const [health, meta, permissions, settings] = await Promise.all([getHealth(), getMeta(), getPermissions(), apiGet<SettingsData>("/settings")]);
 
   return (
     <>
@@ -19,15 +21,26 @@ export default async function SettingsPage() {
         </div>
       </header>
 
-      <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
-        <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
-        <span>
-          <strong>Pengaturan sistem belum terhubung.</strong> Backend tidak menyediakan endpoint konfigurasi
-          (tidak ada <code className="mono">GET/PATCH /settings</code> atau sejenisnya). Kolom{" "}
-          <code className="mono">settings_json</code> ada di model tenant, tetapi tidak ada endpoint yang
-          membacanya atau mengubahnya. Form pengaturan akan menyinggung.
-        </span>
-      </div>
+      {settings.ok ? (
+        <section className="card card--pad" aria-label="Pengaturan tenant" style={{ marginBottom: "var(--s-4)" }}>
+          <h2 style={{ fontSize: 15, margin: "0 0 var(--s-2)" }}>Pengaturan tenant</h2>
+          {Object.keys(settings.data.settings).length === 0 ? (
+            <p className="muted">Belum ada pengaturan tersimpan.</p>
+          ) : (
+            <dl className="def-list">
+              {Object.entries(settings.data.settings).map(([k, v]) => (
+                <div key={k}><dt className="mono">{k}</dt><dd className="mono">{String(v)}</dd></div>
+              ))}
+            </dl>
+          )}
+          <p className="small muted">Perubahan pengaturan lewat <code className="mono">PATCH /settings</code> dengan capability <code className="mono">manage_integrations</code>; setiap perubahan tercatat di audit.</p>
+        </section>
+      ) : (
+        <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
+          <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+          <span><strong>Pengaturan tenant belum terhubung.</strong> {settings.error}</span>
+        </div>
+      )}
 
       <h2 style={{ fontSize: 15, margin: "0 0 var(--s-3)" }}>Status layanan (dari API nyata)</h2>
       {health.ok ? (

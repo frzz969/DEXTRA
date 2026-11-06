@@ -83,6 +83,30 @@ def list_policies(
     }
 
 
+@router.get("/policies/{slug}/versions")
+def list_policy_versions(
+    slug: str,
+    db: Session = Depends(get_db),
+    caller: CallerContext = Depends(get_caller),
+) -> dict:
+    policy = _resolve_policy(db, slug, caller)
+    versions = sorted(policy.versions, key=lambda v: v.version)
+    return {
+        "policy_id": policy.id,
+        "slug": policy.slug,
+        "items": [
+            {
+                "id": v.id,
+                "version": v.version,
+                "rules_json": v.rules_json,
+                "change_note": v.change_note,
+                "created_at": v.created_at.isoformat() if v.created_at else None,
+            }
+            for v in versions
+        ],
+    }
+
+
 @router.patch("/policies/{slug}")
 def update_policy(
     slug: str,
