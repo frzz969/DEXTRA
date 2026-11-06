@@ -86,6 +86,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" aria-hidden="true">monitoring</span>
                   <span className="nav-item__label">Analytics</span>
                 </Link>
+                <Link className="nav-item" href="/monitoring">
+                  <span className="material-symbols-outlined" aria-hidden="true">monitoring</span>
+                  <span className="nav-item__label">Monitoring</span>
+                </Link>
               </nav>
 
               <nav className="nav-group" aria-label="Tata kelola">

@@ -279,6 +279,9 @@ importers:
       '@dextra/store':
         specifier: workspace:*
         version: link:../store
+      nodemailer:
+        specifier: ^6.9.0
+        version: 6.10.1
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -713,6 +716,10 @@ packages:
       sass:
         optional: true
 
+  nodemailer@6.10.1:
+    resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
+    engines: {node: '>=6.0.0'}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -992,6 +999,8 @@ snapshots:
       - '@babel/core'
       - '@types/node'
       - babel-plugin-macros
+
+  nodemailer@6.10.1: {}
 
   picocolors@1.1.1: {}
 
