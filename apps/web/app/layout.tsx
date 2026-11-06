@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Copilot from "@/components/Copilot";
+import Topbar from "@/components/Topbar";
+import Tabsbar from "@/components/Tabsbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -70,6 +72,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
                   <span className="nav-item__label">Paket Kerja</span>
                 </Link>
+                <Link className="nav-item" href="/requests">
+                  <span className="material-symbols-outlined" aria-hidden="true">send</span>
+                  <span className="nav-item__label">Requests</span>
+                </Link>
+                <Link className="nav-item" href="/my-work">
+                  <span className="material-symbols-outlined" aria-hidden="true">task_alt</span>
+                  <span className="nav-item__label">My Work</span>
+                </Link>
                 <Link className="nav-item" href="/board">
                   <span className="material-symbols-outlined" aria-hidden="true">view_kanban</span>
                   <span className="nav-item__label">Papan</span>
@@ -97,6 +107,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Link className="nav-item" href="/approvals">
                   <span className="material-symbols-outlined" aria-hidden="true">fact_check</span>
                   <span className="nav-item__label">Approval</span>
+                </Link>
+                <Link className="nav-item" href="/review">
+                  <span className="material-symbols-outlined" aria-hidden="true">rate_review</span>
+                  <span className="nav-item__label">Review</span>
                 </Link>
                 <Link className="nav-item" href="/mandates">
                   <span className="material-symbols-outlined" aria-hidden="true">assignment_turned_in</span>
@@ -146,6 +160,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" aria-hidden="true">settings</span>
                   <span className="nav-item__label">Admin</span>
                 </Link>
+                <Link className="nav-item" href="/integrations">
+                  <span className="material-symbols-outlined" aria-hidden="true">cable</span>
+                  <span className="nav-item__label">Integrations</span>
+                </Link>
+                <Link className="nav-item" href="/service-identities">
+                  <span className="material-symbols-outlined" aria-hidden="true">badge</span>
+                  <span className="nav-item__label">Service Identity</span>
+                </Link>
+                <Link className="nav-item" href="/settings">
+                  <span className="material-symbols-outlined" aria-hidden="true">tune</span>
+                  <span className="nav-item__label">Settings</span>
+                </Link>
                 <Link className="nav-item" href="/data-management">
                   <span className="material-symbols-outlined" aria-hidden="true">database</span>
                   <span className="nav-item__label">Data Management</span>
@@ -163,6 +189,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </aside>
 
           <main className="main">
+            <Topbar />
+            <Tabsbar />
             <div className="content">
               <div className="page">{children}</div>
             </div>
