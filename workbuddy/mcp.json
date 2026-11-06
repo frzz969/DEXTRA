@@ -12,6 +12,7 @@
         "get_org_rules",
         "find_precedent",
         "create_plan",
+        "office_agent_run",
         "validate_plan",
         "get_plan",
         "list_plans",

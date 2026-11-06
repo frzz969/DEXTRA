@@ -25,6 +25,7 @@ from .database.session import database_health
 from .modules.approvals.router import router as approvals_router
 from .modules.audit.router import router as audit_router
 from .modules.auth.router import router as auth_router
+from .modules.conversations.router import router as conversations_router
 from .modules.execution.router import router as execution_router
 from .modules.identity.router import router as identity_router
 from .modules.mandates.router import router as mandates_router
@@ -81,6 +82,7 @@ def create_app() -> FastAPI:
         skills_router,
         workflows_router,
         office_agent_router,
+        conversations_router,
     ):
         app.include_router(router, prefix=API_PREFIX)
 

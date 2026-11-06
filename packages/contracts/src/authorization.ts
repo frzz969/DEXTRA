@@ -49,6 +49,12 @@ export const TOOL_CAPABILITY = {
   get_org_rules: 'view_all',
   find_precedent: 'view_all',
   create_plan: 'create_request',
+  /*
+   * Intake lengkap Office Agent: normalisasi, dekomposisi, klarifikasi, dan
+   * plan. Ia membuat permintaan/plan, jadi kewenangannya sama dengan
+   * `create_plan`; tidak ada model otorisasi baru.
+   */
+  office_agent_run: 'create_request',
   validate_plan: 'create_request',
   get_plan: 'view_all',
   list_plans: 'view_all',

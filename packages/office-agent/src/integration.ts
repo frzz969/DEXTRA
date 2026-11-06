@@ -38,6 +38,12 @@ export interface OfficeToolContext {
 
 export interface OfficeToolArgs {
   request_id: string;
+  /**
+   * Kunci percakapan dari channel (mis. id chat Telegram). Bila diisi, server
+   * memetakan kunci ini ke request pertama chat tersebut; pesan susulan
+   * melanjutkan request yang sama alih-alih membuat request baru.
+   */
+  chat_id?: string;
   instruction?: string;
   document?: { filename: string; content: string };
   answers?: Array<{ question_id: string; value: string }>;
@@ -53,6 +59,7 @@ export const OFFICE_AGENT_INPUT_SCHEMA = {
   required: ['request_id'],
   properties: {
     request_id: { type: 'string', pattern: '^req_[a-z0-9_]+$' },
+    chat_id: { type: 'string', description: 'Stable chat key; the server keeps one request per chat.' },
     instruction: { type: 'string', maxLength: 20000 },
     document: {
       type: 'object',

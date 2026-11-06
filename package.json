@@ -33,6 +33,7 @@
     "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset",
     "demo:flow": "node scripts/demo-flow.mjs",
     "dev:mcp": "node --experimental-strip-types apps/mcp-server/src/index.ts",
+    "dev:telegram": "node --experimental-strip-types apps/telegram-adapter/index.ts",
     "dev:web": "./scripts/dev-web.sh",
     "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
     "audit:verify": "node --experimental-strip-types packages/audit-export/src/cli.ts"

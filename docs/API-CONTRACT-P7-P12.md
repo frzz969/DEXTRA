@@ -369,7 +369,7 @@ database after every rejection.
 ## 10. Daftar rute terverifikasi
 
 Diambil dari `app.openapi()` pada build ini, bukan diketik ulang. Jumlahnya
-**78 operasi**. Tes `tests/integration/test_api_surface.py` membandingkan blok
+**83 operasi**. Tes `tests/integration/test_api_surface.py` membandingkan blok
 ini dengan skema OpenAPI, jadi rute baru yang lupa didaftarkan atau lupa
 didokumentasikan akan menggagalkan tes.
 
@@ -394,6 +394,11 @@ POST   /api/v1/auth/password
 GET    /api/v1/auth/session
 GET    /api/v1/auth/sessions
 POST   /api/v1/auth/sessions/{session_id}/revoke
+GET    /api/v1/conversations
+POST   /api/v1/conversations
+GET    /api/v1/conversations/{conversation_id}
+GET    /api/v1/conversations/{conversation_id}/messages
+POST   /api/v1/conversations/{conversation_id}/messages
 GET    /api/v1/executions
 POST   /api/v1/executions
 GET    /api/v1/mandates

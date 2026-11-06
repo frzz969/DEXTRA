@@ -17,7 +17,10 @@ export { validateOfficeOutput } from './validator.ts';
 export type { ValidateInput } from './validator.ts';
 export { runOfficeAgent, runOfficeAgentWithDeps } from './run.ts';
 export type { OfficeAgentDeps } from './run.ts';
-export { loadSession, saveSession, listSessions } from './state.ts';
+export { loadSession, saveSession, listSessions, resolveChatRequest, getChatRequest } from './state.ts';
+export type { ChatRequestBinding } from './state.ts';
+export { parseIntent } from './intent.ts';
+export type { ParsedIntent, IntentAssumptions, IntentHints } from './intent.ts';
 export {
   OFFICE_AGENT_TOOL,
   OFFICE_AGENT_CAPABILITY,

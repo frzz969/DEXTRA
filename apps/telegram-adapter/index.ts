@@ -11,7 +11,7 @@
 //   DEXTRA_AGENT_TOKEN  — default agent-dev-token
 //   DEXTRA_DASHBOARD_URL — default http://127.0.0.1:8899 (untuk link approval)
 
-import { randomUUID } from 'node:crypto';
+import { parseIntent } from '../../packages/office-agent/src/intent.ts';
 
 const MCP_URL = (process.env.DEXTRA_MCP_URL || 'http://127.0.0.1:8765').replace(/\/$/, '');
 const OPS_TOKEN = process.env.DEXTRA_OPS_TOKEN || 'ops-dev-token';
@@ -49,12 +49,105 @@ export async function callMcp(tool: string, args: Record<string, unknown> = {}, 
 
 // ---------- command handlers (pure-ish, testable) ----------
 
-export interface CommandContext { chatId: number; text: string; reply: (msg: string) => Promise<void> }
+export interface CommandContext {
+  chatId: number;
+  text: string;
+  reply: (msg: string) => Promise<void>;
+  /** update_id Telegram; dipakai untuk id request pesan pertama. */
+  updateId?: number;
+  /** Injection untuk tes; default callMcp (jaringan sungguhan). */
+  callTool?: typeof callMcp;
+}
+
+/**
+ * Id request untuk satu pesan. Pesan pertama dari sebuah chat memakai id ini;
+ * server menyimpannya sebagai id kanonik chat, sehingga pesan berikutnya
+ * (dengan update_id berbeda) tetap melanjutkan request yang sama.
+ */
+export function requestIdForChat(chatId: number, updateId: number): string {
+  const sign = chatId < 0 ? 'n' : 'p';
+  const chat = Math.abs(chatId).toString(36);
+  const update = Math.max(0, Math.floor(updateId)).toString(36);
+  return `req_tg_${sign}${chat}_${update}`;
+}
+
+function dashboardLink(planId: string | null): string {
+  return planId === null
+    ? `${DASHBOARD_URL}/#/office-agent`
+    : `${DASHBOARD_URL}/#/work-packages/${encodeURIComponent(planId)}`;
+}
+
+/** Balasan manusiawi untuk hasil office_agent_run; tidak pernah melempar. */
+export function formatOfficeAgentReply(result: McpResult): string {
+  if (!result.ok) {
+    return `Maaf, permintaan belum bisa diproses.\n${result.error?.code ?? 'ERROR'}: ${result.error?.message ?? 'unknown'}`;
+  }
+  const data = (result.data ?? {}) as {
+    status?: string;
+    plan?: { plan_id?: string; plan_hash?: string } | null;
+    session?: { questions?: Array<{ prompt?: string }> } | null;
+  };
+  const status = data.status ?? 'unknown';
+  const planId = typeof data.plan?.plan_id === 'string' ? data.plan.plan_id : null;
+
+  const lines: string[] = [`Status: ${status}`];
+
+  if (status === 'needs_clarification') {
+    const questions = data.session?.questions ?? [];
+    lines.push('Saya perlu klarifikasi:');
+    if (questions.length === 0) lines.push('- Pertanyaan klarifikasi belum tersedia.');
+    else for (const question of questions) lines.push(`- ${question.prompt ?? 'Pertanyaan tanpa teks.'}`);
+  } else if (status === 'plan_ready' && data.plan !== null && data.plan !== undefined) {
+    lines.push(`Plan: ${planId ?? '-'}`);
+    if (typeof data.plan.plan_hash === 'string') lines.push(`Hash: ${data.plan.plan_hash}`);
+    lines.push('Plan belum dieksekusi; persetujuan manusia tetap diperlukan.');
+  } else if (status === 'blocked') {
+    lines.push('Plan belum dapat dibentuk; periksa detail di dashboard.');
+  }
+
+  lines.push(`Dashboard: ${dashboardLink(planId)}`);
+  const message = lines.join('\n');
+  return message.length > 4000 ? `${message.slice(0, 3997)}...` : message;
+}
+
+async function handleFreeText(ctx: CommandContext): Promise<void> {
+  const call = ctx.callTool ?? callMcp;
+  const parsed = parseIntent(ctx.text);
+  const requestId = requestIdForChat(ctx.chatId, ctx.updateId ?? Date.now());
+
+  let result: McpResult;
+  try {
+    result = await call(
+      'office_agent_run',
+      {
+        request_id: requestId,
+        chat_id: String(ctx.chatId),
+        instruction: parsed.instruction,
+        assumptions: parsed.assumptions,
+      },
+      AGENT_TOKEN,
+    );
+  } catch (error) {
+    await ctx.reply(`Maaf, layanan DEXTRA tidak dapat dihubungi: ${(error as Error).message}`);
+    return;
+  }
+  await ctx.reply(formatOfficeAgentReply(result));
+}
 
 export async function handleCommand(ctx: CommandContext): Promise<void> {
-  const [cmd, ...rest] = ctx.text.trim().split(/\s+/);
+  const trimmed = ctx.text.trim();
+  if (trimmed === '') {
+    await ctx.reply('Pesan kosong. Tulis permintaan atau ketik /help.');
+    return;
+  }
+  if (!trimmed.startsWith('/')) {
+    await handleFreeText({ ...ctx, text: trimmed });
+    return;
+  }
+
+  const [cmd, ...rest] = trimmed.split(/\s+/);
   const arg = rest.join(' ').trim();
-  switch (cmd.toLowerCase()) {
+  switch ((cmd ?? '').toLowerCase()) {
     case '/start':
       await ctx.reply(
         'DEXTRA — Governed AI Workforce.\n' +
@@ -125,7 +218,7 @@ export async function runBot(): Promise<void> {
         if (chatId !== undefined && text) {
           const reply = async (msg: string) => { await telegramApi('sendMessage', { chat_id: chatId, text: msg }); };
           try {
-            await handleCommand({ chatId, text, reply });
+            await handleCommand({ chatId, text, reply, updateId: u.update_id });
           } catch (err) {
             await reply(`Error: ${(err as Error).message}`);
           }

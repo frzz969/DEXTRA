@@ -8,6 +8,9 @@ import { revokeMandate } from '../../../packages/mandate-engine/src/revoke.ts';
 import { executeAction } from '../../../packages/executor/src/execute.ts';
 import { OrgSchema } from '../../../packages/contracts/src/index.ts';
 import type { Plan, Approval, Mandate } from '../../../packages/contracts/src/index.ts';
+import { handleOfficeAgentTool } from '../../../packages/office-agent/src/integration.ts';
+import { parseIntent } from '../../../packages/office-agent/src/intent.ts';
+import { resolveChatRequest } from '../../../packages/office-agent/src/state.ts';
 import { isAllowed, callerContext, resolvePrincipal, type Scope } from './auth.ts';
 
 /**
@@ -323,6 +326,53 @@ export async function handleTool(name: string, args: any, scope: string): Promis
       }
 
       return { ok: true, data: { plan: validated } };
+    }
+    case 'office_agent_run': {
+      /*
+       * Prinsipal datang dari token, bukan dari argumen - alasan yang sama
+       * dengan create_plan. org rules dibaca dari store supaya org_id yang
+       * dipakai adalah org yang nyata, bukan yang dikirim pemanggil.
+       *
+       * Sebelum masuk pipeline, teks bebas dinormalisasi secara deterministik:
+       * jam/durasi/zona yang tertulis menjadi asumsi eksplisit, sehingga alur
+       * klarifikasi tidak menanyakan ulang hal yang sudah disebut. Asumsi dari
+       * pemanggil tetap menang atas tebakan parser.
+       */
+      const org = await getOrgRules();
+      const principal = await resolvePrincipal(scope as Scope);
+      const requestedRequestId = typeof args?.request_id === 'string' ? args.request_id : '';
+      const chatKey =
+        typeof args?.chat_id === 'string'
+          ? args.chat_id.trim()
+          : typeof args?.chat_id === 'number'
+            ? String(args.chat_id)
+            : '';
+
+      /* Satu chat = satu request. Request id pertama yang diajukan adapter
+         disimpan; pesan susulan memakai id itu lagi sehingga sesi klarifikasi
+         dan plan yang sama dilanjutkan, bukan diduplikasi. */
+      const requestId =
+        chatKey !== '' && requestedRequestId !== ''
+          ? await resolveChatRequest(chatKey, requestedRequestId)
+          : requestedRequestId;
+
+      const parsed = typeof args?.instruction === 'string' ? parseIntent(args.instruction) : null;
+      const callerAssumptions =
+        args?.assumptions !== null && typeof args?.assumptions === 'object' ? args.assumptions : {};
+      const assumptions = { ...(parsed?.assumptions ?? {}), ...callerAssumptions };
+
+      const toolArgs = {
+        ...args,
+        request_id: requestId,
+        ...(parsed === null ? {} : { instruction: parsed.instruction }),
+        ...(Object.keys(assumptions).length === 0 ? {} : { assumptions }),
+      };
+
+      return handleOfficeAgentTool(toolArgs, {
+        scope: scope as 'agent' | 'ops',
+        principal_id: principal?.principal_id ?? null,
+        org_id: org.org_id,
+      });
     }
     case 'validate_plan': {
       const org = await getOrgRules();

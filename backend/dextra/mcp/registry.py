@@ -13,6 +13,9 @@ TOOL_CAPABILITY: Final[dict[str, str]] = {
     "get_org_rules": "view_all",
     "find_precedent": "view_all",
     "create_plan": "create_request",
+    # Intake lengkap Office Agent (normalisasi -> dekomposisi -> klarifikasi ->
+    # plan). Membuat permintaan/plan, jadi kewenangannya sama dengan create_plan.
+    "office_agent_run": "create_request",
     "validate_plan": "create_request",
     "get_plan": "view_all",
     "list_plans": "view_all",

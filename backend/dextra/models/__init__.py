@@ -1,5 +1,11 @@
 """Impor seluruh model supaya `Base.metadata` lengkap untuk Alembic dan create_all."""
 from .audit import AuditEvent
+from .conversation import (
+    CONVERSATION_STATUSES,
+    MESSAGE_ROLES,
+    Conversation,
+    ConversationMessage,
+)
 from .credentials import (
     SERVICE_ACCOUNT_KINDS,
     SERVICE_ACCOUNT_STATUSES,
@@ -41,10 +47,14 @@ __all__ = [
     "ApiToken",
     "Approval",
     "AuditEvent",
+    "CONVERSATION_STATUSES",
+    "Conversation",
+    "ConversationMessage",
     "Execution",
     "ExecutionStep",
     "LoginThrottle",
     "MEMBERSHIP_STATUSES",
+    "MESSAGE_ROLES",
     "Mandate",
     "Membership",
     "OUTCOMES",

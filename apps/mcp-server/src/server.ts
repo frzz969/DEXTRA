@@ -4,6 +4,7 @@ import { resolveScope, isAllowed, toolsForScope } from './auth.ts';
 import { handleTool } from './handlers.ts';
 import { ensureStoreFiles } from '../../../packages/store/src/json-file.ts';
 import { appendAudit } from '../../../packages/store/src/repository.ts';
+import { OFFICE_AGENT_INPUT_SCHEMA } from '../../../packages/office-agent/src/integration.ts';
 import { evaluateRequest, parseAllowedOrigins, type OriginPolicy } from './origin-policy.ts';
 
 const PORT = Number(process.env.DEXTRA_MCP_PORT ?? 8765);
@@ -97,6 +98,7 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   get_org_rules: 'Read organization rules (timezones, office hours, Friday prayer, holidays).',
   find_precedent: 'Find candidate recipients by subject and context.',
   create_plan: 'Create a work plan from an instruction.',
+  office_agent_run: 'Run the Office Agent end to end: normalize an instruction, decompose it, ask for clarification when information is missing, then build and persist a plan. One request per chat when chat_id is supplied.',
   validate_plan: 'Validate a plan against org rules and policies.',
   get_plan: 'Read a plan by id.',
   list_plans: 'List plans, newest first. Optional status filter and limit.',
@@ -120,6 +122,7 @@ const TOOL_SCHEMAS: Record<string, any> = {
   get_org_rules: { type: 'object', properties: { org_id: { type: 'string' } }, required: ['org_id'] },
   find_precedent: { type: 'object', properties: { subject: { type: 'string' }, context: { type: 'string' }, org_id: { type: 'string' } }, required: ['subject', 'org_id'] },
   create_plan: { type: 'object', properties: { org_id: { type: 'string' }, request_id: { type: 'string' }, intent: { type: 'string' }, actions: { type: 'array' }, assignee_id: { type: 'string' } }, required: ['org_id', 'request_id', 'intent', 'actions'] },
+  office_agent_run: OFFICE_AGENT_INPUT_SCHEMA,
   validate_plan: { type: 'object', properties: { plan: { type: 'object' }, org_id: { type: 'string' } }, required: ['plan'] },
   get_plan: { type: 'object', properties: { plan_id: { type: 'string' } }, required: ['plan_id'] },
   list_plans: { type: 'object', properties: { status: { type: 'string', enum: ['DRAFT', 'READY', 'NEEDS_REVIEW', 'BLOCKED'] }, limit: { type: 'number', minimum: 1, maximum: 500 }, offset: { type: 'number', minimum: 0 }, q: { type: 'string', maxLength: 200 }, requester_id: { type: 'string' }, assignee_id: { type: 'string' } } },
@@ -146,6 +149,7 @@ const TOOL_ANNOTATIONS: Record<string, any> = {
   get_org_rules: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   find_precedent: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   create_plan: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  office_agent_run: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   validate_plan: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   get_plan: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   list_plans: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },

@@ -45,9 +45,11 @@ describe('auth scoping', () => {
      * `export_audit` (P4, 2026-11-04) menambah satu lagi dengan capability yang
      * sama: ekspor memuat SELURUH log, jadi agent yang hanya punya `view_all`
      * tidak boleh mendapatkannya.
+     * `office_agent_run` (Fase 1, 2026-11-06) menambah satu tool untuk kedua
+     * scope dengan capability `create_request` yang sudah ada.
      */
-    assert.equal(OPS_TOOLS.size, 20);
-    assert.equal(AGENT_TOOLS.size, 12);
+    assert.equal(OPS_TOOLS.size, 21);
+    assert.equal(AGENT_TOOLS.size, 13);
   });
 
   test('every tool in the contract appears in at least one scope', () => {
