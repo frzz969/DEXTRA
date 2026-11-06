@@ -275,6 +275,49 @@ describe('deteksi alert', () => {
   });
 });
 
+describe('deteksi percakapan → permintaan kerja', () => {
+  test('percakapan yang menghasilkan permintaan kerja baru memicu conversation_work_request', () => {
+    const alerts = detectAlerts({
+      executions: [],
+      mandates: [],
+      approvals: [],
+      audit: [],
+      now: NOW,
+      plans: [{ plan_id: 'plan_9', intent: 'Kirim laporan ke finance', created_at: minutesAgo(10) }],
+    });
+
+    assert.equal(alerts.length, 1);
+    assert.equal(alerts[0]!.kind, 'conversation_work_request');
+    assert.equal(alerts[0]!.severity, 'info');
+    assert.equal(alerts[0]!.subject.plan_id, 'plan_9');
+    assert.equal(alerts[0]!.payload.intent, 'Kirim laporan ke finance');
+  });
+
+  test('percakapan di luar jendela tidak memicu alert', () => {
+    const alerts = detectAlerts({
+      executions: [],
+      mandates: [],
+      approvals: [],
+      audit: [],
+      now: NOW,
+      plans: [{ plan_id: 'plan_9', intent: 'Kirim laporan ke finance', created_at: minutesAgo(120) }],
+    });
+    assert.equal(alerts.length, 0, 'jendela default satu jam');
+  });
+
+  test('timestamp percakapan di masa depan tidak dianggap baru', () => {
+    const alerts = detectAlerts({
+      executions: [],
+      mandates: [],
+      approvals: [],
+      audit: [],
+      now: NOW,
+      plans: [{ plan_id: 'plan_9', intent: 'Kirim laporan ke finance', created_at: minutesFromNow(30) }],
+    });
+    assert.equal(alerts.length, 0, 'jam di masa depan tidak boleh memicu alert');
+  });
+});
+
 describe('ambang deteksi', () => {
   test('jendela dan ambang bisa diatur, dan defaultnya terdokumentasi', () => {
     const alerts = detectAlerts({

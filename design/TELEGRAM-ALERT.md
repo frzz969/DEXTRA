@@ -29,6 +29,7 @@ type AlertKind =
   | 'mandate_expired'       // sudah lewat expires_at, status masih active
   | 'approval_pending'      // menunggu > X jam
   | 'security_rejection';   // mandate_rejected / action_blocked
+  | 'conversation_work_request'; // percakapan → permintaan kerja baru
 
 interface Alert {
   alert_id: string;          // alrt_<hash8(kind + subject + bucket)>

@@ -33,11 +33,24 @@ export interface DetectInput {
   expiringWithinMs?: number;
   /** How long an approval may sit pending before it is worth a message. Default 4 hours. */
   approvalPendingMs?: number;
+  /** How long after a conversation became a work request an alert is worth sending. Default 1 hour. */
+  conversationWindowMs?: number;
+  /** Work requests (plans) created from conversations, to detect. */
+  plans?: readonly ConversationPlanFact[];
+}
+
+/** A plan that came out of a conversation — a work request, if the intent said so. */
+export interface ConversationPlanFact {
+  plan_id: string;
+  intent: string;
+  created_at: string;
 }
 
 export const DEFAULT_FAILURE_WINDOW_MS = 60 * 60 * 1000;
 export const DEFAULT_EXPIRING_WITHIN_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_APPROVAL_PENDING_MS = 4 * 60 * 60 * 1000;
+/** How long after a conversation became a work request before it is worth an alert. Default 1 hour. */
+export const DEFAULT_CONVERSATION_WINDOW_MS = 60 * 60 * 1000;
 /** Three failures of the same action inside the window is a pattern, not an incident. */
 export const REPEATED_FAILURE_THRESHOLD = 3;
 
@@ -185,6 +198,24 @@ export function detectAlerts(input: DetectInput): Alert[] {
         payload: {
           jenis_event: event.type,
           alasan: event.detail.reason ?? event.detail.reason_code ?? 'tidak dilaporkan',
+        },
+      }),
+    );
+  }
+
+  /* 7. Percakapan yang baru menghasilkan permintaan kerja. */
+  const conversationWindowMs = input.conversationWindowMs ?? DEFAULT_CONVERSATION_WINDOW_MS;
+  for (const plan of input.plans ?? []) {
+    if (!withinWindow(plan.created_at, now, conversationWindowMs)) continue;
+    alerts.push(
+      createAlert({
+        kind: 'conversation_work_request',
+        subject: { plan_id: plan.plan_id },
+        at: now,
+        payload: {
+          plan_id: plan.plan_id,
+          intent: plan.intent,
+          jendela_menit: String(Math.round(conversationWindowMs / (60 * 1000))),
         },
       }),
     );

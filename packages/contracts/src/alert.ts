@@ -13,6 +13,7 @@ export const AlertKindSchema = z.enum([
   'mandate_expired',
   'approval_pending',
   'security_rejection',
+  'conversation_work_request',
 ]);
 export type AlertKind = z.infer<typeof AlertKindSchema>;
 
@@ -31,6 +32,7 @@ export const ALERT_SEVERITY: Record<AlertKind, AlertSeverity> = {
   mandate_expired: 'critical',
   approval_pending: 'info',
   security_rejection: 'critical',
+  conversation_work_request: 'info',
 };
 
 export const AlertSubjectSchema = z
