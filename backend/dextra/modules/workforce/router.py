@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from ...core.authz import require_tenant, scope_to_tenant
 from ...core.security import CallerContext, get_caller, require_capability
+from ...database.base import new_id
 from ...database.session import get_db
 from ...models.tasks import Task
 from ...models.workforce import Agent, AgentAssignment
@@ -32,6 +33,12 @@ SPECIALISTS = (
 #: status asing membuat filter UI diam-diam kosong.
 AGENT_STATUSES = ("active", "idle", "busy", "disabled", "error")
 
+
+class AgentCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    role: str = Field(min_length=1, max_length=64)
+    capabilities: list[str] = Field(default_factory=list)
+    status: str = "idle"
 
 class AgentUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
@@ -139,3 +146,58 @@ def delete_agent(
     db.delete(agent)
     db.commit()
     return {"deleted": True, "slug": slug, "id": agent_id}
+
+
+def _resolve_by_id(db, agent_id, caller):
+    agent = db.scalar(scope_to_tenant(select(Agent).where(Agent.id == agent_id), Agent, caller))
+    if agent is None:
+        raise HTTPException(status_code=404, detail="Agen tidak ditemukan.")
+    return agent
+
+
+@router.post("/agents", status_code=201)
+def create_agent(
+    payload: AgentCreate,
+    db: Session = Depends(get_db),
+    caller: CallerContext = Depends(require_capability("create_request")),
+) -> dict:
+    require_tenant(caller)
+    tenant_id = require_tenant(caller)
+    if payload.status not in AGENT_STATUSES:
+        raise HTTPException(status_code=422, detail="Status agen tidak dikenal.")
+    slug = payload.name.lower().replace(" ", "-")
+    agent = Agent(
+        id=new_id("agt"),
+        tenant_id=tenant_id,
+        slug=slug,
+        display_name=payload.name,
+        agent_type=payload.role,
+        status=payload.status,
+    )
+    db.add(agent)
+    db.flush()
+    for cap in payload.capabilities:
+        db.add(AgentCapability(id=new_id("cap"), agent_id=agent.id, capability=cap))
+    db.commit()
+    db.refresh(agent)
+    return _serialize(agent)
+
+
+@router.patch("/agents/{agent_id}")
+def update_agent_by_id(
+    agent_id: str,
+    payload: AgentUpdate,
+    db: Session = Depends(get_db),
+    caller: CallerContext = Depends(require_capability("create_request")),
+) -> dict:
+    require_tenant(caller)
+    agent = _resolve_by_id(db, agent_id, caller)
+    if payload.status is not None and payload.status not in AGENT_STATUSES:
+        raise HTTPException(status_code=422, detail="Status agen tidak dikenal.")
+    for name in ("display_name", "description", "status", "is_enabled", "model_provider"):
+        value = getattr(payload, name)
+        if value is not None:
+            setattr(agent, name, value)
+    db.commit()
+    db.refresh(agent)
+    return _serialize(agent)

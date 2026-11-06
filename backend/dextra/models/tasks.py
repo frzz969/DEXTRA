@@ -15,6 +15,9 @@ from ..database.base import Base, IdMixin, TimestampMixin
 
 WORK_STATUSES = (
     "draft",
+    "assigned",
+    "in_progress",
+    "review",
     "pending_approval",
     "approved",
     "executing",

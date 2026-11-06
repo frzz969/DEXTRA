@@ -378,6 +378,8 @@ GET    /api/v1/agents
 DELETE /api/v1/agents/{slug}
 GET    /api/v1/agents/{slug}
 PATCH  /api/v1/agents/{slug}
+POST   /api/v1/agents
+PATCH  /api/v1/agents/{agent_id}
 GET    /api/v1/approvals
 POST   /api/v1/approvals
 GET    /api/v1/audit-events
@@ -440,6 +442,7 @@ PATCH  /api/v1/tasks/{task_id}
 GET    /api/v1/tasks/{task_id}/assignments
 POST   /api/v1/tasks/{task_id}/assignments
 DELETE /api/v1/tasks/{task_id}/assignments/{assignment_id}
+POST   /api/v1/tasks/{task_id}/transition
 GET    /api/v1/tokens
 POST   /api/v1/tokens
 POST   /api/v1/tokens/{token_id}/revoke

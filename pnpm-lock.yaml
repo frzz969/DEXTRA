@@ -216,6 +216,15 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  apps/whatsapp-adapter:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.19.2
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   packages/alerts:
     dependencies:
       '@dextra/contracts':

@@ -51,6 +51,9 @@ class TaskUpdate(BaseModel):
     sort_order: int | None = Field(default=None, ge=0)
 
 
+class TransitionRequest(BaseModel):
+    to_status: str
+
 class AssignmentCreate(BaseModel):
     agent_slug: str = Field(min_length=1, max_length=64)
     role: str = Field(default="executor", min_length=1, max_length=64)
@@ -370,3 +373,30 @@ def unassign_agent(
     db.delete(assignment)
     db.commit()
     return {"deleted": True, "id": assignment_id}
+
+
+_ALLOWED_TRANSITIONS = {
+    "draft": {"assigned", "cancelled", "rejected"},
+    "assigned": {"in_progress", "cancelled", "rejected"},
+    "in_progress": {"review", "cancelled", "rejected"},
+    "review": {"completed", "cancelled", "rejected"},
+}
+
+
+@router.post("/tasks/{task_id}/transition")
+def transition_task(
+    task_id: str,
+    payload: TransitionRequest,
+    db: Session = Depends(get_db),
+    caller: CallerContext = Depends(require_capability("create_request")),
+) -> dict:
+    require_tenant(caller)
+    task = _resolve_task(db, task_id, caller)
+    if payload.to_status not in WORK_STATUSES:
+        raise HTTPException(status_code=422, detail="Status tidak dikenal.")
+    allowed = _ALLOWED_TRANSITIONS.get(task.status, set()) | {"cancelled", "rejected"}
+    if payload.to_status not in allowed:
+        raise HTTPException(status_code=422, detail="Transisi tidak diizinkan.")
+    task.status = payload.to_status
+    db.commit()
+    return _serialize_task(task)
