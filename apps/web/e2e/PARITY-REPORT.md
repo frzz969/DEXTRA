@@ -7,13 +7,20 @@ Catatan: Playwright MCP tidak tersedia di sesi ini (katalog `execute` tidak memu
 - Backend :8000, MCP :8765, statis :8900 sudah jalan. Web :3000 awalnya jalan dengan env salah (`DEXTRA_API_URL` menunjuk port mati :8001 → semua halaman "fetch failed"). Web di-restart dengan env benar (`DEXTRA_API_URL=http://127.0.0.1:8000`, `DEXTRA_API_TOKEN=ops-dev-token`, `DEXTRA_MCP_URL=http://127.0.0.1:8765/`). **Ini temuan proses #1: jangan start web dengan env playwright-config (:8001) di luar test.**
 - Setelah restart: **26/26 route web HTTP 200, 0 pageerror, 0 request gagal.** Statis: 26/26 hash route dirender (status `?` karena SPA same-document; tidak ada pageerror).
 
+## Koreksi pasca-audit (build baru, diverifikasi ulang 2026-11-06)
+Setelah audit, web di-redeploy (chunk CSS berubah) dan temuan berikut **SUDAH teratasi** — verifikasi ulang via `recheck-*.png`:
+- **/board**: kini render 6 kolom kanban (Draft/Ditugaskan/Berjalan/Review/Selesai/Dibatalkan-ditolak), masing-masing "Tidak ada tugas." → `recheck-board.png`. Gap P0 board **selesai**.
+- **Topbar**: kini ada pill "MCP :8765 · Terhubung", trigger "Copilot", dan user chip nyata "Sesi API · ops" (sebelumnya "DEXTRA Operator" + pill "Lokal"). Gap P2 topbar **selesai**.
+
+Yang **masih berlaku** (terverifikasi di build baru): /service-identities 403 (`recheck-service-identities.png`), /permissions 404, endpoint backend hilang (integrations/settings/access/data-management), parity visual Overview (sparkline/chart/kartu antrean), penamaan route beda, ikon Analytics/Monitoring identik, label sidebar campuran bahasa.
+
 ## Hasil per halaman (web, setelah env benar)
 Semua merender shell + sidebar + topbar + tabs identik. Data tenant `kenari` benar-benar kosong, jadi mayoritas menampilkan empty-state jujur ("Belum ada …"), bukan error. Itu benar secara UX.
 
 | Route | Status | Catatan |
 |---|---|---|
 | `/` Overview | 200 | KPI 0 semua; banner `approval_response_time` belum dapat dihitung (jujur). Beda set KPI vs statis. |
-| `/board` | 200 | **BUG**: tidak ada kolom kanban sama sekali saat kosong (hanya form filter + teks). Statis selalu render 5 kolom (Draf/Klarifikasi/Menunggu/Diblokir/Selesai). |
+| `/board` | 200 | ~~**BUG**: tidak ada kolom kanban~~ **SUDAH DIPERBAIKI** (build baru): 6 kolom kanban selalu render. Lihat koreksi di atas. |
 | `/approvals` | 200 | Lengkap: antrean + riwayat + form Challenge (Setujui/Tolak/Minta revisi). Interaksi aman teruji (toggle tema). |
 | `/audit` | 200 | Empty-state jujur. |
 | `/agents` (=statis `/workforce`) | 200 | Empty-state. Penamaan beda dari statis. |
@@ -45,7 +52,7 @@ Bahasa desain sama: sidebar grup, KPI card lavender, banner warning, tabs bar, C
 4. Statis menampilkan banner "Data v1 belum terhubung … gateway MCP belum menerima token ops" di semua halaman; web tidak menampilkan status MCP sama sekali (padahal MCP :8765 hidup) — status koneksi backend/MCP tidak setara.
 
 ## Daftar gap prioritas
-- **P0**: `/board` tidak render kolom kanban saat kosong → kolom harus selalu digambar (statis: 5 kolom + "Kosong").
+- ~~**P0**: `/board` tidak render kolom kanban saat kosong~~ → **selesai** (build baru, `recheck-board.png`).
 - **P0**: `/service-identities` 403 dengan token ops-dev → putuskan: tambah capability ke token ops, atau tampilkan state 403 yang rapi. Bukti: `web-service-identities.png`, curl di atas.
 - **P1**: `/permissions` 404 di web (ada di statis) → tambah route atau redirect ke `/access`.
 - **P1**: Endpoint backend hilang: status konektor (`/integrations`), konfigurasi (`/settings`), mutasi akses (`/access`), seed/reset/export (`/data-management`).

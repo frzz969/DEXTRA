@@ -23,7 +23,9 @@ from .core.security import (
     unbacked_capabilities,
 )
 from .database.session import database_health
+from .modules.alerts.router import router as alerts_router
 from .modules.analytics.router import router as analytics_router
+from .modules.data_management.router import router as data_management_router
 from .modules.integrations.router import router as integrations_router
 from .modules.search.router import router as search_router
 from .modules.settings.router import router as settings_router
@@ -95,6 +97,8 @@ def create_app() -> FastAPI:
         settings_router,
         analytics_router,
         search_router,
+        alerts_router,
+        data_management_router,
     ):
         app.include_router(router, prefix=API_PREFIX)
 

@@ -1,10 +1,11 @@
-import { getExecutions, getOverview } from "@/lib/api";
+import { getAnalyticsDaily, getExecutions, getOverview, type AnalyticsDay } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-/* Analytics dibaca dari API :8000: /overview untuk KPI, /executions untuk
- * distribusi status dan tren 7 hari. Backend belum punya endpoint token /
- * biaya, jadi bagian itu ditandai belum tersedia — bukan diisi nol. */
+/* Analytics dibaca dari API :8000: /overview untuk KPI, /analytics/daily
+ * untuk chart 7 hari, /executions untuk distribusi status dan durasi.
+ * Backend belum punya endpoint token / biaya, jadi bagian itu ditandai
+ * belum tersedia — bukan diisi nol. */
 
 type DayRow = {
   date: string;
@@ -36,13 +37,6 @@ const STATUS_TONE: Record<string, string> = {
   skipped: "var(--faint)"
 };
 
-function dayKey(iso: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString().slice(0, 10);
-}
-
 function shortLabel(key: string): string {
   const d = new Date(`${key}T00:00:00Z`);
   return d.toLocaleDateString("id-ID", { weekday: "short", timeZone: "UTC" });
@@ -62,10 +56,20 @@ function median(values: number[]): number | null {
 }
 
 export default async function AnalyticsPage() {
-  const [overview, executions] = await Promise.all([getOverview(), getExecutions(200)]);
+  const [overview, executions, daily] = await Promise.all([
+    getOverview(),
+    getExecutions(200),
+    getAnalyticsDaily()
+  ]);
 
-  const failedToLoad = !overview.ok && !executions.ok;
-  const loadError = !overview.ok ? overview.error : !executions.ok ? executions.error : "";
+  const failedToLoad = !overview.ok && !executions.ok && !daily.ok;
+  const loadError = !overview.ok
+    ? overview.error
+    : !executions.ok
+      ? executions.error
+      : !daily.ok
+        ? daily.error
+        : "";
 
   const items = executions.ok ? executions.data.items : [];
   const byStatus = new Map<string, number>();
@@ -76,36 +80,19 @@ export default async function AnalyticsPage() {
   }
   const maxStatus = Math.max(1, ...byStatus.values());
 
-  // Tren 7 hari terakhir (UTC), dihitung dari started_at yang dikirim API.
-  const days: DayRow[] = [];
-  const today = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    d.setUTCDate(d.getUTCDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    const row: DayRow = {
-      date: key,
-      label: shortLabel(key),
-      total: 0,
-      succeeded: 0,
-      failed: 0,
-      blocked: 0,
-      pending: 0,
-      running: 0,
-      skipped: 0
-    };
-    for (const item of items) {
-      if (dayKey(item.started_at) !== key) continue;
-      row.total += 1;
-      if (item.status === "succeeded") row.succeeded += 1;
-      else if (item.status === "failed") row.failed += 1;
-      else if (item.status === "blocked") row.blocked += 1;
-      else if (item.status === "pending") row.pending += 1;
-      else if (item.status === "running") row.running += 1;
-      else if (item.status === "skipped") row.skipped += 1;
-    }
-    days.push(row);
-  }
+  // Tren 7 hari dari GET /analytics/daily (server-side, nyata).
+  const dailyItems: AnalyticsDay[] = daily.ok ? daily.data.items : [];
+  const days: DayRow[] = dailyItems.map((d) => ({
+    date: d.date,
+    label: shortLabel(d.date),
+    total: d.total,
+    succeeded: d.succeeded,
+    failed: d.failed,
+    blocked: d.blocked,
+    pending: d.pending,
+    running: d.running,
+    skipped: d.skipped
+  }));
   const maxDay = Math.max(1, ...days.map((d) => d.total));
 
   return (
@@ -129,7 +116,7 @@ export default async function AnalyticsPage() {
         </div>
       ) : (
         <>
-          {!overview.ok || !executions.ok ? (
+          {(!overview.ok || !executions.ok || !daily.ok) && (
             <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
               <span className="material-symbols-outlined" aria-hidden="true">
                 cloud_off
@@ -137,11 +124,12 @@ export default async function AnalyticsPage() {
               <span>
                 <strong>Sebagian data belum terhubung.</strong>{" "}
                 {!overview.ok ? `Overview: ${overview.error} ` : ""}
-                {!executions.ok ? `Eksekusi: ${executions.error}` : ""} Bagian yang tampil di bawah
+                {!executions.ok ? `Eksekusi: ${executions.error} ` : ""}
+                {!daily.ok ? `Harian: ${daily.error}` : ""} Bagian yang tampil di bawah
                 ini hanya dari sumber yang merespons.
               </span>
             </div>
-          ) : null}
+          )}
 
           {overview.ok && (
             <section
@@ -180,8 +168,8 @@ export default async function AnalyticsPage() {
             <div className="card" style={{ padding: "var(--s-4)" }}>
               <h2 style={{ fontSize: 14, margin: 0 }}>Eksekusi 7 hari terakhir</h2>
               <p className="cell-sub" style={{ marginTop: 4 }}>
-                Hitung eksekusi per hari dari <code className="mono">started_at</code> yang dikirim
-                API. {items.length} baris dibaca (batas 200).
+                Dari <code className="mono">GET /analytics/daily</code> (server-side, 7 hari UTC).
+                {daily.ok ? "" : " Gagal dimuat — chart tidak dihitung dari sumber lain."}
               </p>
 
               <figure
@@ -235,6 +223,11 @@ export default async function AnalyticsPage() {
                 </figcaption>
               </figure>
 
+              {!daily.ok ? (
+                <p className="cell-sub" role="alert" style={{ marginTop: "var(--s-3)" }}>
+                  Chart 7 hari tidak tersedia: {daily.error}
+                </p>
+              ) : (
               <div className="table-wrap" style={{ marginTop: "var(--s-3)" }}>
                 <table className="table table--compact">
                   <caption style={{ textAlign: "left", padding: "6px 0" }}>
@@ -262,6 +255,7 @@ export default async function AnalyticsPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
 
             <div className="card" style={{ padding: "var(--s-4)" }}>

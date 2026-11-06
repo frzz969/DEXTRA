@@ -57,6 +57,22 @@ html, body { overflow-x: clip; }
 /* Teks sr-only untuk pengumuman aria-live tanpa memengaruhi layout. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
+/* Overview parity (P2): pill MCP di topbar + sparkline KPI.
+ * .env-pill[data-state="live"] memakai --success-600; offline --warning-600
+ * (token yang sama dengan design system, kontras terjaga di kedua tema). */
+.env-pill[data-state="live"] .dot { background: var(--success-600); }
+.env-pill[data-state="offline"] .dot { background: var(--warning-600); }
+.env-pill[data-state="live"] { color: var(--success-600); border-color: var(--success-100); }
+.env-pill[data-state="offline"] { color: var(--warning-600); border-color: var(--warning-100); }
+/* Sparkline KPI menempel bawah-kartu seperti di dashboard statis. */
+.kpi { padding-bottom: 34px; }
+.kpi__spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 30px; opacity: .38; pointer-events: none; }
+/* Pill Copilot di topbar: target sentuh sama dengan icon-btn. */
+.copilot-trigger { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) {
+  .kpi__spark { opacity: .38; }
+}
+
 /* Copilot — panel AI global. Satu AI dengan halaman /assistant. */
 .copilot-fab {
   position: fixed;

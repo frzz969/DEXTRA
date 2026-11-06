@@ -369,7 +369,7 @@ database after every rejection.
 ## 10. Daftar rute terverifikasi
 
 Diambil dari `app.openapi()` pada build ini, bukan diketik ulang. Jumlahnya
-**93 operasi**. Tes `tests/integration/test_api_surface.py` membandingkan blok
+**101 operasi**. Tes `tests/integration/test_api_surface.py` membandingkan blok
 ini dengan skema OpenAPI, jadi rute baru yang lupa didaftarkan atau lupa
 didokumentasikan akan menggagalkan tes.
 
@@ -381,6 +381,7 @@ DELETE /api/v1/tasks/{task_id}/assignments/{assignment_id}
 DELETE /api/v1/work-packages/{package_id}
 GET    /api/v1/agents
 GET    /api/v1/agents/{slug}
+GET    /api/v1/alerts/plans
 GET    /api/v1/analytics/daily
 GET    /api/v1/approvals
 GET    /api/v1/audit-events
@@ -392,6 +393,7 @@ GET    /api/v1/auth/sessions
 GET    /api/v1/conversations
 GET    /api/v1/conversations/{conversation_id}
 GET    /api/v1/conversations/{conversation_id}/messages
+GET    /api/v1/data/export
 GET    /api/v1/executions
 GET    /api/v1/integrations/status
 GET    /api/v1/mandates
@@ -430,8 +432,10 @@ GET    /health
 PATCH  /api/v1/agents/{agent_id}
 PATCH  /api/v1/agents/{slug}
 PATCH  /api/v1/policies/{slug}
+PATCH  /api/v1/roles/{role_id}
 PATCH  /api/v1/settings
 PATCH  /api/v1/tasks/{task_id}
+PATCH  /api/v1/users/{user_id}
 PATCH  /api/v1/work-packages/{package_id}
 POST   /api/v1/agents
 POST   /api/v1/approvals
@@ -445,11 +449,14 @@ POST   /api/v1/auth/password
 POST   /api/v1/auth/sessions/{session_id}/revoke
 POST   /api/v1/conversations
 POST   /api/v1/conversations/{conversation_id}/messages
+POST   /api/v1/data/reset
+POST   /api/v1/data/seed
 POST   /api/v1/executions
 POST   /api/v1/mandates/{mandate_id}/revoke
 POST   /api/v1/office-agent/plans
 POST   /api/v1/office-agent/plans/{plan_id}/actions/{action_id}/approve
 POST   /api/v1/policies/evaluate
+POST   /api/v1/roles
 POST   /api/v1/security/sessions/{session_id}/revoke
 POST   /api/v1/service-accounts
 POST   /api/v1/service-accounts/{service_account_id}/revoke
@@ -462,6 +469,7 @@ POST   /api/v1/tasks/{task_id}/transition
 POST   /api/v1/tokens
 POST   /api/v1/tokens/{token_id}/revoke
 POST   /api/v1/tokens/{token_id}/rotate
+POST   /api/v1/users
 POST   /api/v1/workflows
 POST   /api/v1/workflows/runs/{run_id}/gates/{step_id}/approve
 POST   /api/v1/workflows/runs/{run_id}/resume

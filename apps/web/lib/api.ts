@@ -480,7 +480,14 @@ export function approvePlanAction(
 
 export type PermissionsResponse = {
   scope: string;
-  principal: Record<string, unknown> | null;
+  principal: {
+    principal_id?: string;
+    display_name?: string;
+    email?: string;
+    role?: string;
+    kind?: string;
+    tenant_id?: string;
+  } | null;
   capabilities: string[];
   enforced_capabilities: string[];
   unbacked_capabilities: string[];
@@ -593,6 +600,105 @@ export const createServiceAccount = (body: CreateServiceAccountInput) =>
   apiWrite<ServiceAccountItem>("POST", "/service-accounts", body);
 
 // revokeServiceAccount memakai definisi P2 di atas (POST .../revoke dengan { reason }).
+
+/* ---------- Endpoint demo-ready baru (sudah live di :8000) ---------- */
+
+export type SearchHit = {
+  entity: string;
+  id: string;
+  title: string;
+  status: string;
+  href: string;
+};
+
+export type SearchResponse = { q: string; items: SearchHit[]; count: number };
+
+export const SEARCH_PER_ENTITY_LIMIT = 20;
+
+export function search(q: string): Promise<ApiResult<SearchResponse>> {
+  return apiGet<SearchResponse>(`/search?q=${encodeURIComponent(q)}`);
+}
+
+export type AnalyticsDay = {
+  date: string;
+  total: number;
+  succeeded: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  running: number;
+  skipped: number;
+};
+
+export type AnalyticsDailyResponse = { tenant_id: string; items: AnalyticsDay[] };
+
+export const getAnalyticsDaily = () =>
+  apiGet<AnalyticsDailyResponse>("/analytics/daily");
+
+export type WorkPackageTask = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  assigned_agent_id: string | null;
+  sort_order: number | null;
+};
+
+export type WorkPackageDetail = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  org_id: string | null;
+  tenant_id: string | null;
+  due_at: string | null;
+  created_at: string | null;
+  tasks: WorkPackageTask[];
+};
+
+export const getWorkPackageDetail = (id: string) =>
+  apiGet<WorkPackageDetail>(`/work-packages/${encodeURIComponent(id)}`);
+
+export type PolicyVersionItem = {
+  id: string;
+  version: number;
+  rules_json: unknown;
+  change_note: string | null;
+  created_at: string | null;
+};
+
+export type PolicyVersionsResponse = {
+  policy_id: string;
+  slug: string;
+  items: PolicyVersionItem[];
+};
+
+export const getPolicyVersions = (slug: string) =>
+  apiGet<PolicyVersionsResponse>(`/policies/${encodeURIComponent(slug)}/versions`);
+
+export type IntegrationStatusItem = {
+  name: string;
+  configured: boolean;
+  status: string;
+  adapter: string | null;
+  detail: string;
+  evidence: string;
+};
+
+export const getIntegrationsStatus = () =>
+  apiGet<{ items: IntegrationStatusItem[]; tenant_id: string | null }>("/integrations/status");
+
+export type SettingsResponse = {
+  tenant_id: string;
+  tenant_slug: string;
+  tenant_name: string;
+  settings: Record<string, unknown>;
+};
+
+export const getSettings = () => apiGet<SettingsResponse>("/settings");
+
+export const updateSettings = (settings: Record<string, unknown>) =>
+  apiWrite<SettingsResponse>("PATCH", "/settings", { settings });
 
 export async function apiRootGet<T>(path: string): Promise<ApiResult<T>> {
   try {

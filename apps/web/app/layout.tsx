@@ -4,6 +4,8 @@ import Link from "next/link";
 import Copilot from "@/components/Copilot";
 import Topbar from "@/components/Topbar";
 import Tabsbar from "@/components/Tabsbar";
+import { getPermissions } from "@/lib/api";
+import { mcpHealth } from "@/lib/mcp";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +13,15 @@ export const metadata: Metadata = {
   description: "Specialized AI workers. Human-defined authority. Accountable execution."
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  /* Identitas pemanggil dari server (GET /permissions) — tidak di-hardcode.
+   * Principal token gateway lama membawa display_name "Gateway ops/agents";
+   * sesi manusia membawa nama & role-nya. Bila principal kosong, tandai
+   * scope API apa adanya alih-alih nama karangan. */
+  const [permissions, mcpUp] = await Promise.all([getPermissions(), mcpHealth()]);
+  const principal = permissions.ok ? permissions.data.principal : null;
+  const userName = principal?.display_name?.trim() || `Sesi API · ${permissions.ok ? permissions.data.scope : "terputus"}`;
+  const userSubtitle = principal?.role || principal?.email || principal?.kind || (permissions.ok ? permissions.data.scope : "backend tidak merespons");
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
@@ -189,7 +199,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </aside>
 
           <main className="main">
-            <Topbar />
+            <Topbar userName={userName} userSubtitle={userSubtitle} mcpUp={mcpUp} />
             <Tabsbar />
             <div className="content">
               <div className="page">{children}</div>

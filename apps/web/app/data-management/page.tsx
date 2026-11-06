@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 type VerifyResult = { ok: boolean; checked: number; broken_at_seq?: number; chain_versions?: number[] };
 type Counted = { items: unknown[] };
 
-/* Seed/reset/export tidak punya endpoint. Halaman ini hanya memakai API yang
+/* Seed/reset/export tidak punya endpoint (cek backend: tidak ada route
+ * export/seed/reset di API). Halaman ini hanya memakai API yang
  * benar-benar ada: audit verify, counts, dan executions. Tidak ada tombol
- * seed/reset/export karena tidak ada endpoint-nya. */
+ * seed/reset/export karena tidak ada endpoint-nya — banner di bawah
+ * dipertahankan secara jujur. */
 
 export default async function DataManagementPage() {
   const [verify, packages, tasks, executions, audit] = await Promise.all([

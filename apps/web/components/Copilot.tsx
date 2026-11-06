@@ -32,6 +32,23 @@ export default function Copilot({ aiConfigured }: { aiConfigured: boolean }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  /* Pill Copilot di Topbar + pintasan Ctrl/Cmd+J (seperti panel statis). */
+  useEffect(() => {
+    const onToggle = () => setOpen((value) => !value);
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        onToggle();
+      }
+    };
+    window.addEventListener("dextra:copilot-toggle", onToggle);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("dextra:copilot-toggle", onToggle);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
   }, [messages, sending, open]);
