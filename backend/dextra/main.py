@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.csrf import CsrfMiddleware
+from .middleware.tenant import TenantContextMiddleware
 from .core.security import (
     CAPABILITIES,
     CallerContext,
@@ -65,6 +66,9 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-CSRF-Token"],
     )
 
+    # Tenant context seeding (additive, non-breaking). Runs inside CORS,
+    # outermost-safe but before CSRF? Placed right after CORS per spec.
+    app.add_middleware(TenantContextMiddleware)
     for router in (
         auth_router,
         overview_router,
