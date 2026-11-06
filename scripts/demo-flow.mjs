@@ -122,11 +122,7 @@ async function main() {
 
   const audit = await call('get_audit_log', { limit: 50 });
   console.log(`\nSelesai. ${audit.events.length} event audit tercatat.`);
-<<<<<<< HEAD
   console.log('Buka web: npm run dev:web -> http://127.0.0.1:3000');
-=======
-  console.log('Buka dashboard: npm run dev:dashboard -> http://127.0.0.1:8899');
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 }
 
 main().catch((err) => {

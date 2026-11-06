@@ -3,17 +3,9 @@
  * Memeriksa sintaks setiap berkas JavaScript runtime.
  *
  * Kenapa ini ada: commit beba8ec menulis `;` diikuti literal `\n` pada
-<<<<<<< HEAD
  * berkas JavaScript lama, sehingga berkas itu gagal di-parse. `npm run
  * test:all` tetap hijau, karena tidak ada satu pun pemeriksaan yang membaca
  * berkas itu, dan `tsc` tidak menyentuh berkas .js yang tidak di-import.
-=======
- * `apps/dashboard/assets/js/core.js`, sehingga berkas itu gagal di-parse dan
- * SELURUH dashboard tidak bisa dimuat. `npm run test:all` tetap hijau, karena
- * tidak ada satu pun pemeriksaan yang membaca berkas itu: tes kontrak dashboard
- * hanya membaca sources.js dan beberapa modul lewat regex, dan `tsc` tidak
- * menyentuh berkas .js yang tidak di-import.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
  *
  * Jadi gerbangnya harus menyebut hal paling dasar: apakah berkas ini bisa
  * dijalankan sama sekali. `node --check` hanya mem-parse, tidak mengeksekusi,

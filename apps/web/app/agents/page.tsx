@@ -3,7 +3,6 @@ import { apiGet } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 type Agent = {
-<<<<<<< HEAD
   id: string;
   slug: string;
   display_name: string;
@@ -22,20 +21,6 @@ const COLUMNS: { key: string; label: string; tone: string }[] = [
   { key: "disabled", label: "Disabled", tone: "badge--outline" },
   { key: "error", label: "Error", tone: "badge--danger" }
 ];
-=======
-  slug: string;
-  display_name: string;
-  agent_type: string;
-  status: string;
-  capabilities: string[];
-};
-
-const STATUS_TONE: Record<string, string> = {
-  active: "badge--success",
-  idle: "badge--info",
-  disabled: "badge--outline"
-};
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 export default async function AgentsPage() {
   const result = await apiGet<{ items: Agent[]; expected_specialists: string[]; unexpected: string[] }>(
@@ -62,7 +47,6 @@ export default async function AgentsPage() {
               </span>
             </div>
           ) : (
-<<<<<<< HEAD
             <div className="kanban" aria-label="Papan kanban agen">
               {COLUMNS.map((col) => {
                 const agents = result.data.items.filter((a) => a.status === col.key);
@@ -104,29 +88,6 @@ export default async function AgentsPage() {
                 );
               })}
             </div>
-=======
-            <section className="grid grid--4" aria-label="Daftar agen">
-              {result.data.items.map((agent) => (
-                <article className="card kpi kpi--accent" key={agent.slug}>
-                  <div className="kpi__top">
-                    <span className="kpi__label">{agent.agent_type}</span>
-                    <span className="kpi__icon" aria-hidden="true">
-                      <span className="material-symbols-outlined">smart_toy</span>
-                    </span>
-                  </div>
-                  <div className="kpi__value" style={{ fontSize: 17, lineHeight: 1.25 }}>
-                    {agent.display_name}
-                  </div>
-                  <div className="kpi__foot">
-                    <span className={`badge ${STATUS_TONE[agent.status] ?? ""}`}>{agent.status}</span>
-                    <span className="truncate" title={agent.capabilities.join(", ") || "tanpa capability"}>
-                      {agent.capabilities.join(", ") || "tanpa capability"}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </section>
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
           )}
 
           {result.data.unexpected.length > 0 && (

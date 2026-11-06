@@ -24,11 +24,7 @@ agen yang disebut namanya kalau agen itu tidak berjalan.
 - Tawarkan alternatif jam, bukan memilih sendiri.
 
 ## 3:30–4:30 — Human approval
-<<<<<<< HEAD
 - Tunjukkan `apps/web`: rencana lengkap (penerima ter-mask, isi utuh, waktu + zona, `plan_hash`, temuan).
-=======
-- Dashboard: rencana lengkap (penerima ter-mask, isi utuh, waktu + zona, `plan_hash`, temuan).
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 - Approver menyetujui → `submit_approval` mengikat keputusan pada hash itu.
 
 ## 4:30–5:30 — Execution (mock)
@@ -49,11 +45,7 @@ agen yang disebut namanya kalau agen itu tidak berjalan.
 - Roadmap customer ops (bukan MVP).
 
 ## Prasyarat demo
-<<<<<<< HEAD
 - MCP server di 127.0.0.1:8765, frontend lewat `npm run dev:web` (apps/web, port 3000).
-=======
-- MCP server di 127.0.0.1:8765, dashboard lewat `npm run dev:dashboard`.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 - Data di-seed: `npm run demo:reset`.
 - Browser Chrome, viewport 1920×1080.
 - Siapkan satu ekspor audit sebelum tampil, supaya langkah 5:30 tidak menunggu.

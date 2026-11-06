@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-<<<<<<< HEAD
 import Copilot from "@/components/Copilot";
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -57,7 +54,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
               <nav className="nav-group" aria-label="Manajemen kerja">
                 <span className="nav-group__label">Work management</span>
-<<<<<<< HEAD
                 <Link className="nav-item" href="/assistant">
                   <span className="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
                   <span className="nav-item__label">Assistant</span>
@@ -66,13 +62,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" aria-hidden="true">list_alt</span>
                   <span className="nav-item__label">Office Agent</span>
                 </Link>
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
                 <Link className="nav-item" href="/agents">
                   <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
                   <span className="nav-item__label">Workforce</span>
                 </Link>
-<<<<<<< HEAD
                 <Link className="nav-item" href="/work-packages">
                   <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
                   <span className="nav-item__label">Paket Kerja</span>
@@ -161,8 +154,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <span className="material-symbols-outlined" aria-hidden="true">shield</span>
                   <span className="nav-item__label">Security Center</span>
                 </Link>
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
               </nav>
             </div>
           </aside>
@@ -173,10 +164,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
           </main>
         </div>
-<<<<<<< HEAD
         <Copilot aiConfigured={Boolean(process.env.DEXTRA_AI_API_KEY)} />
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
       </body>
     </html>
   );

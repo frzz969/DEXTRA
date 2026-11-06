@@ -15,7 +15,6 @@
  * long unbreakable tokens. `clip` (unlike `hidden`) does not create a
  * scroll container, so sticky topbars/rails keep working. */
 html, body { overflow-x: clip; }
-<<<<<<< HEAD
 
 /* Copilot — panel AI global. Satu AI dengan halaman /assistant. */
 .copilot-fab {
@@ -86,5 +85,3 @@ html, body { overflow-x: clip; }
   }
   .copilot-fab { right: 12px; bottom: 12px; }
 }
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1

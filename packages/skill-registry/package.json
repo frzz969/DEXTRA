@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 {
-=======
-﻿{
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
   "name": "@dextra/skill-registry",
   "version": "0.1.0",
   "private": true,
@@ -15,11 +11,7 @@
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\""
   },
   "dependencies": {
-<<<<<<< HEAD
     "@dextra/contracts": "workspace:*"
-=======
-    "@dextra/contracts": "*"
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -27,7 +19,4 @@
   },
   "engines": { "node": ">=24" }
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1

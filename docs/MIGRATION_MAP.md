@@ -10,13 +10,8 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 
 | Domain | v1 (berjalan) | v2 (target) | Status migrasi |
 |---|---|---|---|
-<<<<<<< HEAD
 | Frontend | `apps/dashboard` (vanilla SPA, 24 rute) — **Dihapus** 6 November 2026 | `apps/web` (Next.js, 25 rute) | **Selesai** — cutover, `apps/web` produksi, Playwright 26/26 lulus |
 | Backend API | `apps/mcp-server` (JSON-RPC) | `apps/api` (FastAPI REST) | **Produksi** — `/api/v1` 16 router; gateway v1 tetap dipakai `apps/web` (Explorer + audit) |
-=======
-| Frontend | `apps/dashboard` (vanilla SPA, 24 rute) | `apps/web` (Next.js) | **Fondasi ada**, 2 halaman. Dashboard lama tetap produksi. |
-| Backend API | `apps/mcp-server` (JSON-RPC) | `apps/api` (FastAPI REST) | **Fondasi ada (NON-PROD)**, 16 router (`backend/dextra/main.py:67-85`). Gateway v1 tetap produksi. |
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | Persistensi | `data/*.json` + `packages/store` | PostgreSQL + SQLAlchemy | **Skema + migrasi ada**, data belum dipindahkan. |
 | Governance | `packages/policy-engine`, `mandate-engine` | `backend/dextra/governance` | **Setara fungsional**, parity test sebagian. |
 | Executor | `packages/executor` | `backend/dextra/modules/execution` | **Setara**, adapter masih mock di kedua sisi. |
@@ -28,7 +23,6 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 
 | Aspek | Isi |
 |---|---|
-<<<<<<< HEAD
 | Implementasi existing | `apps/dashboard/` telah dihapus | |
 | Path | `apps/web/app/` | |
 | Perilaku sekarang | 25 rute, data dari `/api/v1`, login sesi + CSRF, mode demo (Bearer env) bila tanpa sesi | |
@@ -37,16 +31,6 @@ Status per 3 November 2026. Commit acuan: `2f3daf2` + pekerjaan v2 di atasnya.
 | Dependensi | `packages/design-system` (token), `packages/ui` (komponen), `packages/api-client` | |
 | Risiko | Tidak ada dua UI paralel yang membingungkan penguji | |
 | Verifikasi | `next build` lulus; halaman menampilkan data API nyata; tanpa API menampilkan "tidak tersedia", bukan data contoh; Playwright 26/26 lulus | |
-=======
-| Implementasi existing | `apps/dashboard/index.html` + `assets/js/{core,sources,data,ui,shell,app}.js` + 10 view |
-| Path | `apps/dashboard/` |
-| Perilaku sekarang | 24 rute, 18 live / 3 partial / 0 demo / 3 none. Tanpa build step. |
-| Perilaku target | `apps/web` Next.js + Tailwind + shadcn, data dari `/api/v1` |
-| Strategi | Halaman per halaman, mulai dari Overview dan Workforce. Dashboard lama **tidak dihapus** sampai parity tercapai (PRD v2.0.0 §22). |
-| Dependensi | `packages/design-system` (token), `packages/ui` (komponen), `packages/api-client` |
-| Risiko | Dua UI paralel membingungkan penguji. Mitigasi: README menyatakan mana yang produksi. |
-| Verifikasi | `next build` lulus; halaman menampilkan data API nyata; tanpa API menampilkan "tidak tersedia", bukan data contoh. |
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 Yang sudah dikerjakan: `packages/ui`, `packages/design-system`, `packages/api-client`
 sekarang memegang sumber kanonik, dan dashboard memakainya lewat salinan yang
@@ -61,11 +45,7 @@ diverifikasi (`scripts/verify-packages.mjs`).
 | Perilaku target | FastAPI `/api/v1`, REST + SSE, Pydantic, dependency injection |
 | Strategi | Endpoint REST ditulis per domain; gateway lama tetap melayani dashboard sampai `apps/web` lengkap |
 | Dependensi | `packages/contracts/src/authorization.ts` (sumber kebenaran capability) |
-<<<<<<< HEAD
 | Risiko | Tidak ada dua UI paralel. Mitigasi: `tests/security/test_authorization_parity.py` membandingkan keduanya dan gagal bila menyimpang. |
-=======
-| Risiko | **Duplikasi aturan otorisasi di dua bahasa.** Mitigasi: `tests/security/test_authorization_parity.py` membandingkan keduanya dan gagal bila menyimpang. |
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | Verifikasi | pytest (`tests/integration/test_migrations.py` lulus di SQLite pada sesi ini); paritas tool→capability identik dengan TS |
 
 Endpoint v2 yang sudah ada: `/overview`, `/agents`, `/work-packages`, `/tasks`,
@@ -136,7 +116,6 @@ dipalsukan agar tampak sah.
 
 ## 8. Urutan yang disarankan
 
-<<<<<<< HEAD
 1. Selesaikan `apps/web` untuk semua rute — **SELESAI** (25 rute, data nyata, Playwright 26/26).
 2. Pindahkan approval/mandate/execution ke `/api/v1` — **SELESAI** (langsung pakai `/api/v1`, tidak lewat adapter).
 3. Parity test `policy-engine` TS vs Python (reason code + keputusan) — belum.
@@ -144,13 +123,3 @@ dipalsukan agar tampak sah.
 5. Baru pertimbangkan LangGraph — belum.
 
 Setiap langkah harus lulus tes sebelum langkah berikutnya dimulai.
-=======
-1. Selesaikan `apps/web` untuk Overview + Workforce + Approvals (data nyata).
-2. Pindahkan approval/mandate/execution dashboard ke `/api/v1` lewat adapter.
-3. Parity test `policy-engine` TS vs Python (reason code + keputusan).
-4. PostgreSQL berjalan + migrasi data yang bisa dimigrasikan; arsipkan sisanya.
-5. Baru pertimbangkan LangGraph.
-
-Setiap langkah harus lulus tes sebelum langkah berikutnya dimulai. Tidak ada
-penghapusan komponen lama sebelum parity lulus.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1

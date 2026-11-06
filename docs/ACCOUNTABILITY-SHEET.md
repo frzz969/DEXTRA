@@ -32,10 +32,6 @@ Aplikasi:
 | Aplikasi | Fungsi | Tes |
 |---|---|---|
 | mcp-server | 19 tool, pemisahan token agent/ops, batas HTTP | 116 |
-<<<<<<< HEAD
-=======
-| dashboard | SPA operasional, 25 rute, tanpa build step | 16 |
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 | telegram-adapter | Channel adapter (post-MVP) | 7 |
 
 ## Yang nyata vs yang mock
@@ -91,26 +87,15 @@ Aplikasi:
 npm install
 npm run demo:seed
 npm start --workspace @dextra/mcp-server
-<<<<<<< HEAD
 # buka apps/web lewat `npm run dev:web` -> http://127.0.0.1:3000
 ```
 
 Target setup: di bawah 5 menit dari clone sampai `apps/web` terbuka.
-=======
-# buka apps/dashboard/index.html lewat `npm run dev:dashboard`
-```
-
-Target setup: di bawah 5 menit dari clone sampai dashboard terbuka.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 ## Klaim keamanan yang jujur (bukan absolut)
 
 - **Local-Only Service Exposure**, bukan anti-eksfiltrasi absolut: semua layanan listen di 127.0.0.1 (loopback). Ini membatasi eksposur langsung, tetapi tidak mencegah eksfiltrasi lewat kemampuan jaringan WorkBuddy, browser, proses lokal lain, atau celah aplikasi.
-<<<<<<< HEAD
 - **Scoped Execution Authorization**: pemisahan token agent/ops ditegakkan di server, bukan di prompt. MCP server hanya menerima caller yang diotorisasi; `apps/web` tidak menyimpan token ops di browser; endpoint approval/eksekusi dilindungi origin/CSRF; tidak ada CORS permisif; respons error tidak membocorkan data sensitif.
-=======
-- **Scoped Execution Authorization**: pemisahan token agent/ops ditegakkan di server, bukan di prompt. MCP server hanya menerima caller yang diotorisasi; dashboard tidak menyimpan token ops; endpoint approval/eksekusi dilindungi origin/CSRF; tidak ada CORS permisif; respons error tidak membocorkan data sensitif.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
 
 ## Visi Ekspansi (Roadmap, bukan MVP)
 

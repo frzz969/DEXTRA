@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "DEXTRA — agen AI kantor dengan eksekusi berbasis mandat",
+  "packageManager": "pnpm@12.10.1",
   "workspaces": [
     "packages/*",
     "apps/mcp-server",
@@ -17,35 +18,23 @@
     "test": "node scripts/verify-packages.mjs && node scripts/verify-workbuddy.mjs && npm run test --workspaces --if-present",
     "test:all": "node scripts/test-all.mjs",
     "test:inproc": "node --test --experimental-strip-types \"packages/*/tests/*.test.ts\" \"apps/*/tests/*.test.ts\"",
-<<<<<<< HEAD
-    "test:e2e": "cd apps/web && npm run test:e2e",
-=======
     "test:dashboard": "node --test --experimental-strip-types \"apps/dashboard/tests/*.test.ts\"",
-    "test:e2e": "node apps/dashboard/tests/e2e/run.mjs",
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
+    "test:e2e": "cd apps/web && npm run test:e2e",
+    "test:e2e:dashboard": "node apps/dashboard/tests/e2e/run.mjs",
     "test:http": "node --test --experimental-strip-types \"apps/mcp-server/tests/http-verification.verify.ts\"",
     "test:contracts": "npm run test --workspace @dextra/contracts",
     "sync:packages": "node scripts/sync-packages.mjs",
     "verify:packages": "node scripts/verify-packages.mjs",
     "check:syntax": "node scripts/check-syntax.mjs",
-<<<<<<< HEAD
-    "lint": "npm run typecheck && node scripts/check-syntax.mjs",
-=======
     "lint": "npm run typecheck && node scripts/check-syntax.mjs && npm run lint:dashboard",
     "lint:dashboard": "node scripts/lint-dashboard.mjs",
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
+    "dev:dashboard": "node scripts/serve-dashboard.mjs",
     "demo:seed": "node --experimental-strip-types packages/store/src/seed.ts",
     "demo:reset": "node --experimental-strip-types packages/store/src/seed.ts --reset",
     "demo:flow": "node scripts/demo-flow.mjs",
     "dev:mcp": "node --experimental-strip-types apps/mcp-server/src/index.ts",
-<<<<<<< HEAD
     "dev:web": "./scripts/dev-web.sh",
     "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
     "audit:verify": "node --experimental-strip-types packages/audit-export/src/cli.ts"
-=======
-    "alerts:scan": "node --experimental-strip-types packages/alerts/src/cli.ts --once",
-    "audit:verify": "node --experimental-strip-types packages/audit-export/src/cli.ts",
-    "dev:dashboard": "node scripts/serve-dashboard.mjs"
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
   }
 }

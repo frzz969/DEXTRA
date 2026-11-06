@@ -1,17 +1,9 @@
 #!/usr/bin/env node
-<<<<<<< HEAD
 /* Salin sumber kanonik dari packages/ ke apps/web/app/.
  *
  * apps/web punya node_modules sendiri (bukan workspace root) karena symlink
  * workspace gagal dibuat di Windows. Skrip ini memastikan salinan CSS tidak
  * pernah menyimpang dari sumber kanonik di packages/design-system.
-=======
-/* Salin sumber kanonik dari packages/ ke apps/dashboard/assets/.
- *
- * Dashboard sengaja tetap "tanpa build step": berkas hasil salin ikut di-commit,
- * jadi membuka index.html langsung tetap bekerja. Skrip ini hanya memastikan
- * salinan tidak pernah menyimpang dari sumbernya.
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
  *
  * Jalankan: node scripts/sync-packages.mjs
  */
@@ -22,22 +14,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const COPIES = [
-<<<<<<< HEAD
   // aset packages/ sekarang dikonsumsi langsung oleh sumber React di apps/web.
-=======
-  {
-    from: 'packages/ui/src/ui.js',
-    to: 'apps/dashboard/assets/js/ui.js'
-  },
-  {
-    from: 'packages/api-client/src/api-client.js',
-    to: 'apps/dashboard/assets/js/api-client.js'
-  },
-  {
-    from: 'packages/design-system/src/dashboard.css',
-    to: 'apps/dashboard/assets/css/dashboard.css'
-  },
->>>>>>> fa42d129d43eb3b3b947f6d9b79c427b8b660ea1
   {
     from: 'packages/design-system/src/dashboard.css',
     to: 'apps/web/app/dextra-design-system.css'
