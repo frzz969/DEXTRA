@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { apiGet } from "@/lib/api";
+import { apiGet, getOfficePlan } from "@/lib/api";
 import RevokeButton from "./RevokeButton";
+import ExecuteButton from "./ExecuteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,19 @@ function fmtAt(iso: string | null): string {
 
 export default async function MandatesPage() {
   const result = await apiGet<{ items: MandateItem[] }>("/mandates");
+  // Params tiap aksi diambil dari plan asalnya — mandate tidak menyimpannya.
+  const paramsByMandate = new Map<string, Record<string, unknown>>();
+  if (result.ok) {
+    await Promise.all(
+      result.data.items.map(async (m) => {
+        const plan = await getOfficePlan(m.plan_id);
+        if (plan.ok) {
+          const action = plan.data.actions.find((a) => a.action_id === m.action_id);
+          if (action) paramsByMandate.set(m.id, action.params ?? {});
+        }
+      })
+    );
+  }
 
   return (
     <>
@@ -93,7 +107,17 @@ export default async function MandatesPage() {
                       ) : m.status === "expired" ? (
                         <span className="cell-sub">kedaluwarsa</span>
                       ) : (
-                        <RevokeButton mandateId={m.id} />
+                        <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
+                          {m.usable && (
+                            <ExecuteButton
+                              mandateId={m.id}
+                              actionId={m.action_id}
+                              actionType={m.action_type}
+                              params={paramsByMandate.get(m.id) ?? {}}
+                            />
+                          )}
+                          <RevokeButton mandateId={m.id} />
+                        </span>
                       )}
                     </td>
                   </tr>

@@ -4,6 +4,10 @@ import Link from "next/link";
 import Copilot from "@/components/Copilot";
 import Topbar from "@/components/Topbar";
 import Tabsbar from "@/components/Tabsbar";
+import NavItem from "@/components/NavItem";
+import UserMenu from "@/components/UserMenu";
+import SidebarToggle from "@/components/SidebarToggle";
+import BareRoute from "@/components/BareRoute";
 import { getPermissions } from "@/lib/api";
 import { mcpHealth } from "@/lib/mcp";
 import "./globals.css";
@@ -55,146 +59,70 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               </span>
             </div>
 
+            <SidebarToggle />
             <div className="sidebar__scroll">
-              <nav className="nav-group" aria-label="Utama">
+              <nav className="nav-group" aria-label="Workspace">
                 <span className="nav-group__label">Workspace</span>
-                <Link className="nav-item is-active" href="/" aria-current="page">
-                  <span className="material-symbols-outlined" aria-hidden="true">dashboard</span>
-                  <span className="nav-item__label">Overview</span>
-                </Link>
+                <NavItem href="/" icon="space_dashboard" label="Overview" />
+                <NavItem href="/assistant" icon="forum" label="AI Assistant" />
+                <NavItem href="/office-agent" icon="auto_awesome" label="Office Agent" />
+                <NavItem href="/requests" icon="send" label="My Requests" />
+                <NavItem href="/my-work" icon="assignment_ind" label="My Work" />
               </nav>
 
-              <nav className="nav-group" aria-label="Manajemen kerja">
-                <span className="nav-group__label">Work management</span>
-                <Link className="nav-item" href="/assistant">
-                  <span className="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
-                  <span className="nav-item__label">Assistant</span>
-                </Link>
-                <Link className="nav-item" href="/office-agent">
-                  <span className="material-symbols-outlined" aria-hidden="true">list_alt</span>
-                  <span className="nav-item__label">Office Agent</span>
-                </Link>
-                <Link className="nav-item" href="/agents">
-                  <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
-                  <span className="nav-item__label">Workforce</span>
-                </Link>
-                <Link className="nav-item" href="/work-packages">
-                  <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
-                  <span className="nav-item__label">Paket Kerja</span>
-                </Link>
-                <Link className="nav-item" href="/requests">
-                  <span className="material-symbols-outlined" aria-hidden="true">send</span>
-                  <span className="nav-item__label">Requests</span>
-                </Link>
-                <Link className="nav-item" href="/my-work">
-                  <span className="material-symbols-outlined" aria-hidden="true">task_alt</span>
-                  <span className="nav-item__label">My Work</span>
-                </Link>
-                <Link className="nav-item" href="/board">
-                  <span className="material-symbols-outlined" aria-hidden="true">view_kanban</span>
-                  <span className="nav-item__label">Papan</span>
-                </Link>
-                <Link className="nav-item" href="/executions">
-                  <span className="material-symbols-outlined" aria-hidden="true">play_circle</span>
-                  <span className="nav-item__label">Executions</span>
-                </Link>
-                <Link className="nav-item" href="/explorer">
-                  <span className="material-symbols-outlined" aria-hidden="true">manage_search</span>
-                  <span className="nav-item__label">Explorer</span>
-                </Link>
-                <Link className="nav-item" href="/analytics">
-                  <span className="material-symbols-outlined" aria-hidden="true">monitoring</span>
-                  <span className="nav-item__label">Analytics</span>
-                </Link>
-                <Link className="nav-item" href="/monitoring">
-                  <span className="material-symbols-outlined" aria-hidden="true">monitoring</span>
-                  <span className="nav-item__label">Monitoring</span>
-                </Link>
+              <nav className="nav-group" aria-label="Work Management">
+                <span className="nav-group__label">Work Management</span>
+                <NavItem href="/work-packages" icon="layers" label="Work Packages" />
+                <NavItem href="/board" icon="view_kanban" label="Task Board" />
+                <NavItem href="/executions" icon="play_circle" label="Execution History" />
               </nav>
 
-              <nav className="nav-group" aria-label="Tata kelola">
+              <nav className="nav-group" aria-label="Workforce">
+                <span className="nav-group__label">Workforce</span>
+                <NavItem href="/agents" icon="groups" label="Workforce" />
+              </nav>
+
+              <nav className="nav-group" aria-label="Intelligence">
+                <span className="nav-group__label">Intelligence</span>
+                <NavItem href="/analytics" icon="query_stats" label="Analytics" />
+                <NavItem href="/explorer" icon="travel_explore" label="Data Explorer" />
+                <NavItem href="/monitoring" icon="monitoring" label="Monitoring" />
+                <NavItem href="/skills" icon="extension" label="Skill Registry" />
+                <NavItem href="/workflows" icon="account_tree" label="Workflow Orchestration" />
+              </nav>
+
+              <nav className="nav-group" aria-label="Governance">
                 <span className="nav-group__label">Governance</span>
-                <Link className="nav-item" href="/approvals">
-                  <span className="material-symbols-outlined" aria-hidden="true">fact_check</span>
-                  <span className="nav-item__label">Approval</span>
-                </Link>
-                <Link className="nav-item" href="/review">
-                  <span className="material-symbols-outlined" aria-hidden="true">rate_review</span>
-                  <span className="nav-item__label">Review</span>
-                </Link>
-                <Link className="nav-item" href="/mandates">
-                  <span className="material-symbols-outlined" aria-hidden="true">assignment_turned_in</span>
-                  <span className="nav-item__label">Mandates</span>
-                </Link>
-                <Link className="nav-item" href="/policies">
-                  <span className="material-symbols-outlined" aria-hidden="true">policy</span>
-                  <span className="nav-item__label">Kebijakan</span>
-                </Link>
-                <Link className="nav-item" href="/audit">
-                  <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
-                  <span className="nav-item__label">Audit</span>
-                </Link>
+                <NavItem href="/approvals" icon="assignment_turned_in" label="Approval Inbox" />
+                <NavItem href="/review" icon="fact_check" label="Review &amp; Validation" />
+                <NavItem href="/mandates" icon="verified_user" label="Mandates" />
+                <NavItem href="/security" icon="shield" label="Security Center" />
+                <NavItem href="/audit" icon="receipt_long" label="Audit Trail" />
+                <NavItem href="/policies" icon="policy" label="Policies" />
               </nav>
 
-              <nav className="nav-group" aria-label="Registry">
-                <span className="nav-group__label">Registry</span>
-                <Link className="nav-item" href="/skills">
-                  <span className="material-symbols-outlined" aria-hidden="true">school</span>
-                  <span className="nav-item__label">Skills</span>
-                </Link>
-                <Link className="nav-item" href="/workflows">
-                  <span className="material-symbols-outlined" aria-hidden="true">account_tree</span>
-                  <span className="nav-item__label">Workflow</span>
-                </Link>
+              <nav className="nav-group" aria-label="Administration">
+                <span className="nav-group__label">Administration</span>
+                <NavItem href="/access" icon="admin_panel_settings" label="Access Management" />
+                <NavItem href="/tokens" icon="key" label="API Tokens" />
+                <NavItem href="/service-identities" icon="smart_toy" label="Service Identity" />
+                <NavItem href="/integrations" icon="extension" label="Integrations" />
+                <NavItem href="/data-management" icon="database" label="Data Management" />
+                <NavItem href="/settings" icon="settings" label="Settings" />
               </nav>
 
-              <nav className="nav-group" aria-label="Akun dan akses">
-                <span className="nav-group__label">Akun &amp; akses</span>
-                <Link className="nav-item" href="/account">
-                  <span className="material-symbols-outlined" aria-hidden="true">account_circle</span>
-                  <span className="nav-item__label">Akun</span>
-                </Link>
-                <Link className="nav-item" href="/access">
-                  <span className="material-symbols-outlined" aria-hidden="true">group</span>
-                  <span className="nav-item__label">Akses</span>
-                </Link>
-                <Link className="nav-item" href="/tokens">
-                  <span className="material-symbols-outlined" aria-hidden="true">vpn_key</span>
-                  <span className="nav-item__label">Token</span>
-                </Link>
-              </nav>
-
-              <nav className="nav-group" aria-label="Administrasi">
-                <span className="nav-group__label">Administrasi</span>
-                <Link className="nav-item" href="/admin">
-                  <span className="material-symbols-outlined" aria-hidden="true">settings</span>
-                  <span className="nav-item__label">Admin</span>
-                </Link>
-                <Link className="nav-item" href="/integrations">
-                  <span className="material-symbols-outlined" aria-hidden="true">cable</span>
-                  <span className="nav-item__label">Integrations</span>
-                </Link>
-                <Link className="nav-item" href="/service-identities">
-                  <span className="material-symbols-outlined" aria-hidden="true">badge</span>
-                  <span className="nav-item__label">Service Identity</span>
-                </Link>
-                <Link className="nav-item" href="/settings">
-                  <span className="material-symbols-outlined" aria-hidden="true">tune</span>
-                  <span className="nav-item__label">Settings</span>
-                </Link>
-                <Link className="nav-item" href="/data-management">
-                  <span className="material-symbols-outlined" aria-hidden="true">database</span>
-                  <span className="nav-item__label">Data Management</span>
-                </Link>
-              </nav>
-
-              <nav className="nav-group" aria-label="Keamanan">
-                <span className="nav-group__label">Security</span>
-                <Link className="nav-item" href="/security">
-                  <span className="material-symbols-outlined" aria-hidden="true">shield</span>
-                  <span className="nav-item__label">Security Center</span>
-                </Link>
-              </nav>
+              <div className="nav-group" style={{ marginBottom: 4 }}>
+                <div
+                  style={{ margin: "0 10px", padding: "7px 9px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 6 }}
+                  title="Semua layanan listen di 127.0.0.1. Sesi manusia memakai cookie httpOnly; token ops MCP disimpan di sessionStorage saja."
+                >
+                  <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14, color: "var(--success-600)" }}>shield_lock</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--muted)" }}>Local-only · 127.0.0.1</span>
+                </div>
+              </div>
+            </div>
+            <div className="sidebar__foot">
+              <UserMenu userName={userName} userSubtitle={userSubtitle} placement="up" />
             </div>
           </aside>
 
@@ -206,7 +134,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </div>
           </main>
         </div>
-        <Copilot aiConfigured={Boolean(process.env.DEXTRA_AI_API_KEY)} />
+        <BareRoute /><Copilot aiConfigured={Boolean(process.env.DEXTRA_AI_API_KEY)} />
       </body>
     </html>
   );

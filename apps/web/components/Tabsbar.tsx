@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 
 const TABS = [
   { href: "/", label: "Overview", icon: "dashboard" },
-  { href: "/board", label: "Papan", icon: "view_kanban" },
-  { href: "/approvals", label: "Approval", icon: "fact_check" },
-  { href: "/executions", label: "Executions", icon: "play_circle" },
-  { href: "/audit", label: "Audit", icon: "receipt_long" },
+  { href: "/board", label: "Task Board", icon: "view_kanban" },
+  { href: "/approvals", label: "Approval Inbox", icon: "fact_check" },
+  { href: "/executions", label: "Execution History", icon: "play_circle" },
+  { href: "/audit", label: "Audit Trail", icon: "receipt_long" },
   { href: "/agents", label: "Workforce", icon: "smart_toy" },
 ] as const;
 

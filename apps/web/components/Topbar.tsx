@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import UserMenu from "@/components/UserMenu";
 
 const STORAGE_KEY = "dextra-theme";
 
@@ -12,12 +13,6 @@ function applyTheme(dark: boolean) {
   } catch {
     /* penyimpanan tidak tersedia — tema tetap berlaku sesi ini */
   }
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "D";
-  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
 /** Label breadcrumb untuk rute utama; rute lain memakai segmen pertama path. */
@@ -88,6 +83,24 @@ export default function Topbar({
   return (
     <header className="topbar" role="banner">
       <div className="topbar__left">
+        <button
+          type="button"
+          className="icon-btn menu-btn"
+          aria-label="Buka navigasi"
+          onClick={() => {
+            document.body.classList.add("is-mobile-open");
+            document.querySelector(".mobile-scrim")?.remove();
+            const s = document.createElement("div");
+            s.className = "mobile-scrim";
+            s.addEventListener("click", () => {
+              document.body.classList.remove("is-mobile-open");
+              s.remove();
+            });
+            document.body.appendChild(s);
+          }}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">menu</span>
+        </button>
         <nav className="breadcrumbs" aria-label="Breadcrumb">
           <Link href="/">DEXTRA</Link>
           <span className="sep" aria-hidden="true">/</span>
@@ -133,10 +146,8 @@ export default function Topbar({
         <Link className="icon-btn" href="/approvals" aria-label="Persetujuan menunggu">
           <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
         </Link>
-        <Link className="user-chip" href="/account" aria-label={`Akun ${userName}`}>
-          <span className="avatar" aria-hidden="true">{initials(userName)}</span>
-          <span className="user-chip__meta"><b>{userName}</b><span>{userSubtitle}</span></span>
-        </Link>
+        <div className="vdivider" style={{ height: 24, margin: "0 4px" }} aria-hidden="true" />
+        <UserMenu userName={userName} userSubtitle={userSubtitle} placement="down" />
       </div>
     </header>
   );

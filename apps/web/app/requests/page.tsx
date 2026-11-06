@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getOfficePlans, getPlanDetail } from "@/lib/api";
 import { Badge, FilterForm, UnavailableBanner, fmtDateTime } from "@/components/p1";
+import RequestIntakeForm from "./RequestIntakeForm";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,11 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
         <div className="page-head__text"><h1>Requests</h1><p>Pengajuan kerja dari Office Agent dan kanal terhubung. Status dibaca langsung dari backend.</p></div>
       </header>
 
+      <RequestIntakeForm />
+
       {!plans.ok ? <UnavailableBanner title="Daftar request" error={plans.error} /> : (
         <>
+          <h2 style={{ fontSize: 16, margin: "var(--s-5) 0 var(--s-3)" }}>Daftar request</h2>
           <FilterForm action="/requests" fields={[
             { name: "q", label: "Cari judul / ID", value: sp.q },
             { name: "status", label: "Status", value: sp.status, type: "select", options: statuses.map((s) => ({ value: s, label: s })) }
