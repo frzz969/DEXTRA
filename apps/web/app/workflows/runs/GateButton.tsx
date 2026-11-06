@@ -15,10 +15,10 @@ export default function GateButton({ runId, stepId }: { runId: string; stepId: s
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
       <input
         className="input"
-        style={{ maxWidth: 160 }}
+        style={{ maxWidth: 160, minHeight: 44 }}
         placeholder="Catatan (opsional)…"
         value={note}
         onChange={(event) => setNote(event.target.value)}
@@ -27,7 +27,9 @@ export default function GateButton({ runId, stepId }: { runId: string; stepId: s
       <button
         type="button"
         className="btn btn--primary btn--sm"
+        style={{ minHeight: 44 }}
         disabled={pending}
+        aria-busy={pending}
         onClick={() =>
           startTransition(async () => {
             const out = await approveGate(runId, stepId, note);

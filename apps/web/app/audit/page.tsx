@@ -1,4 +1,5 @@
-import { apiGet } from "@/lib/api";
+import Link from "next/link";
+import { apiGet, verifyAuditChain } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +46,19 @@ function fmtDetail(detail: unknown): string {
   }
 }
 
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ limit?: string; offset?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  const limit = Math.min(200, Math.max(10, Number(params.limit) || 100));
+  const offset = Math.max(0, Number(params.offset) || 0);
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 100;
+  const safeOffset = Number.isFinite(offset) && offset >= 0 ? offset : 0;
   const [eventsResult, verifyResult] = await Promise.all([
-    apiGet<{ items: AuditEvent[] }>("/audit-events?limit=100&offset=0"),
-    apiGet<VerifyResult>("/audit-events/verify")
+    apiGet<{ items: AuditEvent[] }>(`/audit-events?limit=${safeLimit}&offset=${safeOffset}`),
+    verifyAuditChain()
   ]);
 
   return (
@@ -144,6 +154,22 @@ export default async function AuditPage() {
           <span>
             <strong>Data tidak tersedia.</strong> {eventsResult.error}
           </span>
+        </div>
+      )}
+
+      {eventsResult.ok && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: "var(--s-3)" }}>
+          <span className="field__hint" style={{ alignSelf: "center" }}>
+            Offset {safeOffset} · Memuat {safeLimit} per halaman
+          </span>
+          {safeOffset > 0 && (
+            <Link className="btn btn--sm" style={{ minHeight: 44 }} href={`/audit?limit=${safeLimit}&offset=${Math.max(0, safeOffset - safeLimit)}`}>
+              Sebelumnya
+            </Link>
+          )}
+          <Link className="btn btn--sm" style={{ minHeight: 44 }} href={`/audit?limit=${safeLimit}&offset=${safeOffset + safeLimit}`}>
+            Berikutnya
+          </Link>
         </div>
       )}
     </>

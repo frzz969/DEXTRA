@@ -1,111 +1,74 @@
-import { apiGet } from "@/lib/api";
+import Link from "next/link";
+import { getExecutions } from "@/lib/api";
+import { Badge, FilterForm, UnavailableBanner, fmtDateTime, fmtDuration } from "@/components/p1";
 
 export const dynamic = "force-dynamic";
 
-type Execution = {
-  id: string;
-  plan_id: string | null;
-  mandate_id: string | null;
-  action_id: string | null;
-  status: string;
-  adapter: string | null;
-  started_at: string | null;
-  duration_ms: number | null;
-  result: string | null;
-};
+type SP = { status?: string; adapter?: string; id?: string };
 
-const STATUS_TONE: Record<string, string> = {
-  running: "badge--info",
-  pending: "badge--outline",
-  failed: "badge--outline"
-};
-
-function formatStarted(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatDuration(ms: number | null): string {
-  if (ms == null) return "—";
-  if (ms < 1000) return `${ms} ms`;
-  const s = ms / 1000;
-  if (s < 60) return `${s.toFixed(1)} dtk`;
-  const m = Math.floor(s / 60);
-  return `${m} mnt ${Math.round(s % 60)} dtk`;
-}
-
-export default async function ExecutionsPage() {
-  const result = await apiGet<{ items: Execution[] }>("/executions");
+export default async function ExecutionsPage({ searchParams }: { searchParams: Promise<SP> }) {
+  const sp = await searchParams;
+  const result = await getExecutions(200);
+  const statuses = result.ok ? [...new Set(result.data.items.map((e) => e.status))] : [];
+  const adapters = result.ok ? [...new Set(result.data.items.map((e) => e.adapter ?? "—"))] : [];
+  let items = result.ok ? result.data.items : [];
+  if (sp.status) items = items.filter((e) => e.status === sp.status);
+  if (sp.adapter) items = items.filter((e) => (e.adapter ?? "—") === sp.adapter);
+  const detail = sp.id ? items.find((e) => e.id === sp.id) : undefined;
 
   return (
     <>
       <header className="page-head">
-        <div className="page-head__text">
-          <h1>Monitor Eksekusi</h1>
-          <p>Eksekusi aksi oleh adapter, terbaru lebih dulu. Data langsung dari API.</p>
-        </div>
+        <div className="page-head__text"><h1>Monitor Eksekusi</h1><p>Eksekusi aksi oleh adapter, terbaru lebih dulu. Data langsung dari API.</p></div>
       </header>
 
-      {result.ok ? (
-        result.data.items.length === 0 ? (
-          <div className="empty">
-            <div className="empty__icon">
-              <span className="material-symbols-outlined" aria-hidden="true">play_circle</span>
+      {!result.ok ? <UnavailableBanner title="Eksekusi" error={result.error} /> : (
+        <>
+          <FilterForm action="/executions" fields={[
+            { name: "status", label: "Status", value: sp.status, type: "select", options: statuses.map((s) => ({ value: s, label: s })) },
+            { name: "adapter", label: "Adapter", value: sp.adapter, type: "select", options: adapters.map((s) => ({ value: s, label: s })) }
+          ]} />
+
+          {detail && (
+            <section className="card card--pad" aria-labelledby="exec-detail-h" style={{ marginBottom: "var(--s-4)" }}>
+              <h2 id="exec-detail-h">Detail <span className="mono">{detail.id}</span></h2>
+              <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "var(--s-3)", marginTop: "var(--s-3)" }}>
+                <div><dt className="field__hint">Status</dt><dd><Badge value={detail.status} /></dd></div>
+                <div><dt className="field__hint">Adapter</dt><dd>{detail.adapter ?? "—"}</dd></div>
+                <div><dt className="field__hint">Mulai</dt><dd className="mono">{fmtDateTime(detail.started_at)}</dd></div>
+                <div><dt className="field__hint">Durasi</dt><dd>{fmtDuration(detail.duration_ms)}</dd></div>
+                <div><dt className="field__hint">Plan</dt><dd className="mono">{detail.plan_id ?? "—"}</dd></div>
+                <div><dt className="field__hint">Mandate</dt><dd className="mono">{detail.mandate_id ?? "—"}</dd></div>
+                <div><dt className="field__hint">Action</dt><dd className="mono">{detail.action_id ?? "—"}</dd></div>
+              </dl>
+              {detail.result && <pre className="mono" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", marginTop: "var(--s-3)", fontSize: 12 }}>{detail.result}</pre>}
+              <p style={{ marginTop: "var(--s-3)" }}><Link href="/executions">Tutup detail</Link></p>
+            </section>
+          )}
+
+          {items.length === 0 ? (
+            <div className="banner"><span className="material-symbols-outlined" aria-hidden="true">play_circle</span><span>{sp.status || sp.adapter ? "Tidak ada eksekusi yang cocok dengan filter." : "Belum ada eksekusi."}</span></div>
+          ) : (
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>Status</th><th>Adapter</th><th>Mulai</th><th className="num">Durasi</th><th>Hasil</th><th>ID</th><th></th></tr></thead>
+                <tbody>
+                  {items.map((ex) => (
+                    <tr key={ex.id}>
+                      <td><Badge value={ex.status} /></td>
+                      <td>{ex.adapter ?? "—"}</td>
+                      <td>{fmtDateTime(ex.started_at)}</td>
+                      <td className="num">{fmtDuration(ex.duration_ms)}</td>
+                      <td><span className="truncate" title={ex.result ?? ""} style={{ display: "inline-block", maxWidth: 280 }}>{ex.result ?? "—"}</span></td>
+                      <td className="mono truncate" style={{ maxWidth: 150 }} title={ex.id}>{ex.id}</td>
+                      <td><Link href={`/executions?id=${ex.id}`} className="btn btn--soft btn--sm" style={{ minHeight: 44 }}>Detail</Link></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <h3>Belum ada eksekusi</h3>
-            <p>API mengembalikan daftar kosong. Tidak ada data yang dikarang — eksekusi akan muncul di sini setelah dijalankan.</p>
-          </div>
-        ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Adapter</th>
-                  <th>Mulai</th>
-                  <th className="num">Durasi</th>
-                  <th>Hasil</th>
-                  <th>ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.data.items.map((ex) => (
-                  <tr key={ex.id}>
-                    <td>
-                      <span className={`badge ${STATUS_TONE[ex.status] ?? "badge--outline"}`}>{ex.status}</span>
-                      {ex.status === "failed" && (
-                        <span className="material-symbols-outlined" aria-hidden="true" style={{ color: "var(--danger)", verticalAlign: "middle", marginLeft: 4, fontSize: 16 }}>error</span>
-                      )}
-                    </td>
-                    <td>{ex.adapter ?? "—"}</td>
-                    <td>{formatStarted(ex.started_at)}</td>
-                    <td className="num">{formatDuration(ex.duration_ms)}</td>
-                    <td>
-                      <span className="truncate" title={ex.result ?? ""} style={{ display: "inline-block", maxWidth: 320 }}>
-                        {ex.result ?? "—"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="cell-sub mono truncate" title={ex.id} style={{ maxWidth: 160 }}>exec: {ex.id}</div>
-                      {ex.plan_id && <div className="cell-sub mono truncate" title={ex.plan_id} style={{ maxWidth: 160 }}>plan: {ex.plan_id}</div>}
-                      {ex.mandate_id && <div className="cell-sub mono truncate" title={ex.mandate_id} style={{ maxWidth: 160 }}>mandate: {ex.mandate_id}</div>}
-                      {ex.action_id && <div className="cell-sub mono truncate" title={ex.action_id} style={{ maxWidth: 160 }}>action: {ex.action_id}</div>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )
-      ) : (
-        <div className="banner banner--warning" role="alert">
-          <span className="material-symbols-outlined" aria-hidden="true">error</span>
-          <span>
-            <strong>Data tidak tersedia.</strong> {result.error}
-          </span>
-        </div>
+          )}
+        </>
       )}
     </>
   );

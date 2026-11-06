@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import RevokeButton from "./RevokeButton";
 
@@ -70,9 +71,9 @@ export default async function MandatesPage() {
                   <tr key={m.id}>
                     <td>
                       <div className="cell-title">{m.action_type}</div>
-                      <div className="cell-sub mono truncate" title={m.id} style={{ maxWidth: 180 }}>
+                      <Link className="cell-sub mono truncate" title={m.id} style={{ maxWidth: 180, display: "block" }} href={`/mandates/${encodeURIComponent(m.id)}`}>
                         {m.id}
-                      </div>
+                      </Link>
                     </td>
                     <td className="mono truncate" title={m.plan_id} style={{ maxWidth: 160 }}>
                       {m.plan_id}

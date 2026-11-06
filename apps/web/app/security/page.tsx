@@ -1,5 +1,6 @@
 import { apiGet } from "@/lib/api";
 import Link from "next/link";
+import SessionRevokeButton from "./SessionRevokeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -186,6 +187,7 @@ export default async function SecurityPage() {
                   <th>IP</th>
                   <th>MFA</th>
                   <th>Berakhir</th>
+                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,6 +203,13 @@ export default async function SecurityPage() {
                       </span>
                     </td>
                     <td className="mono" style={{ whiteSpace: "nowrap" }}>{fmtAt(s.expires_at)}</td>
+                      <td>
+                        {overview.ok && overview.data.capabilities?.can_revoke_sessions ? (
+                          <SessionRevokeButton sessionId={s.id} />
+                        ) : (
+                          <span className="cell-sub">butuh admin</span>
+                        )}
+                      </td>
                   </tr>
                 ))}
               </tbody>

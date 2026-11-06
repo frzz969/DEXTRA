@@ -1,141 +1,323 @@
-import { mcpCall, mcpHealth } from "@/lib/mcp";
+import { getExecutions, getOverview } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-type ExecutionSummary = {
+/* Analytics dibaca dari API :8000: /overview untuk KPI, /executions untuk
+ * distribusi status dan tren 7 hari. Backend belum punya endpoint token /
+ * biaya, jadi bagian itu ditandai belum tersedia — bukan diisi nol. */
+
+type DayRow = {
+  date: string;
+  label: string;
   total: number;
-  by_result: { sent: number; blocked: number; failed: number; queued: number };
-  dispatch_rate: number | null;
-  latency: { scope: string; measured: number; p50_ms: number | null; p95_ms: number | null; max_ms: number | null };
-  tokens: { measured: number; input: number; output: number; total: number };
-  cost_usd: { measured: number; total: number; by_source: { provider_reported: number; rate_card: number; unknown: number } };
+  succeeded: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  running: number;
+  skipped: number;
 };
 
-type ExecutionsResult = { executions: unknown[]; total: number; offset: number; limit: number; summary: ExecutionSummary };
-
-const RESULT_TONE: Record<string, string> = {
-  sent: "var(--success-600)",
-  blocked: "var(--warning-600)",
-  failed: "var(--danger-600)",
-  queued: "var(--muted)"
-};
-
-const RESULT_LABEL: Record<string, string> = {
-  sent: "Diterima adapter",
-  blocked: "Ditolak governance",
+const STATUS_LABEL: Record<string, string> = {
+  succeeded: "Berhasil",
   failed: "Gagal",
-  queued: "Menunggu"
+  blocked: "Diblokir",
+  pending: "Menunggu",
+  running: "Berjalan",
+  skipped: "Dilewati"
 };
 
-function pct(value: number | null): string {
-  return value === null ? "—" : `${Math.round(value * 1000) / 10}%`;
+const STATUS_TONE: Record<string, string> = {
+  succeeded: "var(--success-600)",
+  failed: "var(--danger-600)",
+  blocked: "var(--warning-600)",
+  pending: "var(--muted)",
+  running: "var(--info-600)",
+  skipped: "var(--faint)"
+};
+
+function dayKey(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
 }
 
-function ms(value: number | null): string {
-  if (value === null) return "tidak diukur";
-  if (value < 1000) return `${Math.round(value)} ms`;
-  return `${(value / 1000).toFixed(1)} dtk`;
+function shortLabel(key: string): string {
+  const d = new Date(`${key}T00:00:00Z`);
+  return d.toLocaleDateString("id-ID", { weekday: "short", timeZone: "UTC" });
 }
 
-function usd(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "tidak diukur";
-  return `$${value.toFixed(2)}`;
+function fmtMs(ms: number | null): string {
+  if (ms == null) return "tidak diukur";
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  return `${(ms / 1000).toFixed(1)} dtk`;
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
 export default async function AnalyticsPage() {
-  const [health, result] = await Promise.all([
-    mcpHealth(),
-    mcpCall<ExecutionsResult>("list_executions", { limit: 1, offset: 0 })
-  ]);
+  const [overview, executions] = await Promise.all([getOverview(), getExecutions(200)]);
 
-  const summary = result.ok ? result.data.summary : null;
-  const total = summary?.total ?? 0;
-  const sent = summary?.by_result.sent ?? 0;
-  const blocked = summary?.by_result.blocked ?? 0;
-  const failed = summary?.by_result.failed ?? 0;
-  const queued = summary?.by_result.queued ?? 0;
-  const maxResult = Math.max(sent, blocked, failed, queued, 1);
+  const failedToLoad = !overview.ok && !executions.ok;
+  const loadError = !overview.ok ? overview.error : !executions.ok ? executions.error : "";
+
+  const items = executions.ok ? executions.data.items : [];
+  const byStatus = new Map<string, number>();
+  const durations: number[] = [];
+  for (const item of items) {
+    byStatus.set(item.status, (byStatus.get(item.status) ?? 0) + 1);
+    if (item.duration_ms != null) durations.push(item.duration_ms);
+  }
+  const maxStatus = Math.max(1, ...byStatus.values());
+
+  // Tren 7 hari terakhir (UTC), dihitung dari started_at yang dikirim API.
+  const days: DayRow[] = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const row: DayRow = {
+      date: key,
+      label: shortLabel(key),
+      total: 0,
+      succeeded: 0,
+      failed: 0,
+      blocked: 0,
+      pending: 0,
+      running: 0,
+      skipped: 0
+    };
+    for (const item of items) {
+      if (dayKey(item.started_at) !== key) continue;
+      row.total += 1;
+      if (item.status === "succeeded") row.succeeded += 1;
+      else if (item.status === "failed") row.failed += 1;
+      else if (item.status === "blocked") row.blocked += 1;
+      else if (item.status === "pending") row.pending += 1;
+      else if (item.status === "running") row.running += 1;
+      else if (item.status === "skipped") row.skipped += 1;
+    }
+    days.push(row);
+  }
+  const maxDay = Math.max(1, ...days.map((d) => d.total));
 
   return (
     <>
       <header className="page-head">
         <div className="page-head__text">
           <h1>Analytics</h1>
-          <p>Agregasi eksekusi apa adanya dari server — tidak ada angka estimasi, tidak ada yang dibulatkan jadi seolah "berhasil".</p>
-        </div>
-        <div className="page-head__actions">
-          <span className={`badge ${health ? "badge--success" : "badge--danger"}`}>{health ? "MCP live" : "MCP mati"}</span>
+          <p>Angka dari API :8000. Yang belum diukur ditandai, bukan diisi nol.</p>
         </div>
       </header>
 
-      {summary === null ? (
+      {failedToLoad ? (
         <div className="banner banner--warning" role="alert">
-          <span className="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            cloud_off
+          </span>
           <span>
-            <strong>Analytics tidak tersedia.</strong> {result.ok ? "Ringkasan kosong." : result.error}
-            <br />Tidak ada metrik yang dikarang untuk mengisi tempat kosong.
+            <strong>Belum terhubung ke API (:8000).</strong> {loadError} Tidak ada metrik yang
+            dikarang untuk mengisi tempat kosong.
           </span>
         </div>
       ) : (
         <>
-          <section className="grid grid--4" aria-label="Ringkasan eksekusi" style={{ marginBottom: "var(--s-4)" }}>
-            <div className="card kpi"><div className="kpi__top"><span className="kpi__label">Total eksekusi</span></div><div className="kpi__value">{total}</div><div className="kpi__foot"><span className="cell-sub">seluruh data terfilter</span></div></div>
-            <div className="card kpi kpi--success"><div className="kpi__top"><span className="kpi__label">Diterima adapter</span></div><div className="kpi__value">{sent}</div></div>
-            <div className="card kpi kpi--warn"><div className="kpi__top"><span className="kpi__label">Ditolak governance</span></div><div className="kpi__value">{blocked}</div></div>
-            <div className="card kpi kpi--danger"><div className="kpi__top"><span className="kpi__label">Gagal</span></div><div className="kpi__value">{failed}</div></div>
-          </section>
+          {!overview.ok || !executions.ok ? (
+            <div className="banner banner--warning" role="alert" style={{ marginBottom: "var(--s-4)" }}>
+              <span className="material-symbols-outlined" aria-hidden="true">
+                cloud_off
+              </span>
+              <span>
+                <strong>Sebagian data belum terhubung.</strong>{" "}
+                {!overview.ok ? `Overview: ${overview.error} ` : ""}
+                {!executions.ok ? `Eksekusi: ${executions.error}` : ""} Bagian yang tampil di bawah
+                ini hanya dari sumber yang merespons.
+              </span>
+            </div>
+          ) : null}
 
-          <div className="grid grid--2" style={{ alignItems: "start", marginBottom: "var(--s-4)" }}>
-            <div className="card" style={{ padding: "var(--s-4)" }}>
-              <h2 style={{ fontSize: 14, margin: 0 }}>By hasil (seluruh data)</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--s-3)", marginTop: "var(--s-3)" }}>
-                {Object.entries(summary.by_result).map(([key, count]) => (
-                  <div key={key}>
-                    <div className="row" style={{ justifyContent: "space-between" }}>
-                      <span className="small">{RESULT_LABEL[key] ?? key}</span>
-                      <span className="mono"><strong>{count}</strong></span>
-                    </div>
-                    <div style={{ height: 8, borderRadius: 4, background: "var(--surface-3)", overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${(count / maxResult) * 100}%`, background: RESULT_TONE[key] }} />
-                    </div>
-                  </div>
-                ))}
+          {overview.ok && (
+            <section
+              className="grid grid--4"
+              aria-label="Ringkasan operasional"
+              style={{ marginBottom: "var(--s-4)" }}
+            >
+              <div className="card kpi">
+                <div className="kpi__top">
+                  <span className="kpi__label">Agen aktif</span>
+                </div>
+                <div className="kpi__value">{overview.data.kpi.active_agents}</div>
               </div>
-              <p className="cell-sub" style={{ marginTop: "var(--s-3)" }}>
-                “Diterima adapter” = adapter menerima permintaan dan mengembalikan id — <strong>bukan</strong> keberhasilan bisnis. Adapter mock tidak mengirim apa pun.
+              <div className="card kpi">
+                <div className="kpi__top">
+                  <span className="kpi__label">Paket kerja terbuka</span>
+                </div>
+                <div className="kpi__value">{overview.data.kpi.open_work_packages}</div>
+              </div>
+              <div className="card kpi kpi--warn">
+                <div className="kpi__top">
+                  <span className="kpi__label">Approval menunggu</span>
+                </div>
+                <div className="kpi__value">{overview.data.kpi.pending_approvals}</div>
+              </div>
+              <div className="card kpi kpi--danger">
+                <div className="kpi__top">
+                  <span className="kpi__label">Eksekusi gagal</span>
+                </div>
+                <div className="kpi__value">{overview.data.kpi.failed_executions}</div>
+              </div>
+            </section>
+          )}
+
+          <div className="grid grid--2" style={{ alignItems: "start", marginBottom: "var(--s-4)", gap: "var(--s-4)" }}>
+            <div className="card" style={{ padding: "var(--s-4)" }}>
+              <h2 style={{ fontSize: 14, margin: 0 }}>Eksekusi 7 hari terakhir</h2>
+              <p className="cell-sub" style={{ marginTop: 4 }}>
+                Hitung eksekusi per hari dari <code className="mono">started_at</code> yang dikirim
+                API. {items.length} baris dibaca (batas 200).
               </p>
+
+              <figure
+                role="img"
+                aria-label={`Diagram batang eksekusi 7 hari. Total tertinggi ${maxDay}.`}
+                style={{ margin: "var(--s-4) 0 0" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: 8,
+                    height: 140,
+                    borderBottom: "1px solid var(--border)",
+                    paddingBottom: 4
+                  }}
+                >
+                  {days.map((d) => (
+                    <div
+                      key={d.date}
+                      style={{
+                        flex: "1 1 0",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        height: "100%",
+                        gap: 4
+                      }}
+                    >
+                      <span className="mono" style={{ fontSize: 11 }}>
+                        {d.total}
+                      </span>
+                      <div
+                        style={{
+                          width: "100%",
+                          maxWidth: 34,
+                          height: `${Math.max(d.total === 0 ? 2 : 4, (d.total / maxDay) * 100)}%`,
+                          background: "var(--brand-500)",
+                          borderRadius: "4px 4px 0 0",
+                          minHeight: 2
+                        }}
+                      />
+                      <span className="tiny muted">{d.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <figcaption className="cell-sub" style={{ marginTop: 6 }}>
+                  Batang = jumlah eksekusi per hari. Angka di atas batang sama dengan tabel di bawah
+                  ini.
+                </figcaption>
+              </figure>
+
+              <div className="table-wrap" style={{ marginTop: "var(--s-3)" }}>
+                <table className="table table--compact">
+                  <caption style={{ textAlign: "left", padding: "6px 0" }}>
+                    Tabel pendamping diagram 7 hari
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th className="num">Total</th>
+                      <th className="num">Berhasil</th>
+                      <th className="num">Gagal</th>
+                      <th className="num">Diblokir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {days.map((d) => (
+                      <tr key={d.date}>
+                        <td className="mono">{d.date}</td>
+                        <td className="num">{d.total}</td>
+                        <td className="num">{d.succeeded}</td>
+                        <td className="num">{d.failed}</td>
+                        <td className="num">{d.blocked}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="card" style={{ padding: "var(--s-4)" }}>
-              <h2 style={{ fontSize: 14, margin: 0 }}>Latensi &amp; performa</h2>
-              <dl className="def-list" style={{ marginTop: "var(--s-3)" }}>
-                <dt>Cakupan</dt><dd>{summary.latency.scope}</dd>
-                <dt>Terukur</dt><dd>{summary.latency.measured} panggilan</dd>
-                <dt>p50</dt><dd>{ms(summary.latency.p50_ms)}</dd>
-                <dt>p95</dt><dd>{ms(summary.latency.p95_ms)}</dd>
-                <dt>Maks</dt><dd>{ms(summary.latency.max_ms)}</dd>
-                <dt>Dispatch rate</dt><dd>{pct(summary.dispatch_rate)} <span className="faint">(bukan tingkat keberhasilan)</span></dd>
-              </dl>
-              <h2 style={{ fontSize: 14, margin: "var(--s-5) 0 0" }}>Token &amp; biaya</h2>
-              <dl className="def-list" style={{ marginTop: "var(--s-3)" }}>
-                <dt>Terukur</dt><dd>{summary.tokens.measured} panggilan</dd>
-                <dt>Token in / out</dt><dd>{summary.tokens.measured > 0 ? `${summary.tokens.input} / ${summary.tokens.output}` : "tidak diukur"}</dd>
-                <dt>Total token</dt><dd>{summary.tokens.measured > 0 ? summary.tokens.total : "tidak diukur"}</dd>
-                <dt>Biaya total</dt><dd>{usd(summary.cost_usd.measured > 0 ? summary.cost_usd.total : null)}</dd>
-                <dt>Sumber biaya</dt>
-                <dd className="muted">provider {summary.cost_usd.by_source.provider_reported} · rate-card {summary.cost_usd.by_source.rate_card} · unknown {summary.cost_usd.by_source.unknown}</dd>
-              </dl>
-              <p className="cell-sub" style={{ marginTop: "var(--s-3)" }}>
-                Adapter mock melaporkan <code className="mono">null</code> — sampai provider nyata mengisi, semua angka token/biaya tampil “tidak diukur”, bukan tebakan.
+              <h2 style={{ fontSize: 14, margin: 0 }}>Distribusi status</h2>
+              <p className="cell-sub" style={{ marginTop: 4 }}>
+                Dari <strong>{items.length}</strong> eksekusi terakhir yang dikirim API.
               </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--s-3)", marginTop: "var(--s-3)" }}>
+                {[...byStatus.entries()].map(([status, count]) => (
+                  <div key={status}>
+                    <div className="row" style={{ justifyContent: "space-between" }}>
+                      <span className="small">{STATUS_LABEL[status] ?? status}</span>
+                      <span className="mono">
+                        <strong>{count}</strong>
+                      </span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label={`${STATUS_LABEL[status] ?? status}: ${count}`}
+                      aria-valuenow={count}
+                      aria-valuemin={0}
+                      aria-valuemax={maxStatus}
+                      style={{ height: 8, borderRadius: 4, background: "var(--surface-3)", overflow: "hidden" }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${(count / maxStatus) * 100}%`,
+                          background: STATUS_TONE[status] ?? "var(--muted)"
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {byStatus.size === 0 && <p className="cell-sub">Belum ada eksekusi.</p>}
+              </div>
+
+              <h2 style={{ fontSize: 14, margin: "var(--s-5) 0 0" }}>Durasi</h2>
+              <dl className="def-list" style={{ marginTop: "var(--s-3)" }}>
+                <dt>Terukur</dt>
+                <dd>{durations.length} eksekusi</dd>
+                <dt>Median</dt>
+                <dd>{fmtMs(median(durations))}</dd>
+                <dt>Token &amp; biaya</dt>
+                <dd>belum tersedia — API :8000 belum mengirim kolom ini</dd>
+              </dl>
             </div>
           </div>
 
           <div className="banner" role="status">
-            <span className="material-symbols-outlined" aria-hidden="true">info</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              info
+            </span>
             <span>
-              Angka di atas dihitung di server atas <em>seluruh</em> data terfilter, bukan halaman yang tampil.
-              Halaman adalah jendela; metriknya bukan.
+              Token dan biaya belum tampil karena endpoint :8000 belum menyediakannya. Angka di atas
+              tidak diperkirakan.
             </span>
           </div>
         </>

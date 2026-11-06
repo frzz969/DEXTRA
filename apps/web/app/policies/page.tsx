@@ -1,4 +1,5 @@
-import { apiGet } from "@/lib/api";
+import { getPolicies } from "@/lib/api";
+import PolicyEvaluatePanel from "./PolicyEvaluatePanel";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ type PolicyItem = {
 };
 
 export default async function PoliciesPage() {
-  const result = await apiGet<{ items: PolicyItem[]; writable: boolean }>("/policies");
+  const result = await getPolicies();
 
   return (
     <>
@@ -59,8 +60,9 @@ export default async function PoliciesPage() {
       )}
 
       <p className="field__hint" style={{ marginTop: "var(--s-4)" }}>
-        Mengubah kebijakan menuntut capability <code className="mono">edit_policy</code>; caller ini tidak memegangnya — tombol ubah sengaja tidak ada.
+        Mengubah kebijakan menuntut capability <code className="mono">edit_policy</code>; tombol ubah hanya muncul bila wewenang memadai. Daftar riwayat versi per-policy belum tersedia dari API — kolom versi hanya hitungan.
       </p>
+      <PolicyEvaluatePanel />
     </>
   );
 }

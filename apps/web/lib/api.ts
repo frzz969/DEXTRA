@@ -133,6 +133,299 @@ export async function getOverview(): Promise<ApiResult<Overview>> {
   return apiGet<Overview>("/overview");
 }
 
+/* P2b — workforce & intelligence. Semua fungsi di bawah memanggil API :8000
+ * yang sama; kegagalan dikembalikan sebagai { ok: false }, bukan data contoh. */
+
+export type Agent = {
+  id: string;
+  slug: string;
+  display_name: string;
+  agent_type: string;
+  description: string | null;
+  model_provider: string | null;
+  status: string;
+  is_enabled: boolean;
+  capabilities: string[];
+  versions?: number;
+};
+
+export type AgentsResponse = {
+  items: Agent[];
+  expected_specialists: string[];
+  unexpected: string[];
+};
+
+export async function getAgents(): Promise<ApiResult<AgentsResponse>> {
+  return apiGet<AgentsResponse>("/agents");
+}
+
+export async function getAgent(slug: string): Promise<ApiResult<Agent>> {
+  return apiGet<Agent>(`/agents/${encodeURIComponent(slug)}`);
+}
+
+export type AgentUpdate = {
+  display_name?: string;
+  description?: string;
+  status?: string;
+  is_enabled?: boolean;
+  model_provider?: string;
+};
+
+export async function updateAgent(slug: string, body: AgentUpdate): Promise<ApiResult<Agent>> {
+  return apiWrite<Agent>("PATCH", `/agents/${encodeURIComponent(slug)}`, body);
+}
+
+export type SkillItem = {
+  id: string;
+  slug: string;
+  display_name: string;
+  description: string;
+  status: string;
+  latest_version: string | null;
+  is_system: boolean;
+  created_at: string;
+};
+
+export async function getSkills(): Promise<ApiResult<{ items: SkillItem[] }>> {
+  return apiGet<{ items: SkillItem[] }>("/skills");
+}
+
+export type SkillVersion = {
+  version: string;
+  status: string;
+  input_schema?: Record<string, unknown>;
+  output_schema?: Record<string, unknown>;
+  required_capabilities: string[];
+  notes: string;
+  published_at: string | null;
+  created_at: string;
+};
+
+export type SkillDetail = SkillItem & { versions: SkillVersion[] };
+
+export async function getSkill(slug: string): Promise<ApiResult<SkillDetail>> {
+  return apiGet<SkillDetail>(`/skills/${encodeURIComponent(slug)}`);
+}
+
+export async function setSkillStatus(slug: string, status: string): Promise<ApiResult<SkillDetail>> {
+  return apiWrite<SkillDetail>("POST", `/skills/${encodeURIComponent(slug)}/status`, { status });
+}
+
+export type WorkflowStep = {
+  id: string;
+  type?: string;
+  depends_on?: string[];
+  max_attempts?: number;
+  params?: Record<string, unknown>;
+};
+
+export type WorkflowItem = {
+  id: string;
+  name: string;
+  version: number;
+  description: string;
+  status: string;
+  steps: WorkflowStep[];
+  created_at: string;
+};
+
+export async function getWorkflows(): Promise<ApiResult<{ items: WorkflowItem[]; tenant_id?: string }>> {
+  return apiGet<{ items: WorkflowItem[]; tenant_id?: string }>("/workflows");
+}
+
+export type WorkflowStepRun = {
+  step_id: string;
+  status: string;
+  attempts: number;
+  error: string | null;
+  output: unknown;
+  started_at: string | null;
+  finished_at: string | null;
+  approved_by: string | null;
+};
+
+export type WorkflowRun = {
+  id: string;
+  workflow_id: string;
+  status: string;
+  idempotency_key: string;
+  started_at: string | null;
+  finished_at: string | null;
+  error: string | null;
+  steps: WorkflowStepRun[];
+};
+
+export async function getWorkflowRuns(): Promise<ApiResult<{ items: WorkflowRun[] }>> {
+  return apiGet<{ items: WorkflowRun[] }>("/workflows/runs");
+}
+
+export async function getWorkflowRun(runId: string): Promise<ApiResult<WorkflowRun>> {
+  return apiGet<WorkflowRun>(`/workflows/runs/${encodeURIComponent(runId)}`);
+}
+
+export async function startWorkflowRun(
+  workflowId: string,
+  idempotencyKey: string
+): Promise<ApiResult<WorkflowRun>> {
+  return apiWrite<WorkflowRun>("POST", `/workflows/${encodeURIComponent(workflowId)}/runs`, {
+    idempotency_key: idempotencyKey,
+    inputs: {}
+  });
+}
+
+export async function resumeWorkflowRun(runId: string): Promise<ApiResult<WorkflowRun>> {
+  return apiWrite<WorkflowRun>("POST", `/workflows/runs/${encodeURIComponent(runId)}/resume`);
+}
+
+export type ExecutionItem = {
+  id: string;
+  plan_id: string | null;
+  mandate_id: string | null;
+  action_id: string | null;
+  status: string;
+  adapter: string | null;
+  started_at: string | null;
+  duration_ms: number | null;
+  result: string | null;
+};
+
+export async function getExecutions(limit = 200): Promise<ApiResult<{ items: ExecutionItem[] }>> {
+  const path = `/executions${limit > 0 ? `?limit=${limit}` : ""}`;
+  return apiGet<{ items: ExecutionItem[] }>(path);
+}
+
+export async function getApprovals(): Promise<ApiResult<{ items: ApprovalItem[] }>> {
+  return apiGet<{ items: ApprovalItem[] }>("/approvals");
+}
+
+export async function getAuditEvents(limit = 100, offset = 0): Promise<ApiResult<{ items: AuditEvent[] }>> {
+  return apiGet<{ items: AuditEvent[] }>(`/audit-events?limit=${limit}&offset=${offset}`);
+}
+
+export async function getWorkPackages(): Promise<ApiResult<{ items: WorkPackageItem[] }>> {
+  return apiGet<{ items: WorkPackageItem[] }>("/work-packages");
+}
+
+/* ---------- P1 parity: tambahan yang belum ada di atas ---------- */
+export type TaskItem = { id: string; work_package_id: string; title: string; status: string; assigned_agent_id: string | null };
+export type PlanItem = { id: string; title?: string; status?: string; summary?: string; created_at?: string };
+export type AssignmentItem = { id: string; task_id: string; agent_id: string; role: string };
+
+export const getTasks = () => apiGet<{ items: TaskItem[] }>("/tasks");
+export const getPlanDetail = (id: string) => apiGet<Record<string, unknown>>(`/office-agent/plans/${id}`);
+export const getTaskAssignments = (id: string) => apiGet<{ items: AssignmentItem[] }>(`/tasks/${id}/assignments`);
+
+/* Governance (P2a) — typed helpers over /api/v1. Failure → { ok: false }. */
+
+export type ApprovalItem = {
+  id: string;
+  plan_id: string;
+  approver_id: string | null;
+  decision: string;
+  reason: string | null;
+  decided_at: string | null;
+  mandate_id: string | null;
+};
+
+export type PlanActionItem = {
+  action_id: string;
+  action_type: string;
+  params?: Record<string, unknown>;
+  source_ref?: Record<string, unknown>;
+};
+
+export type OfficePlan = {
+  id: string;
+  request_id: string;
+  plan_id: string;
+  plan_hash: string;
+  status: string;
+  actions: PlanActionItem[];
+  findings: Array<{ code?: string; message?: string; [k: string]: unknown }>;
+  validation: Record<string, unknown>;
+  created_at: string;
+};
+
+export type MandateItem = {
+  id: string;
+  plan_id: string;
+  approval_id: string | null;
+  action_id: string;
+  action_type: string;
+  resource_scope: string | null;
+  recipient_scope: string | null;
+  approver_id: string | null;
+  status: string;
+  issued_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  usable: boolean;
+};
+
+export type PolicyItem = {
+  id: string;
+  slug: string;
+  title: string;
+  scope: string;
+  is_active: boolean;
+  versions: number;
+};
+
+export type AuditEventItem = {
+  id: string;
+  seq: number;
+  at: string;
+  event_type: string;
+  actor: string | null;
+  action: string | null;
+  resource: string | null;
+  decision: string | null;
+  detail: unknown;
+  entry_hash: string;
+};
+
+export const getGovernanceApprovals = () =>
+  apiGet<{ items: ApprovalItem[]; note?: string }>("/approvals");
+
+export const getOfficePlans = () =>
+  apiGet<{ items: OfficePlan[] }>("/office-agent/plans");
+
+export const getMandates = () => apiGet<{ items: MandateItem[] }>("/mandates");
+
+export const getMandate = (id: string) =>
+  apiGet<MandateItem>(`/mandates/${encodeURIComponent(id)}`);
+
+export const getPolicies = () =>
+  apiGet<{ items: PolicyItem[]; writable: boolean }>("/policies");
+
+export type AuditEvent = AuditEventItem;
+export type WorkPackageItem = { id: string; title: string; status: string; priority: string; task_count: number; due_at: string | null };
+
+export const verifyAuditChain = () =>
+  apiGet<{ ok: boolean; checked: number; broken_at_seq?: number; chain_versions?: number[] }>(
+    "/audit-events/verify"
+  );
+
+/** Approve/reject satu tindakan pada plan via endpoint resmi office-agent. */
+export function approvePlanAction(
+  planId: string,
+  actionId: string,
+  decision: "approved" | "rejected",
+  reason: string,
+  ttlMinutes = 30
+) {
+  return apiWrite<{
+    approval_id: string;
+    mandate_id: string | null;
+    action_id: string;
+    decision: string;
+  }>(
+    "POST",
+    `/office-agent/plans/${encodeURIComponent(planId)}/actions/${encodeURIComponent(actionId)}/approve`,
+    { decision, reason, ttl_minutes: ttlMinutes }
+  );
+}
+
 /**
  * Endpoint yang tidak berada di bawah `/api/v1` (mis. `/health`). Publik —
  * tanpa Authorization. Hanya untuk endpoint yang memang publik.
