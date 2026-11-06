@@ -1,0 +1,20 @@
+{
+  "source": "GET /api/v1/approvals",
+  "collected_at": "2026-11-06T05:18:33Z",
+  "token_used": "ops-dev-token (redacted, not stored)",
+  "items": [
+    {
+      "id": "apr_20261106051739_9437cdb0",
+      "plan_id": "pln_demo_20261106121723",
+      "approver_id": "legacy:ops",
+      "decision": "approved",
+      "reason": "Demo E2E disetujui.",
+      "decided_at": "2026-11-06T05:17:39.868645",
+      "mandate_id": "mnd_cd1a740e913176a9"
+    }
+  ],
+  "note": "approver_id adalah principal terverifikasi dari sesi/token pemanggil.",
+  "unproven": [
+    "approver_id legacy:ops bukan nama manusia; tidak membuktikan siapa individu yang menekan approve di luar sesi token ops"
+  ]
+}

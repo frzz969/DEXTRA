@@ -1,0 +1,42 @@
+{
+  "source": "GET /api/v1/audit-events?limit=20, GET /api/v1/audit-events?limit=100, GET /api/v1/audit-events/verify, GET /api/v1/office-agent/plans/pln_demo_20261106121723",
+  "collected_at": "2026-11-06T05:18:33Z",
+  "verify": {
+    "ok": true,
+    "checked": 6,
+    "chain_versions": [2]
+  },
+  "plan": {
+    "id": "ofp_c937152714d443df985c",
+    "request_id": "demo-20261106121723",
+    "plan_id": "pln_demo_20261106121723",
+    "plan_hash": "c29c46cf9a072a1cef5b459fecaf3749159ddfeee65809bb8895f13d75ba1c56",
+    "status": "partially_approved",
+    "actions": [
+      {
+        "action_id": "act_demo_1",
+        "action_type": "send_email",
+        "params": {"subject": "Laporan mingguan", "to": "ops@example.com"},
+        "source_ref": {}
+      }
+    ],
+    "findings": [],
+    "validation": {}
+  },
+  "audit_events_visible_via_tenant_filter": [
+    {"seq": 6, "at": "2026-11-06T05:17:49.817304", "event_type": "action_executed", "actor": "executor", "scope": "ops", "action": "send_email", "resource": "mnd_cd1a740e913176a9", "decision": "allow", "plan_id": "pln_demo_20261106121723", "mandate_id": "mnd_cd1a740e913176a9", "execution_id": "exe_1793942269804_1ea811", "detail_adapter": "outbox", "detail_duration_ms": 8, "detail_result_id": "9c9b742fa297450d9e28ebb2f08f4c69"},
+    {"seq": 5, "at": "2026-11-06T05:17:39.888236", "event_type": "mandate_issued", "actor": "office_agent", "scope": "ops", "action": "issue_mandate", "resource": "mnd_cd1a740e913176a9", "decision": "allow", "plan_id": "pln_demo_20261106121723", "mandate_id": "mnd_cd1a740e913176a9", "execution_id": "", "detail_approval_id": "apr_20261106051739_9437cdb0", "detail_via": "submit_approval"},
+    {"seq": 4, "at": "2026-11-06T05:17:39.881179", "event_type": "approval_recorded", "actor": "office_agent", "scope": "ops", "action": "submit_approval", "resource": "pln_demo_20261106121723", "decision": "approved", "plan_id": "pln_demo_20261106121723", "mandate_id": "", "execution_id": "", "detail_approval_id": "apr_20261106051739_9437cdb0", "detail_approver_id": "legacy:ops"},
+    {"seq": 3, "at": "2026-11-06T05:17:24.016052", "event_type": "office_plan_received", "actor": "user", "scope": "agent", "action": "submit_office_plan", "resource": "pln_demo_20261106121723", "decision": "allow", "plan_id": "", "mandate_id": "", "execution_id": "", "detail_actions": 1, "detail_findings": 0, "detail_request_id": "demo-20261106121723"}
+  ],
+  "entry_hashes": {
+    "seq3": "ba0fd03189b15bb900ea7ab235b453ba9650ea2c888fa16c98daa632e7be73cf",
+    "seq4": "47cc3a16690df319a94cc2da04b916aa1eae40b71ed651642a1e180149b4a3eb",
+    "seq5": "eae693050cea25dad2ed167d266a997af3e42a6568c02d769305c8729154006b",
+    "seq6": "a8e527aad843847729105d5461d6455e8e245d8369bf793dd681835f293ae2d4"
+  },
+  "unproven": [
+    "audit list mengembalikan 4 event (seq 3-6) sedangkan verify checked=6: 2 event pertama tidak terlihat lewat filter tenant token ini; tidak membuktikan isi seq 1-2, hanya terbukti rantai tidak rusak di server",
+    "tenant_id tidak muncul pada payload audit yang dikembalikan; tidak membuktikan atribusi tenant dari respons list, hanya dari desain chain v2 di kode"
+  ]
+}

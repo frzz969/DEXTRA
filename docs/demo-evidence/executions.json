@@ -1,0 +1,45 @@
+{
+  "source": "GET /api/v1/executions?limit=5 dan GET /api/v1/mandates",
+  "collected_at": "2026-11-06T05:18:33Z",
+  "executions": [
+    {
+      "id": "exe_1793942269804_1ea811",
+      "plan_id": "pln_demo_20261106121723",
+      "mandate_id": "mnd_cd1a740e913176a9",
+      "action_id": "act_demo_1",
+      "status": "succeeded",
+      "adapter": "outbox",
+      "started_at": "2026-11-06T05:17:49.804603",
+      "duration_ms": 8,
+      "result": {
+        "action_type": "send_email",
+        "adapter": "outbox",
+        "path": "data\\outbox\\9c9b742fa297450d9e28ebb2f08f4c69.task.json",
+        "provider": "outbox",
+        "result_id": "9c9b742fa297450d9e28ebb2f08f4c69"
+      }
+    }
+  ],
+  "mandates": [
+    {
+      "id": "mnd_cd1a740e913176a9",
+      "plan_id": "pln_demo_20261106121723",
+      "approval_id": "apr_20261106051739_9437cdb0",
+      "action_id": "act_demo_1",
+      "action_type": "send_email",
+      "resource_scope": "",
+      "recipient_scope": "",
+      "params_hash": "50950e554e3cbb3cf57aaf375e9457b6928fec5c6454570148883751f92b830b",
+      "approver_id": "legacy:ops",
+      "status": "executing",
+      "issued_at": "2026-11-06T05:17:39.885424",
+      "expires_at": "2026-11-06T05:47:39.885424",
+      "revoked_at": null,
+      "usable": false
+    }
+  ],
+  "unproven": [
+    "usable=false dan status=executing setelah eksekusi succeeded: tidak membuktikan mandat kembali usable; TTL 30 menit (issued 05:17:39, expires 05:47:39) teramati, bukan klaim",
+    "recipient ops@example.com pada plan adalah alamat dummy demo; tidak membuktikan pengiriman ke layanan eksternal (adapter outbox = file lokal)"
+  ]
+}

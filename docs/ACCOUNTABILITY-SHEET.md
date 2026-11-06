@@ -18,6 +18,17 @@ Satu baris = satu tindakan agen. Kolom-kolomnya menjawab pertanyaan: atas mandat
 | A6 | Baca audit (`GET /audit-events`) dan verifikasi rantai (`GET /audit-events/verify`) | Tidak relevan | `require_tenant` + filter `tenant_id`; caller tanpa tenant menerima hasil kosong, bukan semua tenant (`repositories/audit.py` → `list_events`) | `auditor`, `approver`, `admin` | `view_audit` | Tidak relevan | Tidak relevan | `GET /audit-events` mengembalikan `seq`, `entry_hash`, `event_type`, `plan_id`, `mandate_id`, `execution_id` | Tidak ada — ini jalur baca bukti |
 | A7 | WorkBuddy memanggil tool MCP lewat token agent (`workbuddy/mcp.json`, `127.0.0.1:8765`) | Tidak bisa menerbitkan mandat — tool `issue_mandate`/`execute_action` tidak ada di `allowedTools` | Token gateway lama memakai `DEXTRA_LEGACY_TENANT`; tanpa pengikatan, endpoint ber-tenant menolaknya (fail-closed, `core/security.py` → `_bind_legacy_tenant`) | Scope `agent`, bukan role manusia | `view_own`, `view_all`, `create_request` saja (`SCOPE_CAPABILITIES`) | Tool `validate_plan`/`get_org_rules` memanggil policy engine yang sama | Tidak bisa membuat approval — `submit_approval` tidak diekspos ke agen | Event dari server tetap tercatat; pemanggilan tanpa capability menghasilkan 403 dan dicatat sebagai `access_denied` di security events (`_record_denial`) | Tidak ada — agen tidak bisa mengeksekusi. Koneksi live *perlu dibuktikan saat demo* (`docs/WORKBUDDY-INTEGRATION-TEST.md` status BELUM) |
 
+## Baris demo 2026-11-06 (run yang sudah terjadi)
+
+Run ini bukan contoh. Datanya hasil curl ke backend `:8000`, tenant `kenari`, dan setiap ID di bawah bisa dicari lagi lewat endpoint yang disebut. Screenshot-nya belum ada; lane screenshot akan mengisinya di path `docs/screenshots/S3-office-agent-detail.png`, `docs/screenshots/S6-executions.png`, dan `docs/screenshots/S7-audit.png`, mengikuti placeholder di `docs/SUBMISSION.md`.
+
+| Langkah | Bukti konkret |
+|---|---|
+| A1 — rencana | `POST /api/v1/office-agent/plans` (`agent-dev-token`) → 201, `plan_id: pln_demo_20261106121723`, `plan_hash: c29c46cf...`, status `received` |
+| A3 — approval + mandat | `POST /api/v1/office-agent/plans/{plan_id}/actions/{action_id}/approve` (`ops-dev-token`) → 201, `approval_id: apr_20261106051739_9437cdb0`, `mandate_id: mnd_cd1a740e913176a9`. `approver_id` tercatat `legacy:ops`, identitas token, bukan nama manusia; nama principal nyata butuh sesi login manusia |
+| A4 — eksekusi | `POST /api/v1/executions` → 201, `execution_id: exe_1793942269804_1ea811`, `status: succeeded`, provider `outbox`, `result_id: 9c9b742fa297450d9e28ebb2f08f4c69`. File hasilnya lokal di `data/outbox`, bukan email terkirim |
+| A6 — verify | `GET /api/v1/audit-events/verify` → 200, `ok: true`, `checked: 6` |
+
 ## Cara verifikasi audit chain
 
 Endpoint: `GET /api/v1/audit-events/verify`, implementasi di `backend/dextra/modules/audit/router.py` → `verify_audit`, yang memanggil `repositories/audit.py` → `verify_chain(db)`.

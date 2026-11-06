@@ -2,6 +2,12 @@
 
 Skrip ini ditulis untuk presenter yang berdiri di depan layar, bukan untuk dibacakan kata per kata. Setiap langkah menyebut: klik apa, data apa yang tampil, dan apa yang harus ditunjukkan. Semua route dan endpoint di bawah berasal dari kode yang sudah dibaca (`apps/web/app/`, `apps/web/lib/api.ts`, `backend/dextra/modules/*/router.py`). Kalau langkah gagal di panggung, pakai rencana cadangan di bagian akhir — jangan mengarang data.
 
+## Bukti run 2026-11-06 (acuan ID nyata)
+
+Run terakhir yang sudah terjadi memakai backend `:8000` dan tenant `kenari`, bukan data contoh. Plan yang dibuat: `pln_demo_20261106121723` (`plan_hash: c29c46cf...`, status `received`). Approvalnya: `apr_20261106051739_9437cdb0`, mandat: `mnd_cd1a740e913176a9`. Eksekusinya: `exe_1793942269804_1ea811`, status `succeeded`, provider `outbox`, `result_id: 9c9b742fa297450d9e28ebb2f08f4c69`. Verify audit menunjukkan `ok: true`, `checked: 6`. Pakai ID itu saat presenter menunjuk layar; kalau layar menampilkan ID lain, sebutkan ID layar apa adanya dan jangan mencocok-cocokkan.
+
+Satu batas wajib disebut di panggung: `approver_id` run ini adalah `legacy:ops`, identitas token, bukan nama manusia. Untuk principal nyata, presenter perlu login sesi manusia sebelum menekan approve.
+
 ## Daftar kesiapan (sebelum juri masuk)
 
 | Item | Nilai / perintah | Sumber |
@@ -27,7 +33,7 @@ Buka `/` (Overview, `apps/web/app/page.tsx`). Tunjukkan lima KPI: agen aktif, wo
 
 ### Menit 1–2: Mandate Input
 
-Buka `/office-agent`. Tunjukkan daftar rencana Office Agent dari `GET /office-agent/plans`. Pilih satu rencana dan buka detailnya di `/office-agent/[planId]` (`GET /office-agent/plans/{plan_id}` di `modules/office_agent/router.py`). Tunjukkan daftar `actions` di dalamnya: `action_id`, `action_type`, `params`, dan `source_ref` yang menunjuk asal tindakan di dokumen. Jelaskan bahwa rencana datang sebagai dokumen yang tidak dipercaya, lalu dinormalisasi dan dipecah jadi tindakan diskret sebelum ada yang disetujui.
+Buka `/office-agent`. Tunjukkan daftar rencana Office Agent dari `GET /office-agent/plans`. Run 2026-11-06 memakai `pln_demo_20261106121723` (`plan_hash: c29c46cf...`, status `received`, dibuat lewat `POST /api/v1/office-agent/plans` dengan `agent-dev-token`, HTTP 201). Buka detailnya di `/office-agent/[planId]` (`GET /office-agent/plans/{plan_id}` di `modules/office_agent/router.py`). Tunjukkan daftar `actions` di dalamnya: `action_id`, `action_type`, `params`, dan `source_ref` yang menunjuk asal tindakan di dokumen. Jelaskan bahwa rencana datang sebagai dokumen yang tidak dipercaya, lalu dinormalisasi dan dipecah jadi tindakan diskret sebelum ada yang disetujui. Tangkapan layar detail rencana ini akan diisi lane screenshot di `docs/screenshots/S3-office-agent-detail.png`; jangan mengganti path itu dengan gambar karangan.
 
 ### Menit 2–3: Governance Validation
 
@@ -39,15 +45,15 @@ Tunjukkan `workbuddy/mcp.json` di layar: server `dextra` di `http://127.0.0.1:87
 
 ### Menit 4–5: Human Approval
 
-Buka `/approvals` (`GET /approvals`). Pilih tindakan pada rencana demo dan klik approve (tombol memanggil `approvePlanAction` → `POST /office-agent/plans/{plan_id}/actions/{action_id}/approve`, `apps/web/lib/api.ts`). Tunjukkan responsnya: `approval_id` dan `mandate_id` terisi. Buka `/mandates` dan tunjukkan mandat barunya: `plan_id`, `action_id`, `status`, `issued_at`, `expires_at`, dan `usable`. Jelaskan bahwa approver yang tercatat adalah identitas terverifikasi dari sesi, bukan isian klien (`modules/approvals/router.py`), dan bahwa satu approval tidak bisa menerbitkan mandat kedua (`MANDATE_ALREADY_ISSUED` di `governance/mandate.py`).
+Buka `/approvals` (`GET /approvals`). Pilih tindakan pada rencana demo dan klik approve (tombol memanggil `approvePlanAction` → `POST /office-agent/plans/{plan_id}/actions/{action_id}/approve`, `apps/web/lib/api.ts`). Run 2026-11-06 mencatat respons HTTP 201 dengan `approval_id: apr_20261106051739_9437cdb0` dan mandat `mnd_cd1a740e913176a9` untuk rencana `pln_demo_20261106121723`; approval itu memakai `ops-dev-token`, jadi `approver_id`-nya `legacy:ops`, bukan nama manusia. Tunjukkan responsnya: `approval_id` dan `mandate_id` terisi. Buka `/mandates` dan tunjukkan mandat barunya: `plan_id`, `action_id`, `status`, `issued_at`, `expires_at`, dan `usable`. Jelaskan bahwa approver yang tercatat adalah identitas terverifikasi dari sesi, bukan isian klien (`modules/approvals/router.py`), dan bahwa satu approval tidak bisa menerbitkan mandat kedua (`MANDATE_ALREADY_ISSUED` di `governance/mandate.py`). Kalau presenter ingin nama manusia di layar, ia harus login sesi `approver`/`admin` dulu; tanpa itu, sebut `legacy:ops` apa adanya.
 
 ### Menit 5–6: AI Worker Execution
 
-Buka `/executions` (`GET /executions`). Jalankan eksekusi lewat `POST /executions` dengan `mandate_id`, `action_id`, `action_type`, dan `params` yang sama persis dengan yang disetujui — kalau parametrnya diubah, server menolak dengan `PARAMS_CHANGED` (`governance/mandate.py` → `validate_for_execution`). Tunjukkan baris eksekusi barunya: `status: succeeded`, `duration_ms`, dan `result_json` berisi `adapter: outbox`, `provider: outbox`, `result_id`, dan path file. Jujur di sini: adapter-nya `outbox` (`modules/execution/service.py`), artinya hasilnya file `.eml`/`.ics`/`.task.json` di `data/outbox`, bukan kiriman ke layanan eksternal. Itu batas demo, bukan fitur yang disembunyikan.
+Buka `/executions` (`GET /executions`). Jalankan eksekusi lewat `POST /executions` dengan `mandate_id`, `action_id`, `action_type`, dan `params` yang sama persis dengan yang disetujui — kalau parametrnya diubah, server menolak dengan `PARAMS_CHANGED` (`governance/mandate.py` → `validate_for_execution`). Run 2026-11-06 mengembalikan HTTP 201 dengan `execution_id: exe_1793942269804_1ea811`, `status: succeeded`, provider `outbox`, `result_id: 9c9b742fa297450d9e28ebb2f08f4c69`. Tunjukkan baris eksekusi barunya: `status: succeeded`, `duration_ms`, dan `result_json` berisi `adapter: outbox`, `provider: outbox`, `result_id`, dan path file. Jujur di sini: adapter-nya `outbox` (`modules/execution/service.py`), artinya hasilnya file `.eml`/`.ics`/`.task.json` di `data/outbox`, bukan kiriman ke layanan eksternal. Itu batas demo, bukan fitur yang disembunyikan. Tangkapan layar baris eksekusi ini akan diisi lane screenshot di `docs/screenshots/S6-executions.png`.
 
 ### Menit 6–8: Result & Accountability
 
-Buka `/audit` (`GET /audit-events`). Tunjukkan rangkaian event dari demo ini: `office_plan_received`, `approval_recorded`, `mandate_issued`, `action_executed` — masing-masing membawa `seq`, `plan_id`, `mandate_id`, dan `execution_id`. Klik tombol verifikasi (`GET /audit-events/verify`, helper `verifyAuditChain` di `apps/web/lib/api.ts`) dan tunjukkan `{"ok": true, "checked": ...}`. Kalau mau menunjukkan sisi penolakan, coba eksekusi ulang dengan parameter berubah dan tunjukkan `action_blocked` dengan kode `PARAMS_CHANGED` masuk ke audit sebagai `deny`. Tutup dengan kembali ke Overview dan tunjukkan KPI mandat aktif serta approval menunggu yang berubah.
+Buka `/audit` (`GET /audit-events`). Tunjukkan rangkaian event dari demo ini: `office_plan_received`, `approval_recorded`, `mandate_issued`, `action_executed` — masing-masing membawa `seq`, `plan_id`, `mandate_id`, dan `execution_id`. Untuk run 2026-11-06, event itu mengikat `pln_demo_20261106121723`, `mnd_cd1a740e913176a9`, dan `exe_1793942269804_1ea811`. Klik tombol verifikasi (`GET /audit-events/verify`, helper `verifyAuditChain` di `apps/web/lib/api.ts`) dan tunjukkan `{"ok": true, "checked": 6}` seperti respons HTTP 200 pada run tersebut. Tangkapan layar hasil verify ini akan diisi lane screenshot di `docs/screenshots/S7-audit.png`. Kalau mau menunjukkan sisi penolakan, coba eksekusi ulang dengan parameter berubah dan tunjukkan `action_blocked` dengan kode `PARAMS_CHANGED` masuk ke audit sebagai `deny`. Tutup dengan kembali ke Overview dan tunjukkan KPI mandat aktif serta approval menunggu yang berubah.
 
 ## Rencana cadangan bila endpoint gagal
 

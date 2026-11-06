@@ -61,6 +61,16 @@ Manusia menyetujui satu tindakan lewat `POST /office-agent/plans/{plan_id}/actio
 
 Hasil eksekusi tersimpan sebagai baris `Execution` dengan `status` (`succeeded`/`failed`/`running`), `duration_ms`, dan `result_json` berisi `result_id` serta path outbox. Setiap langkah menulis ke audit chain lewat `repositories/audit.py` → `append_event`, dengan `seq`, `prev_hash`, dan `entry_hash` (chain versi 2, termasuk `tenant_id` di hash). Verifikasi dilakukan lewat `GET /audit-events/verify`, yang mengembalikan `{ok, checked, broken_at_seq?}`. Overview di `apps/web/app/page.tsx` menutup lingkaran dengan menampilkan mandat aktif, antrean approval, dan audit terbaru dalam satu layar.
 
+## Bukti demo (2026-11-06)
+
+Bagian ini bukan janji. Semua ID di bawah hasil curl ke backend `:8000` dengan tenant `kenari` pada 2026-11-06, dan semua langkahnya selesai dengan status sukses. Catatannya kami simpan apa adanya, termasuk yang belum bisa kami buktikan.
+
+**ID dan status yang terjadi.** `POST /api/v1/office-agent/plans` dengan `agent-dev-token` mengembalikan 201, `plan_id: pln_demo_20261106121723`, `plan_hash: c29c46cf...`, status `received`. Persetujuan lewat `POST /api/v1/office-agent/plans/{plan_id}/actions/{action_id}/approve` dengan `ops-dev-token` mengembalikan 201, `approval_id: apr_20261106051739_9437cdb0`, dan menerbitkan mandat `mnd_cd1a740e913176a9`. Eksekusi lewat `POST /api/v1/executions` mengembalikan 201, `execution_id: exe_1793942269804_1ea811`, status `succeeded`, provider `outbox`, `result_id: 9c9b742fa297450d9e28ebb2f08f4c69`. Terakhir, `GET /api/v1/audit-events/verify` mengembalikan 200 dengan `ok: true` dan `checked: 6`.
+
+**Bukti.** Respons HTTP dan ID di atas adalah bukti primernya; file outbox lokal yang ditulis eksekusi itu tinggal di `data/outbox` sesuai adapter `outbox` di `modules/execution/service.py`. Untuk tangkapan layar dan rekaman, kami tidak mengarang. Path yang akan diisi lane screenshot tetap mengikuti placeholder di bagian Screenshot bawah, misalnya `docs/screenshots/S3-office-agent-detail.png` untuk detail rencana `pln_demo_20261106121723` dan `docs/screenshots/S7-audit.png` untuk hasil verify `checked: 6`. Selama file-file itu belum ada, jangan anggap screenshot sebagai bukti.
+
+**Batas yang tetap berlaku.** `approver_id` pada approval di atas adalah `legacy:ops`, yaitu identitas token gateway lama, bukan nama manusia. Jadi demo ini membuktikan rantai plan → approve → mandate → execution → verify berjalan, tetapi belum membuktikan siapa manusia yang menekan approve. `outbox` juga bukan email yang terkirim; hasilnya file lokal, dan itu batas demo yang sudah kami tulis di bagian Batas demo. Untuk nama principal nyata, demo butuh sesi login manusia dengan role `approver`/`admin` supaya `approver_id` berasal dari sesi terverifikasi, bukan token. Perlu dibuktikan saat demo dengan sesi seperti itu.
+
 ## Diagram arsitektur
 
 ```mermaid
