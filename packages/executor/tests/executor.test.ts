@@ -65,11 +65,11 @@ async function setup() {
 }
 
 describe('executor', () => {
-  test('valid execution -> sent with mock_message_id and audit action_executed', async () => {
+  test('valid execution -> sent with message_id and audit action_executed', async () => {
     const { mandate, actionId } = await setup();
     const res = await executeAction({ mandate_id: mandate.mandate_id, action_id: actionId, execution_key: 'k1', now: '2026-11-01T10:06:00+07:00' });
     assert.equal(res.result, 'sent');
-    assert.ok(res.evidence.mock_message_id);
+    assert.ok(res.evidence.message_id);
   });
 
   test('replay returns same record', async () => {
@@ -184,7 +184,7 @@ describe('executor', () => {
     }
   });
 
-  test('create_task action -> sent with mock_task_id', async () => {
+  test('create_task action -> sent with task_id', async () => {
     await seed();
     const org = await getOrgRules();
     const plan = validatePlanFn(createPlan({
@@ -211,10 +211,10 @@ describe('executor', () => {
     await saveMandate(mandate);
     const res = await executeAction({ mandate_id: mandate.mandate_id, action_id: plan.actions[0]!.action_id, execution_key: 'kt', now: '2026-11-01T10:06:00+07:00' });
     assert.equal(res.result, 'sent');
-    assert.ok(res.evidence.mock_task_id);
+    assert.ok(res.evidence.task_id);
   });
 
-  test('create_calendar_event action -> sent with mock_event_id', async () => {
+  test('create_calendar_event action -> sent with event_id', async () => {
     await seed();
     const org = await getOrgRules();
     const plan = validatePlanFn(createPlan({
@@ -241,6 +241,6 @@ describe('executor', () => {
     await saveMandate(mandate);
     const res = await executeAction({ mandate_id: mandate.mandate_id, action_id: plan.actions[0]!.action_id, execution_key: 'kc', now: '2026-11-01T10:06:00+07:00' });
     assert.equal(res.result, 'sent');
-    assert.ok(res.evidence.mock_event_id);
+    assert.ok(res.evidence.event_id);
   });
 });

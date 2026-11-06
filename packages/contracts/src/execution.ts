@@ -12,6 +12,14 @@ export const ActionEvidenceSchema = z
     mock_message_id: z.string().optional(),
     mock_event_id: z.string().optional(),
     mock_task_id: z.string().optional(),
+    message_id: z.string().optional(),
+    event_id: z.string().optional(),
+    task_id: z.string().optional(),
+    outbox_path: z.string().optional(),
+    ics_path: z.string().optional(),
+    task_path: z.string().optional(),
+    provider: z.string().optional(),
+    result_id: z.string().optional(),
     note: z.string().optional(),
   })
   .strict();
@@ -22,8 +30,9 @@ export type ActionEvidence = z.infer<typeof ActionEvidenceSchema>;
  *
  * `latency_ms` is always real: any execution takes time and the executor can
  * measure it. The token and cost fields are `nullable` on purpose. The current
- * adapters are mocks — they call no model — so they report `provider: 'mock'`
- * with `null` tokens and `null` cost. Writing `0` there would be a measurement
+ * adapters are file-producing (outbox) — they call no model — so they report
+ * `provider: 'outbox'` with `null` tokens and `null` cost. Writing `0` there
+ * would be a measurement
  * that never happened, and any analytics screen built on it would report a
  * saving that is really an absence of data.
  *

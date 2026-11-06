@@ -4,7 +4,7 @@ import type { ActionResult, Mandate, Plan, AuditEvent, ExecutionUsage } from '..
 import { validateMandate } from '../../mandate-engine/src/index.ts';
 import { verifyPlanHash } from '../../plan/src/index.ts';
 import { getMandate, getPlan, getExecution, saveExecution, appendAudit, DuplicateExecutionError } from '../../store/src/index.ts';
-import { mockSendEmail, mockCreateCalendarEvent, mockCreateTask } from './mocks.ts';
+import { getAdapter } from './adapters/index.ts';
 
 export interface ExecuteInput {
   mandate_id: MandateId;
@@ -63,7 +63,6 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     if (planAction) actionType = planAction.action_type;
   }
 
-  // action not found in plan -> ACTION_NOT_ALLOWED
   if (actionType === null) {
     const blocked = makeBlockedResult(input.mandate_id, input.action_id, input.execution_key, 'ACTION_NOT_ALLOWED', now);
     await appendAudit(audit({
@@ -95,13 +94,11 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     return blocked;
   }
 
-  // idempotency
   const existing = await getExecution(input.mandate_id, input.action_id);
   if (existing) {
     return existing;
   }
 
-  // write queued
   const queued: ActionResult = {
     execution_id: makeExecutionId(),
     mandate_id: input.mandate_id,
@@ -140,24 +137,14 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     return res;
   }
 
-  // execute mock
   let evidence: Record<string, string> = {};
   let failed = false;
   let failureReason: ErrorCode = 'EXECUTOR_FAILURE';
-  let mockId = '';
-  /*
-   * Measured around the adapter call, not around the whole function: the
-   * interesting number is how long the provider took, not how long the mandate
-   * was looked up. `Date.now()` is enough here because the granularity we
-   * report is milliseconds and this is a local mock.
-   */
+  let resultId = '';
+  let adapterName = '';
   const startedAt = Date.now();
-  let latencyMs = 0;
-  /* The adapters below are mocks: no model is called, so tokens and cost are
-   * reported as null rather than zero. Zero is a measurement; null is the
-   * truth. A real provider adapter replaces this object. */
   let usage: ExecutionUsage = {
-    provider: 'mock',
+    provider: 'outbox',
     model: null,
     tokens_in: null,
     tokens_out: null,
@@ -165,30 +152,32 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     latency_ms: 0,
   };
 
-  try {
-    const t = action.action_type;
-    if (t === 'send_email' || t === 'send_message') {
-      const r = mockSendEmail({ to: action.target.masked_address, subject: action.content.subject ?? '', body: action.content.body, attachments: [] });
-      evidence = { mock_message_id: r.mock_message_id };
-      mockId = r.mock_message_id;
-    } else if (t === 'create_calendar_event') {
-      const r = mockCreateCalendarEvent({ title: action.content.subject ?? 'event', start: action.schedule.start_at, end: action.schedule.end_at, tz: action.schedule.timezone, participants: [action.target.display_name] });
-      evidence = { mock_event_id: r.mock_event_id };
-      mockId = r.mock_event_id;
-    } else if (t === 'create_task') {
-      const r = mockCreateTask({ title: action.content.subject ?? 'task', assignee: action.target.display_name, due: action.schedule.start_at });
-      evidence = { mock_task_id: r.mock_task_id };
-      mockId = r.mock_task_id;
-    } else {
-      failed = true;
-      failureReason = 'EXECUTOR_FAILURE';
-    }
-  } catch {
+  const adapter = getAdapter(action.action_type);
+  if (!adapter) {
     failed = true;
     failureReason = 'EXECUTOR_FAILURE';
+  } else {
+    adapterName = adapter.name;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await new Promise(r => setTimeout(r, [50, 100, 200][attempt - 1]));
+      }
+      try {
+        const r = await adapter.run(action, plan);
+        evidence = r.evidence;
+        usage = r.usage;
+        const idKey = Object.keys(evidence).find(k => k.endsWith('_id'));
+        resultId = idKey ? (evidence[idKey] ?? '') : '';
+        failed = false;
+        break;
+      } catch {
+        failed = true;
+      }
+    }
+    if (failed) failureReason = 'EXECUTOR_FAILURE';
   }
-  latencyMs = Date.now() - startedAt;
-  usage = { ...usage, latency_ms: latencyMs };
+  const latencyMs = Date.now() - startedAt;
+  usage = { ...usage, latency_ms: (usage.latency_ms as number) || latencyMs, provider: adapterName || 'outbox' } as ExecutionUsage;
 
   if (failed) {
     const failedRes: ActionResult = {
@@ -235,7 +224,7 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     plan_id: plan?.plan_id,
     mandate_id: input.mandate_id,
     action_id: input.action_id,
-    detail: { action_id: input.action_id, result: 'sent', mock_id: mockId },
+    detail: { action_id: input.action_id, result: 'sent', provider: adapterName, result_id: resultId },
   }));
   return sent;
 }

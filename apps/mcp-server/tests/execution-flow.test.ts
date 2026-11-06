@@ -92,7 +92,7 @@ test('approve → execute produces a sent result with evidence', async () => {
   const result = res.data.result;
   assert.equal(result.result, 'sent');
   assert.equal(result.reason_code, null);
-  assert.ok(result.evidence.mock_message_id, 'evidence must carry the adapter id');
+  assert.ok(result.evidence.message_id, 'evidence must carry the adapter id');
   assert.equal(result.mandate_id, mandateId);
   assert.equal(result.action_id, actionId);
 });
