@@ -46,7 +46,7 @@ out.txt
 __pycache__/
 *.pyc
 
-﻿node_modules/
+node_modules/
 # Data kerja agen (catatan sesi lokal), bukan bagian dari produk
 .workbuddy-ai/
 # Next.js
@@ -77,4 +77,10 @@ data/exports/
 .playwright-mcp/
 # Konfigurasi agen lokal (sama seperti .workbuddy-ai), bukan bagian dari produk
 .codebuddy/
+# Artefak tes Playwright: hasil, bukan sumber. Tiap jalan menghasilkan berkas
+# baru, jadi meng-commit-nya hanya menambah derau di diff.
+apps/web/test-results/
+apps/web/e2e/screenshots/
+# Tangkapan layar ad-hoc di root repo (bahan demo, bukan bagian produk)
+/case-*.png
 
