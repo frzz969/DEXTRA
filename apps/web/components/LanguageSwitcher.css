@@ -1,0 +1,56 @@
+/* Pemilih bahasa. Dua segmen, bukan menu: hanya ada dua pilihan, dan keadaan
+   aktifnya harus terbaca sekali lihat. Ukurannya sengaja kecil supaya muat di
+   topbar yang sudah padat. */
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.lang-switch__opt {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .14s, color .14s, box-shadow .14s;
+}
+
+.lang-switch__opt:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.lang-switch__opt[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--brand-700);
+  box-shadow: var(--shadow-xs);
+}
+
+.lang-switch__opt:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 1px;
+}
+
+.lang-switch__opt:disabled {
+  opacity: .55;
+  cursor: progress;
+}
+
+/* Varian sempit: dipakai di topbar dan header ponsel. */
+.lang-switch--compact .lang-switch__opt {
+  padding: 4px 8px;
+  font-size: 10.5px;
+  letter-spacing: .03em;
+}

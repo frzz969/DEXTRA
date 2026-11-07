@@ -234,6 +234,19 @@
   max-width: 352px;
 }
 
+/* Baris atas: tautan kembali di kiri, pemilih bahasa di kanan. */
+.lg-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: clamp(12px, 2.2vh, 22px);
+}
+
+.lg-panel__head .lg-back {
+  margin-bottom: 0;
+}
+
 .lg-back {
   display: inline-flex;
   align-items: center;

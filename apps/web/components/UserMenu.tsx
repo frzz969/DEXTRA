@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth-actions";
+import { useT } from "@/lib/i18n/client";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -30,6 +31,7 @@ export default function UserMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -69,7 +71,7 @@ export default function UserMenu({
         <div
           className="menu user-menu__list"
           role="menu"
-          aria-label="Menu akun"
+          aria-label={t("Menu akun")}
           style={
             placement === "up"
               ? { bottom: "calc(100% + 6px)", left: 0, right: 0, minWidth: 220 }
@@ -82,19 +84,19 @@ export default function UserMenu({
           </div>
           <Link className="menu__item" role="menuitem" href="/account" onClick={() => setOpen(false)}>
             <span className="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
-            Akun &amp; Keamanan
+            {t("Akun & Keamanan")}
           </Link>
           <Link className="menu__item" role="menuitem" href="/account" onClick={() => setOpen(false)}>
             <span className="material-symbols-outlined" aria-hidden="true">lock_reset</span>
-            Ganti password
+            {t("Ganti password")}
           </Link>
           <Link className="menu__item" role="menuitem" href="/settings" onClick={() => setOpen(false)}>
             <span className="material-symbols-outlined" aria-hidden="true">person</span>
-            Profil &amp; preferensi
+            {t("Profil & preferensi")}
           </Link>
           <button type="button" className="menu__item" role="menuitem" onClick={toggleTheme}>
             <span className="material-symbols-outlined" aria-hidden="true">contrast</span>
-            Ganti tema
+            {t("Ganti tema")}
           </button>
           <div className="menu__sep" role="separator" />
           <button
@@ -105,7 +107,7 @@ export default function UserMenu({
             onClick={logout}
           >
             <span className="material-symbols-outlined" aria-hidden="true">{busy ? "hourglass_top" : "logout"}</span>
-            {busy ? "Keluar…" : "Keluar"}
+            {busy ? t("Keluar…") : t("Keluar")}
           </button>
         </div>
       )}
@@ -116,7 +118,7 @@ export default function UserMenu({
         data-user-menu
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Akun ${userName}`}
+        aria-label={`${t("Akun")} ${userName}`}
         onClick={() => setOpen((o) => !o)}
       >
         <span className="avatar" aria-hidden="true">{initials(userName)}</span>

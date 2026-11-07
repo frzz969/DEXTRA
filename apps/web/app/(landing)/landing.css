@@ -191,11 +191,15 @@
   color: var(--lp-slate-400);
 }
 
-.lp-nav { display: flex; align-items: center; gap: 32px; }
+/* Label Inggris lebih panjang daripada Indonesia, dan sejak pemilih bahasa ada
+   di baris yang sama, tautan sempat terpotong jadi dua baris. nowrap + jarak
+   lebih rapat menjaga header tetap satu baris tanpa memotong teks. */
+.lp-nav { display: flex; align-items: center; gap: 24px; flex-wrap: nowrap; }
 .lp-nav a {
   font-size: 14px;
   font-weight: 600;
   color: var(--lp-slate-600);
+  white-space: nowrap;
   transition: color 0.15s ease;
 }
 .lp-nav a:hover { color: var(--lp-purple-600); }
@@ -206,6 +210,7 @@
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--lp-slate-700);
   transition: color 0.15s ease;
 }
@@ -477,26 +482,50 @@
 }
 
 /* Isi mockup: tiruan antarmuka, bukan tangkapan layar. */
-.lp-mock__body { display: grid; grid-template-columns: 56px 1fr; background: var(--lp-slate-50); }
+.lp-mock__body { display: grid; grid-template-columns: 168px 1fr; background: var(--lp-slate-50); }
 
 .lp-mock__side {
   background: #fff;
   border-right: 1px solid var(--lp-slate-200);
-  padding: 16px 0;
+  padding: 14px 10px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
+  align-items: stretch;
+  gap: 2px;
 }
-.lp-mock__side span {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: var(--lp-slate-100);
+.lp-mock__nav {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--lp-slate-500);
+  white-space: nowrap;
 }
-.lp-mock__side span:first-child { background: var(--lp-purple-100); }
+.lp-mock__nav--on {
+  background: var(--lp-purple-50);
+  color: var(--lp-purple-700);
+  font-weight: 700;
+}
 
-.lp-mock__main { padding: 20px 22px 26px; }
+/* Status netral: bukan aksen, supaya tidak menarik perhatian dari isi. */
+.lp-mock__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--lp-slate-100);
+  border: 1px solid var(--lp-slate-200);
+  color: var(--lp-slate-600);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lp-mock__main { padding: 20px 22px 64px; }
 
 .lp-mock__head {
   display: flex;
@@ -520,7 +549,7 @@
   border-radius: 10px;
   padding: 10px 12px;
 }
-.lp-mock__kpi b { display: block; font-size: 16px; color: var(--lp-slate-900); }
+.lp-mock__kpi b { display: block; font-size: 22px; line-height: 1.15; font-weight: 700; color: var(--lp-slate-900); }
 .lp-mock__kpi i {
   display: block;
   font-style: normal;
@@ -581,8 +610,10 @@
   box-shadow: 0 16px 34px rgba(30, 27, 75, 0.12);
   max-width: 340px;
 }
-.lp-mock__badge--bl { bottom: -28px; left: -24px; }
-.lp-mock__badge--tr { top: -18px; right: -18px; }
+/* Badge digantung di luar tepi frame. Posisi vertikal dijaga agar tidak
+   menimpa baris data maupun teks di title bar. */
+.lp-mock__badge--bl { bottom: -22px; left: -24px; }
+.lp-mock__badge--tr { top: -46px; right: -18px; max-width: none; }
 
 .lp-mock__badge-icon {
   width: 36px;
@@ -634,6 +665,7 @@
   color: #fff;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
 }
 .lp-mock__quorum span {
@@ -1444,6 +1476,8 @@
   .lp-mock__url { display: none; }
   .lp-mock__meta span:last-child { display: none; }
   .lp-mock__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-mock__body { grid-template-columns: minmax(0, 1fr); }
+  .lp-mock__side { display: none; }
   .lp-footer__bottom { text-align: center; }
   .lp-footer__links { flex-wrap: wrap; justify-content: center; gap: 16px; }
 }

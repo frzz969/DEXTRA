@@ -1,4 +1,6 @@
 import Link from "next/link";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getT } from "@/lib/i18n/server";
 import { WORKERS } from "@/lib/workers";
 import "./landing.css";
 
@@ -296,13 +298,14 @@ const FOOTER_COLS = [
   }
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const t = await getT();
   return (
     <div className="lp">
       {/* ======================= A. HEADER ======================= */}
       <header className="lp-header">
         <div className="lp-header__inner">
-          <Link className="lp-brand" href="/" aria-label="DEXTRA — beranda">
+          <Link className="lp-brand" href="/" aria-label={t("DEXTRA — beranda")}>
             <span className="lp-brand__mark">
               <span>{icon.layers}</span>
             </span>
@@ -317,14 +320,15 @@ export default function LandingPage() {
 
           <nav className="lp-nav" aria-label="Navigasi utama">
             {NAV.map((item) => (
-              <a key={item.href} href={item.href}>{item.label}</a>
+              <a key={item.href} href={item.href}>{t(item.label)}</a>
             ))}
           </nav>
 
           <div className="lp-header__actions">
-            <Link className="lp-signin" href="/login">Masuk</Link>
+            <LanguageSwitcher compact />
+            <Link className="lp-signin" href="/login">{t("Masuk")}</Link>
             <Link className="lp-btn lp-btn--grad" href="/overview">
-              <span>Buka Dashboard</span>
+              <span>{t("Buka Dashboard")}</span>
               <span className="lp-btn__arrow">{icon.arrowRight}</span>
             </Link>
           </div>
@@ -340,38 +344,39 @@ export default function LandingPage() {
           <div className="lp-pill-wrap">
             <div className="lp-pill">
               <span className="lp-dot" aria-hidden="true" />
-              <span className="lp-pill__label">Prinsip Inti:</span>
-              <span>&ldquo;Baca boleh otomatis, tulis harus lewat mandat.&rdquo;</span>
+              <span className="lp-pill__label">{t("Prinsip Inti:")}</span>
+              <span>&ldquo;{t("Baca boleh otomatis, tulis harus lewat mandat.")}&rdquo;</span>
               {icon.chevron}
             </div>
           </div>
 
           <div className="lp-hero__head">
             <h1 className="lp-hero__title">
-              Transform the Way Your Organization <br />
-              <span className="lp-gradient-text">Works with Governed AI.</span>
+              {t("Transform the Way Your Organization")} <br />
+              <span className="lp-gradient-text">{t("Works with Governed AI.")}</span>
             </h1>
             <p className="lp-hero__lead">
-              Temui <strong>DEXTRA</strong>, platform AI workforce terotorisasi yang mengoordinasikan empat
-              spesialis independen, merapikan operasional kantor, dan menjaga setiap aksi kritis tetap di bawah
-              mandat otoritas manusia.
+              {t("Temui")} <strong>DEXTRA</strong>,{" "}
+              {t(
+                "platform AI workforce terotorisasi yang mengoordinasikan empat spesialis independen, merapikan operasional kantor, dan menjaga setiap aksi kritis tetap di bawah mandat otoritas manusia."
+              )}
             </p>
 
             <div className="lp-hero__cta">
               <Link className="lp-btn lp-btn--dark" href="/login">
-                <span>Explore DEXTRA</span>
+                <span>{t("Explore DEXTRA")}</span>
                 <span className="lp-btn__arrow">{icon.arrowLong}</span>
               </Link>
               <a className="lp-btn lp-btn--ghost" href="#workflow">
                 <span style={{ color: "var(--lp-purple-600)", display: "inline-flex" }}>{icon.playCircle}</span>
-                <span>Pelajari Alur Mandat</span>
+                <span>{t("Pelajari Alur Mandat")}</span>
               </a>
             </div>
 
             <div className="lp-trust">
-              <div className="lp-trust__item">{icon.checkCircleSolid}<span>4 Spesialis AI</span></div>
-              <div className="lp-trust__item">{icon.checkCircleSolid}<span>Validator kebijakan deterministik (non-LLM)</span></div>
-              <div className="lp-trust__item">{icon.checkCircleSolid}<span>Jejak audit permanen</span></div>
+              <div className="lp-trust__item">{icon.checkCircleSolid}<span>{t("4 Spesialis AI")}</span></div>
+              <div className="lp-trust__item">{icon.checkCircleSolid}<span>{t("Validator kebijakan deterministik (non-LLM)")}</span></div>
+              <div className="lp-trust__item">{icon.checkCircleSolid}<span>{t("Jejak audit permanen")}</span></div>
             </div>
           </div>
 
@@ -393,39 +398,47 @@ export default function LandingPage() {
                 <div className="lp-mock__meta">
                   <span className="lp-mock__chip">
                     <span aria-hidden="true" />
-                    Validator: deterministik
+                    {t("Validator: deterministik")}
                   </span>
-                  <span>Mode demo</span>
+                  <span>{t("Mode demo")}</span>
                 </div>
               </div>
 
               <div className="lp-mock__body">
                 <div className="lp-mock__side" aria-hidden="true">
-                  <span /><span /><span /><span /><span />
+                  <span className="lp-mock__nav lp-mock__nav--on">{t("Overview")}</span>
+                  <span className="lp-mock__nav">{t("Rencana")}</span>
+                  <span className="lp-mock__nav">{t("Mandat")}</span>
+                  <span className="lp-mock__nav">{t("Audit")}</span>
+                  <span className="lp-mock__nav">{t("Spesialis")}</span>
                 </div>
                 <div className="lp-mock__main">
                   <div className="lp-mock__head">
                     <div>
-                      <h3>Overview</h3>
-                      <small>Ringkasan operasional hari ini</small>
+                      <h3>{t("Overview")}</h3>
+                      <small>{t("Ringkasan operasional hari ini")}</small>
                     </div>
-                    <span className="lp-chip lp-chip--role">Sesi aktif</span>
+                    <span className="lp-mock__status">{t("Sesi aktif")}</span>
                   </div>
 
                   <div className="lp-mock__kpis">
-                    <div className="lp-mock__kpi"><b>4</b><i>Spesialis</i></div>
-                    <div className="lp-mock__kpi"><b>1</b><i>Jalur persetujuan</i></div>
-                    <div className="lp-mock__kpi"><b>Semua</b><i>Tindakan bermandat</i></div>
+                    <div className="lp-mock__kpi"><b>4</b><i>{t("Spesialis")}</i></div>
+                    <div className="lp-mock__kpi"><b>3</b><i>{t("Menunggu persetujuan")}</i></div>
+                    <div className="lp-mock__kpi"><b>12</b><i>{t("Tindakan bermandat")}</i></div>
                   </div>
 
                   <div className="lp-mock__rows">
                     <div className="lp-mock__row">
-                      <span>Rapat koordinasi besok 10.00</span>
-                      <span className="lp-mock__state lp-mock__state--wait">Menunggu Anda</span>
+                      <span>{t("Rapat koordinasi · 13 Nov 10.00")}</span>
+                      <span className="lp-mock__state lp-mock__state--wait">{t("Menunggu Anda")}</span>
                     </div>
                     <div className="lp-mock__row">
-                      <span>Notulen rapat operasional</span>
-                      <span className="lp-mock__state lp-mock__state--done">Mandat terbit</span>
+                      <span>{t("Notulen rapat operasional")}</span>
+                      <span className="lp-mock__state lp-mock__state--done">{t("Mandat terbit")}</span>
+                    </div>
+                    <div className="lp-mock__row">
+                      <span>{t("Follow-up Keuangan · 13 Nov 13.15")}</span>
+                      <span className="lp-mock__state lp-mock__state--wait">{t("Menunggu Anda")}</span>
                     </div>
                   </div>
                 </div>
@@ -436,17 +449,17 @@ export default function LandingPage() {
               <span className="lp-mock__badge-icon">{icon.shieldCheck}</span>
               <div>
                 <div className="lp-mock__badge-title">
-                  <span>Rencana ditahan</span>
+                  <span>{t("Rencana ditahan")}</span>
                   <em>Interlock</em>
                 </div>
-                <p>Eksekusi berhenti sampai Anda menandatangani. Tidak ada jalur pintas.</p>
+                <p>{t("Eksekusi berhenti sampai Anda menandatangani. Tidak ada jalur pintas.")}</p>
               </div>
             </div>
 
             <div className="lp-mock__badge lp-mock__badge--tr">
               <span className="lp-mock__quorum">
                 <span aria-hidden="true" />
-                Setiap tindakan berhenti di persetujuan manusia
+                {t("Setiap tindakan berhenti di persetujuan manusia")}
               </span>
             </div>
           </div>
@@ -457,11 +470,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--white" id="governance">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker">Governance Architecture</span>
-            <h2>AI Workforce. Human Authority. Complete Accountability.</h2>
+            <span className="lp-kicker">{t("Governance Architecture")}</span>
+            <h2>{t("AI Workforce. Human Authority. Complete Accountability.")}</h2>
             <p>
-              DEXTRA menutup risiko eksekusi liar dari model yang tidak deterministik. Setiap inisiatif operasional
-              dibatasi tiga fondasi yang sama di semua halaman.
+              {t(
+                "DEXTRA menutup risiko eksekusi liar dari model yang tidak deterministik. Setiap inisiatif operasional dibatasi tiga fondasi yang sama di semua halaman."
+              )}
             </p>
           </div>
 
@@ -472,10 +486,10 @@ export default function LandingPage() {
                 <span className={`lp-pillar__kicker lp-pillar__kicker--${pillar.tone}`}>
                   Pillar 0{index + 1}
                 </span>
-                <h3>{pillar.title}</h3>
-                <p>{pillar.body}</p>
+                <h3>{t(pillar.title)}</h3>
+                <p>{t(pillar.body)}</p>
                 <ul className={`lp-bullets lp-bullets--${pillar.tone}`}>
-                  {pillar.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                  {pillar.bullets.map((bullet) => <li key={bullet}>{t(bullet)}</li>)}
                 </ul>
               </div>
             ))}
@@ -487,11 +501,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--tint" id="workforce">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker lp-kicker--solid">The 4 AI Specialists</span>
-            <h2>Meet the Specialized Workers Behind Your Operations.</h2>
+            <span className="lp-kicker lp-kicker--solid">{t("The 4 AI Specialists")}</span>
+            <h2>{t("Meet the Specialized Workers Behind Your Operations.")}</h2>
             <p>
-              DEXTRA dirancang dengan tepat empat spesialis. Tidak ada bot generik: setiap agen punya peran
-              fungsional dan kapabilitas yang saling memeriksa.
+              {t(
+                "DEXTRA dirancang dengan tepat empat spesialis. Tidak ada bot generik: setiap agen punya peran fungsional dan kapabilitas yang saling memeriksa."
+              )}
             </p>
           </div>
 
@@ -509,10 +524,10 @@ export default function LandingPage() {
                     </div>
                     <h3>{worker.name}</h3>
                     <p className="lp-worker__node">{worker.type} · {worker.role}</p>
-                    <p className="lp-worker__desc">{worker.purpose}</p>
+                    <p className="lp-worker__desc">{t(worker.purpose)}</p>
                   </div>
                   <div className="lp-worker__foot">
-                    <span>Kapabilitas</span>
+                    <span>{t("Kapabilitas")}</span>
                     <span className="lp-worker__caps">
                       {worker.capabilities.map((capability) => (
                         <code key={capability}>{capability}</code>
@@ -529,17 +544,18 @@ export default function LandingPage() {
               <span className="lp-policy__icon">{icon.fingerprint}</span>
               <div>
                 <div className="lp-policy__title">
-                  <span>Arsitektur Kunci: Policy Validator BUKAN AI Worker</span>
-                  <em>Deterministic Engine</em>
+                  <span>{t("Arsitektur Kunci: Policy Validator BUKAN AI Worker")}</span>
+                  <em>{t("Deterministic Engine")}</em>
                 </div>
                 <p>
-                  Policy Validator adalah mesin aturan yang <strong>tidak memakai LLM</strong>. Ia memeriksa izin,
-                  kebijakan, dan kelayakan tindakan sebelum instruksi mencapai sistem produksi — sehingga hasilnya
-                  bisa diulang dan tidak bergantung pada tebakan model.
+                  {t("Policy Validator adalah mesin aturan yang")} <strong>{t("tidak memakai LLM")}</strong>.{" "}
+                  {t(
+                    "Ia memeriksa izin, kebijakan, dan kelayakan tindakan sebelum instruksi mencapai sistem produksi — sehingga hasilnya bisa diulang dan tidak bergantung pada tebakan model."
+                  )}
                 </p>
               </div>
             </div>
-            <span className="lp-policy__code">non-LLM · hasil dapat diulang</span>
+            <span className="lp-policy__code">{t("non-LLM · hasil dapat diulang")}</span>
           </div>
         </div>
       </section>
@@ -548,11 +564,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--white" id="workflow">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker">Operational Flow</span>
-            <h2>From Human Request to Governed Execution.</h2>
+            <span className="lp-kicker">{t("Operational Flow")}</span>
+            <h2>{t("From Human Request to Governed Execution.")}</h2>
             <p>
-              Setiap tahap terlihat. Tidak ada kotak hitam, dan tidak ada eksekusi tanpa verifikasi izin serta
-              tinjauan manusia.
+              {t(
+                "Setiap tahap terlihat. Tidak ada kotak hitam, dan tidak ada eksekusi tanpa verifikasi izin serta tinjauan manusia."
+              )}
             </p>
           </div>
 
@@ -563,10 +580,10 @@ export default function LandingPage() {
                 <div key={step.key} className={`lp-step${key ? " lp-step--key" : ""}`}>
                   <div className={`lp-step__num lp-step__num--${step.n}`}>{step.n}</div>
                   <span className={`lp-step__kicker lp-step__kicker--${step.n}`}>
-                    Langkah {step.n}{key ? " (Kunci)" : ""}
+                    {t("Langkah")} {step.n}{key ? ` (${t("Kunci")})` : ""}
                   </span>
-                  <h4>{step.key}</h4>
-                  <p>{step.body}</p>
+                  <h4>{t(step.key)}</h4>
+                  <p>{t(step.body)}</p>
                 </div>
               );
             })}
@@ -576,11 +593,11 @@ export default function LandingPage() {
             <div className="lp-callout__left">
               <span className="lp-callout__mark" aria-hidden="true">§</span>
               <div>
-                <h4>Fondasi Utama Filosofi Keamanan DEXTRA</h4>
-                <p>&ldquo;Read operations can be automated. Write operations require human-defined authority.&rdquo;</p>
+                <h4>{t("Fondasi Utama Filosofi Keamanan DEXTRA")}</h4>
+                <p>&ldquo;{t("Read operations can be automated. Write operations require human-defined authority.")}&rdquo;</p>
               </div>
             </div>
-            <Link className="lp-callout__link" href="/overview">Lihat Dashboard →</Link>
+            <Link className="lp-callout__link" href="/overview">{t("Lihat Dashboard")} →</Link>
           </div>
         </div>
       </section>
@@ -589,11 +606,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--tint" id="features">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker lp-kicker--solid">Enterprise Control Center</span>
-            <h2>Everything Under Your Control.</h2>
+            <span className="lp-kicker lp-kicker--solid">{t("Enterprise Control Center")}</span>
+            <h2>{t("Everything Under Your Control.")}</h2>
             <p>
-              Enam instrumen kendali utama untuk kepatuhan, mitigasi risiko, dan audit — semuanya ada di dalam
-              aplikasi yang sama.
+              {t(
+                "Enam instrumen kendali utama untuk kepatuhan, mitigasi risiko, dan audit — semuanya ada di dalam aplikasi yang sama."
+              )}
             </p>
           </div>
 
@@ -601,8 +619,8 @@ export default function LandingPage() {
             {FEATURES.map((feature) => (
               <div className="lp-feature" key={feature.title}>
                 <div className={`lp-feature__icon lp-feature__icon--${feature.tone}`}>{feature.glyph}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.body}</p>
+                <h3>{t(feature.title)}</h3>
+                <p>{t(feature.body)}</p>
               </div>
             ))}
           </div>
@@ -613,11 +631,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--white" id="integrations">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker">Ecosystem Connectivity</span>
-            <h2>One Workforce. Multiple Ways to Collaborate.</h2>
+            <span className="lp-kicker">{t("Ecosystem Connectivity")}</span>
+            <h2>{t("One Workforce. Multiple Ways to Collaborate.")}</h2>
             <p>
-              DEXTRA menjadi pusat orkestrasi antara operator manusia, dashboard operasional, AI worker, dan
-              antarmuka eksternal.
+              {t(
+                "DEXTRA menjadi pusat orkestrasi antara operator manusia, dashboard operasional, AI worker, dan antarmuka eksternal."
+              )}
             </p>
           </div>
 
@@ -629,10 +648,10 @@ export default function LandingPage() {
                   <div className="lp-integration__title">
                     <h4>{item.title}</h4>
                     <span className={`lp-tag ${item.live ? "lp-tag--live" : "lp-tag--soon"}`}>
-                      {item.live ? "Tersedia" : "Roadmap"}
+                      {item.live ? t("Tersedia") : t("Roadmap")}
                     </span>
                   </div>
-                  <p>{item.body}</p>
+                  <p>{t(item.body)}</p>
                 </div>
               </div>
             ))}
@@ -644,11 +663,12 @@ export default function LandingPage() {
       <section className="lp-section lp-section--tint">
         <div className="lp-wrap">
           <div className="lp-sec-head">
-            <span className="lp-kicker lp-kicker--solid">Measurable Value</span>
-            <h2>Make Your Operations More Organized, Visible, and Accountable.</h2>
+            <span className="lp-kicker lp-kicker--solid">{t("Measurable Value")}</span>
+            <h2>{t("Make Your Operations More Organized, Visible, and Accountable.")}</h2>
             <p>
-              Tanpa klaim angka yang tidak bisa dibuktikan. Yang berubah adalah cara kerja: koordinasi tercatat,
-              posisi pekerjaan terlihat, dan keputusan punya jejak.
+              {t(
+                "Tanpa klaim angka yang tidak bisa dibuktikan. Yang berubah adalah cara kerja: koordinasi tercatat, posisi pekerjaan terlihat, dan keputusan punya jejak."
+              )}
             </p>
           </div>
 
@@ -656,20 +676,20 @@ export default function LandingPage() {
             {VALUES.map((value) => (
               <div className="lp-value" key={value.n}>
                 <div className="lp-value__num">{value.n}</div>
-                <h3>{value.title}</h3>
-                <p>{value.body}</p>
+                <h3>{t(value.title)}</h3>
+                <p>{t(value.body)}</p>
               </div>
             ))}
 
             {/* Kartu ini menggantikan angka SLA karangan di referensi desain. */}
             <div className="lp-value lp-value--cta">
               <div>
-                <span className="lp-value__eyebrow">Coba sendiri</span>
-                <h3>Lihat alurnya dari ujung ke ujung</h3>
-                <p>Buka Office Agent, pilih satu worker, dan ikuti rencananya sampai persetujuan.</p>
+                <span className="lp-value__eyebrow">{t("Coba sendiri")}</span>
+                <h3>{t("Lihat alurnya dari ujung ke ujung")}</h3>
+                <p>{t("Buka Office Agent, pilih satu worker, dan ikuti rencananya sampai persetujuan.")}</p>
               </div>
               <Link className="lp-value__link" href="/office-agent">
-                Buka Office Agent <span aria-hidden="true">→</span>
+                {t("Buka Office Agent")} <span aria-hidden="true">→</span>
               </Link>
             </div>
           </div>
@@ -683,29 +703,30 @@ export default function LandingPage() {
         <div className="lp-final__inner">
           <span className="lp-final__pill">
             <span aria-hidden="true" />
-            Ready to Transform Operations
+            {t("Ready to Transform Operations")}
           </span>
           <h2>
-            Ready to Build a More Governed <br />
-            <em>AI Workforce?</em>
+            {t("Ready to Build a More Governed")} <br />
+            <em>{t("AI Workforce?")}</em>
           </h2>
           <p>
-            Temukan bagaimana DEXTRA menyatukan pekerja AI spesialis dan wewenang manusia dalam satu ruang kerja
-            operasional.
+            {t(
+              "Temukan bagaimana DEXTRA menyatukan pekerja AI spesialis dan wewenang manusia dalam satu ruang kerja operasional."
+            )}
           </p>
           <div className="lp-final__cta">
             <Link className="lp-btn lp-btn--white" href="/login">
-              <span>Explore DEXTRA Dashboard</span>
+              <span>{t("Explore DEXTRA Dashboard")}</span>
               {icon.arrowRight}
             </Link>
-            <Link className="lp-btn lp-btn--outline" href="/login">Masuk ke Akun</Link>
+            <Link className="lp-btn lp-btn--outline" href="/login">{t("Masuk ke Akun")}</Link>
           </div>
           <div className="lp-final__trust">
-            <span>Tanpa data contoh yang dikarang</span>
+            <span>{t("Tanpa data contoh yang dikarang")}</span>
             <em aria-hidden="true">•</em>
-            <span>Setiap tindakan lewat mandat</span>
+            <span>{t("Setiap tindakan lewat mandat")}</span>
             <em aria-hidden="true">•</em>
-            <span>Jejak audit permanen</span>
+            <span>{t("Jejak audit permanen")}</span>
           </div>
         </div>
       </section>
@@ -724,17 +745,17 @@ export default function LandingPage() {
                 Human-defined authority. Accountable execution.
               </p>
               <div className="lp-footer__principle">
-                Prinsip: &ldquo;Baca boleh otomatis, tulis harus lewat mandat.&rdquo;
+                {t("Prinsip:")} &ldquo;{t("Baca boleh otomatis, tulis harus lewat mandat.")}&rdquo;
               </div>
             </div>
 
             {FOOTER_COLS.map((column) => (
               <div key={column.title}>
-                <h4>{column.title}</h4>
+                <h4>{t(column.title)}</h4>
                 <ul>
                   {column.links.map((link) => (
                     <li key={link.href}>
-                      <Link href={link.href}>{link.label}</Link>
+                      <Link href={link.href}>{t(link.label)}</Link>
                     </li>
                   ))}
                 </ul>
@@ -743,11 +764,11 @@ export default function LandingPage() {
           </div>
 
           <div className="lp-footer__bottom">
-            <div>© 2026 DEXTRA. Hak cipta dilindungi.</div>
+            <div>© 2026 DEXTRA. {t("Hak cipta dilindungi.")}</div>
             <div className="lp-footer__links">
-              <a href="#governance">Tata kelola</a>
-              <a href="#workflow">Alur kerja</a>
-              <a href="#integrations">Integrasi</a>
+              <a href="#governance">{t("Tata kelola")}</a>
+              <a href="#workflow">{t("Alur kerja")}</a>
+              <a href="#integrations">{t("Integrasi")}</a>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import CommandPalette from "@/components/CommandPalette";
 import { getPermissions } from "@/lib/api";
 import { getNotificationFeed } from "@/lib/notifications";
 import { mcpHealth } from "@/lib/mcp";
+import { getT } from "@/lib/i18n/server";
 
 /* Shell aplikasi: sidebar + topbar + tabsbar. Dipasang oleh
  * app/(app)/layout.tsx saja, sehingga halaman publik di app/(public) tidak
@@ -21,21 +22,21 @@ import { mcpHealth } from "@/lib/mcp";
  * app/layout.tsx. */
 export default async function AppShell({ children }: { children: ReactNode }) {
   /* Identitas pemanggil dari server (GET /permissions) — tidak di-hardcode.
-   * Principal token gateway lama membawa display_name "Gateway ops/agents";
-   * sesi manusia membawa nama & role-nya. Bila principal kosong, tandai
-   * scope API apa adanya alih-alih nama karangan. */
-  /* Feed notifikasi disusun di server: `getNotificationFeed` membaca cookie
-   * sesi lewat `next/headers`, jadi tidak bisa dipanggil dari Topbar yang
-   * client component. Hasilnya dioper sebagai prop — bentuknya data biasa,
-   * sehingga aman menyeberang batas server/client. */
+   * Bila identitas tidak tersedia, tampilkan sebutan umum yang tetap jujur
+   * alih-alih nama karangan atau istilah teknis. */
+  /* Feed notifikasi disusun di server: `getNotificationFeed` membaca sesi
+   * lewat `next/headers`, jadi tidak bisa dipanggil dari Topbar yang client
+   * component. Hasilnya dioper sebagai prop — bentuknya data biasa, sehingga
+   * aman menyeberang batas server/client. */
   const [permissions, mcpUp, notifFeed] = await Promise.all([
     getPermissions(),
     mcpHealth(),
     getNotificationFeed()
   ]);
-  const principal = permissions.ok ? permissions.data.principal : null;
-  const userName = principal?.display_name?.trim() || `Sesi API · ${permissions.ok ? permissions.data.scope : "terputus"}`;
-  const userSubtitle = principal?.role || principal?.email || principal?.kind || (permissions.ok ? permissions.data.scope : "backend tidak merespons");
+  const t = await getT();
+  const profile = permissions.ok ? permissions.data.principal : null;
+  const userName = profile?.display_name?.trim() || t("Pengguna DEXTRA");
+  const userSubtitle = profile?.role || profile?.email || t("Anggota tim");
   return (
     <>
       <div className="app">
@@ -54,63 +55,42 @@ export default async function AppShell({ children }: { children: ReactNode }) {
 
           <SidebarToggle />
           <div className="sidebar__scroll">
-            <nav className="nav-group" aria-label="Workspace">
-              <span className="nav-group__label">Workspace</span>
-              <NavItem href="/overview" icon="space_dashboard" label="Overview" />
-              <NavItem href="/assistant" icon="forum" label="AI Assistant" />
-              <NavItem href="/office-agent" icon="auto_awesome" label="Office Agent" />
-              <NavItem href="/requests" icon="send" label="My Requests" />
-              <NavItem href="/my-work" icon="assignment_ind" label="My Work" />
+            {/* Navigasi utama sengaja pendek: empat kelompok, sepuluh tujuan.
+                Halaman lain tetap ada dan bisa dicapai lewat pencarian cepat
+                (⌘K) atau tautan antarhalaman — hanya tidak dipajang di sini. */}
+            <nav className="nav-group" aria-label={t("Ruang Kerja")}>
+              <span className="nav-group__label">{t("Ruang Kerja")}</span>
+              <NavItem href="/overview" icon="space_dashboard" label={t("Overview")} />
+              <NavItem href="/assistant" icon="forum" label={t("AI Assistant")} />
+              <NavItem href="/office-agent" icon="auto_awesome" label={t("Office Agent")} />
             </nav>
 
-            <nav className="nav-group" aria-label="Work Management">
-              <span className="nav-group__label">Work Management</span>
-              <NavItem href="/work-packages" icon="layers" label="Work Packages" />
-              <NavItem href="/board" icon="view_kanban" label="Task Board" />
-              <NavItem href="/executions" icon="play_circle" label="Execution History" />
+            <nav className="nav-group" aria-label={t("Pekerjaan")}>
+              <span className="nav-group__label">{t("Pekerjaan")}</span>
+              <NavItem href="/work-packages" icon="layers" label={t("Paket Kerja")} />
+              <NavItem href="/board" icon="view_kanban" label={t("Papan Tugas")} />
+              <NavItem href="/executions" icon="play_circle" label={t("Riwayat Eksekusi")} />
             </nav>
 
-            <nav className="nav-group" aria-label="Workforce">
-              <span className="nav-group__label">Workforce</span>
-              <NavItem href="/agents" icon="groups" label="Workforce" />
+            <nav className="nav-group" aria-label={t("Persetujuan")}>
+              <span className="nav-group__label">{t("Persetujuan")}</span>
+              <NavItem href="/approvals" icon="assignment_turned_in" label={t("Kotak Persetujuan")} />
+              <NavItem href="/mandates" icon="verified_user" label={t("Mandat")} />
+              <NavItem href="/audit" icon="receipt_long" label={t("Jejak Audit")} />
             </nav>
 
-            <nav className="nav-group" aria-label="Intelligence">
-              <span className="nav-group__label">Intelligence</span>
-              <NavItem href="/analytics" icon="query_stats" label="Analytics" />
-              <NavItem href="/explorer" icon="travel_explore" label="Data Explorer" />
-              <NavItem href="/monitoring" icon="monitoring" label="Monitoring" />
-              <NavItem href="/skills" icon="extension" label="Skill Registry" />
-              <NavItem href="/workflows" icon="account_tree" label="Workflow Orchestration" />
-            </nav>
-
-            <nav className="nav-group" aria-label="Governance">
-              <span className="nav-group__label">Governance</span>
-              <NavItem href="/approvals" icon="assignment_turned_in" label="Approval Inbox" />
-              <NavItem href="/review" icon="fact_check" label="Review &amp; Validation" />
-              <NavItem href="/mandates" icon="verified_user" label="Mandates" />
-              <NavItem href="/security" icon="shield" label="Security Center" />
-              <NavItem href="/audit" icon="receipt_long" label="Audit Trail" />
-              <NavItem href="/policies" icon="policy" label="Policies" />
-            </nav>
-
-            <nav className="nav-group" aria-label="Administration">
-              <span className="nav-group__label">Administration</span>
-              <NavItem href="/access" icon="admin_panel_settings" label="Access Management" />
-              <NavItem href="/tokens" icon="key" label="API Tokens" />
-              <NavItem href="/service-identities" icon="smart_toy" label="Service Identity" />
-              <NavItem href="/integrations" icon="extension" label="Integrations" />
-              <NavItem href="/data-management" icon="database" label="Data Management" />
-              <NavItem href="/settings" icon="settings" label="Settings" />
+            <nav className="nav-group" aria-label={t("Tim AI")}>
+              <span className="nav-group__label">{t("Tim AI")}</span>
+              <NavItem href="/agents" icon="groups" label={t("Workforce")} />
             </nav>
 
             <div className="nav-group" style={{ marginBottom: 4 }}>
               <div
                 style={{ margin: "0 10px", padding: "7px 9px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 6 }}
-                title="Semua layanan listen di 127.0.0.1. Sesi manusia memakai cookie httpOnly; token ops MCP disimpan di sessionStorage saja."
+                title={t("Sistem berjalan di komputer ini. Sesi Anda tersimpan aman di peramban.")}
               >
                 <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 14, color: "var(--success-600)" }}>shield_lock</span>
-                <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--muted)" }}>Local-only · 127.0.0.1</span>
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--muted)" }}>{t("Berjalan lokal")}</span>
               </div>
             </div>
           </div>

@@ -2,20 +2,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 /* `pinned` menandai tab yang tidak bisa ditutup. Sebelumnya penandanya adalah
  * href "/" — penanda itu hilang begitu Overview pindah ke /overview, dan tab
  * Overview jadi bisa ditutup tanpa ada yang meminta. */
 const TABS = [
   { href: "/overview", label: "Overview", icon: "dashboard", pinned: true },
-  { href: "/board", label: "Task Board", icon: "view_kanban" },
-  { href: "/approvals", label: "Approval Inbox", icon: "fact_check" },
-  { href: "/executions", label: "Execution History", icon: "play_circle" },
-  { href: "/audit", label: "Audit Trail", icon: "receipt_long" },
+  { href: "/board", label: "Papan Tugas", icon: "view_kanban" },
+  { href: "/approvals", label: "Kotak Persetujuan", icon: "fact_check" },
+  { href: "/executions", label: "Riwayat Eksekusi", icon: "play_circle" },
+  { href: "/audit", label: "Jejak Audit", icon: "receipt_long" },
   { href: "/agents", label: "Workforce", icon: "smart_toy" },
 ] as const;
 
 export default function Tabsbar() {
+  const t = useT();
   const pathname = usePathname();
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const barRef = useRef<HTMLDivElement>(null);
@@ -42,19 +44,19 @@ export default function Tabsbar() {
     <div
       className="tabsbar"
       role="tablist"
-      aria-label="Halaman terbuka"
+      aria-label={t("Halaman terbuka")}
       ref={barRef}
     >
-      {TABS.filter((t) => !closed.has(t.href)).map((t) => {
-        const pinned = "pinned" in t && t.pinned === true;
-        const active = pathname === t.href || (pathname ?? "").startsWith(`${t.href}/`);
+      {TABS.filter((tab) => !closed.has(tab.href)).map((tab) => {
+        const pinned = "pinned" in tab && tab.pinned === true;
+        const active = pathname === tab.href || (pathname ?? "").startsWith(`${tab.href}/`);
         return (
-          <span key={t.href} role="tab" aria-selected={active} className={`tab${active ? " is-active" : ""}`}>
-            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>{t.icon}</span>
-            <Link href={t.href} onKeyDown={onKeyDown}>{t.label}</Link>
+          <span key={tab.href} role="tab" aria-selected={active} className={`tab${active ? " is-active" : ""}`}>
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>{tab.icon}</span>
+            <Link href={tab.href} onKeyDown={onKeyDown}>{t(tab.label)}</Link>
             {!pinned && (
-              <button type="button" className="tab__x" aria-label={`Tutup tab ${t.label}`}
-                onClick={() => setClosed((s) => new Set(s).add(t.href))}>
+              <button type="button" className="tab__x" aria-label={`${t("Tutup tab")} ${t(tab.label)}`}
+                onClick={() => setClosed((s) => new Set(s).add(tab.href))}>
                 <span className="material-symbols-outlined" aria-hidden="true">close</span>
               </button>
             )}

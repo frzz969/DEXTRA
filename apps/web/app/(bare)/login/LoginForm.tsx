@@ -2,10 +2,12 @@
 
 import { useActionState } from "react";
 import { signIn, verifyMfa, type AuthFormState } from "@/lib/auth-actions";
+import { useT } from "@/lib/i18n/client";
 
 const initialState: AuthFormState = {};
 
 export default function LoginForm() {
+  const t = useT();
   const [state, signInAction, signingIn] = useActionState(signIn, initialState);
   const [mfaState, verifyAction, verifying] = useActionState(verifyMfa, state.mfa ? state : initialState);
 
@@ -17,10 +19,13 @@ export default function LoginForm() {
         <input type="hidden" name="email" value={current.email ?? ""} />
         <div className="banner" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">phonelink_lock</span>
-          <span>Akun ini mengharuskan <strong>MFA</strong>. Masukkan kode 6 digit dari aplikasi authenticator Anda.</span>
+          <span>
+            {t("Akun ini mengharuskan")} <strong>MFA</strong>.{" "}
+            {t("Masukkan kode 6 digit dari aplikasi authenticator Anda.")}
+          </span>
         </div>
         <div className="field">
-          <label className="field__label" htmlFor="mfa-code">Kode authenticator</label>
+          <label className="field__label" htmlFor="mfa-code">{t("Kode authenticator")}</label>
           <input
             className="input mono"
             id="mfa-code"
@@ -36,7 +41,7 @@ export default function LoginForm() {
         </div>
         <button className="btn btn--primary btn--block" type="submit" disabled={pending}>
           <span className="material-symbols-outlined" aria-hidden="true">{pending ? "hourglass_top" : "verified_user"}</span>
-          {pending ? "Memverifikasi…" : "Verifikasi & masuk"}
+          {pending ? t("Memverifikasi…") : t("Verifikasi & masuk")}
         </button>
         {current.error && (
           <div className="field__error" role="alert">
@@ -51,7 +56,7 @@ export default function LoginForm() {
   return (
     <form action={signInAction}>
       <div className="field">
-        <label className="field__label" htmlFor="login-email">Email</label>
+        <label className="field__label" htmlFor="login-email">{t("Email")}</label>
         <input
           className="input"
           id="login-email"
@@ -61,11 +66,11 @@ export default function LoginForm() {
           required
           autoFocus
           defaultValue={state.email ?? ""}
-          placeholder="nama@perusahaan.co.id"
+          placeholder={t("nama@perusahaan.co.id")}
         />
       </div>
       <div className="field">
-        <label className="field__label" htmlFor="login-password">Password</label>
+        <label className="field__label" htmlFor="login-password">{t("Password")}</label>
         <input
           className="input"
           id="login-password"
@@ -73,12 +78,12 @@ export default function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          placeholder="Masukkan kata sandi"
+          placeholder={t("Masukkan kata sandi")}
         />
       </div>
       <div className="field">
         <label className="field__label" htmlFor="login-tenant">
-          Tenant <span className="faint">(opsional)</span>
+          {t("Tenant")} <span className="faint">{t("(opsional)")}</span>
         </label>
         <input
           className="input mono"
@@ -87,11 +92,11 @@ export default function LoginForm() {
           autoComplete="organization"
           placeholder="dextra-demo"
         />
-        <p className="field__hint">Kosongkan untuk memakai tenant default Anda.</p>
+        <p className="field__hint">{t("Kosongkan untuk memakai tenant default Anda.")}</p>
       </div>
       <button className="btn btn--primary btn--block" type="submit" disabled={signingIn}>
         <span className="material-symbols-outlined" aria-hidden="true">{signingIn ? "hourglass_top" : "login"}</span>
-        {signingIn ? "Masuk…" : "Masuk"}
+        {signingIn ? t("Masuk…") : t("Masuk")}
       </button>
       {state.error && (
         <div className="field__error" role="alert">
