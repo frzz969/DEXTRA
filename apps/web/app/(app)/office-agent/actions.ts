@@ -18,6 +18,10 @@ export async function createOfficePlanAction(input: {
   target: string;
   subject: string;
   start: string;
+  /* Opsional: /requests mengirim rencana tanpa memilih worker. */
+  worker_slug?: string;
+  worker_name?: string;
+  worker_type?: string;
 }): Promise<CreatePlanResult> {
   const request_id = input.request_id.trim();
   const plan_id = input.plan_id.trim();
@@ -50,10 +54,25 @@ export async function createOfficePlanAction(input: {
     params = { title: input.subject.trim(), content: intake_text };
   }
 
+  const source: Record<string, unknown> = {
+    kind: "web_intake",
+    title: input.source_title.trim() || "Permintaan web"
+  };
+  // `source` bebas di backend. Worker hanya dicatat kalau benar-benar dipilih,
+  // tanpa mengisi nilai default saat formulir dipakai tanpa pilihan.
+  const worker_slug = (input.worker_slug ?? "").trim();
+  if (worker_slug) {
+    source.worker = {
+      slug: worker_slug,
+      name: (input.worker_name ?? "").trim(),
+      type: (input.worker_type ?? "").trim()
+    };
+  }
+
   const result = await createOfficePlan({
     request_id,
     plan_id,
-    source: { kind: "web_intake", title: input.source_title.trim() || "Permintaan web" },
+    source,
     document: { text: intake_text, chars: intake_text.length },
     actions: [{ action_id, action_type, params, source_ref: { origin: "web_intake" } }],
     findings: [],

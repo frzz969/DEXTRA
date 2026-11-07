@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createOfficePlanAction, type CreatePlanResult } from "./actions";
+import type { Worker } from "./workers";
 
 const ACTION_TYPES = [
   { value: "send_email", label: "Kirim email" },
@@ -18,14 +19,14 @@ function uid(prefix: string) {
 
 const ctrl = { minHeight: 44 } as const;
 
-export default function PlanIntakeForm() {
+export default function PlanIntakeForm({ worker }: { worker?: Worker }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<CreatePlanResult | null>(null);
   const [requestId, setRequestId] = useState("");
   const [planId, setPlanId] = useState("");
   const [actionId, setActionId] = useState("");
-  const [actionType, setActionType] = useState("send_email");
+  const [actionType, setActionType] = useState<string>(worker?.defaultActionType ?? "send_email");
   const [sourceTitle, setSourceTitle] = useState("");
   const [intakeText, setIntakeText] = useState("");
   const [target, setTarget] = useState("");
@@ -53,6 +54,9 @@ export default function PlanIntakeForm() {
         target,
         subject,
         start,
+        worker_slug: worker?.slug,
+        worker_name: worker?.name,
+        worker_type: worker?.type,
       });
       setResult(out);
       if (out.ok) router.refresh();
@@ -157,7 +161,7 @@ export default function PlanIntakeForm() {
                 </div>
               )}
             </div>
-            <p className="field__hint" style={{ marginTop: "var(--s-3)" }}>Satu kiriman membawa satu tindakan. Tambah tindakan lain lewat kiriman baru dengan Plan ID yang sama tidak bisa — pakai Plan ID baru.</p>
+            <p className="field__hint" style={{ marginTop: "var(--s-3)" }}>Satu kiriman membawa satu tindakan. Tambah tindakan lain lewat kiriman baru dengan Plan ID yang sama tidak bisa. Pakai Plan ID baru.</p>
           </fieldset>
 
           <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>

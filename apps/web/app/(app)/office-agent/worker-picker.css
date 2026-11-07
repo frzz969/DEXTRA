@@ -1,0 +1,23 @@
+/* Kartu worker: seluruh kartu adalah tautan. Chip kapabilitas tidak boleh ikut
+   merebut ruang kosong, supaya tombol tetap di bawah dan keempat kartu sejajar.
+   Selector digandakan agar menang atas `.spec-card .tag-row` tanpa bergantung
+   pada urutan pemuatan CSS. */
+.worker-card.spec-card .tag-row { margin-top: 0; }
+.worker-card .btn { margin-top: auto; }
+
+/* Keempat kartu menuju langkah yang sama; hover dan active hanya menandai
+   kartu mana yang sedang ditunjuk sebelum diklik. */
+.worker-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.worker-card:active { background: var(--surface-3); }
+
+/* Avatar panel worker terpilih: satu tingkat di atas `.avatar--lg` (44px) yang
+   dipakai kartu. `xl` tidak ada di design-system karena berkas itu hasil
+   generate, jadi didefinisikan di sini. Selector digandakan agar menang atas
+   `.avatar` tanpa bergantung pada urutan pemuatan CSS. */
+.avatar.avatar--xl { width: 56px; height: 56px; font-size: 18px; }
+
+/* Head panel worker: avatar 56px, judul, badge, dan tombol "Ganti worker"
+   tidak muat satu baris di ponsel. Judul boleh menyusut (min-width: 0 di
+   markup), tombol turun baris dan tetap menempel kanan. */
+.worker-panel__head { flex-wrap: wrap; }
+.worker-panel__head .btn { margin-left: auto; }

@@ -53,6 +53,10 @@ function initials(name: string, slug: string): string {
  * Avatar agen. Gambar hanya berasal dari `agentAvatar(slug)`; kalau modul itu
  * mengembalikan null, yang tampil adalah inisial di atas kelas `.avatar`.
  * Tidak ada ikon pengganti dan tidak ada gambar karangan.
+ *
+ * `xl` sengaja tidak punya kelas di design-system (berkas itu hasil generate),
+ * jadi pemakainya wajib mendefinisikan `.avatar--xl` sendiri. Saat ini hanya
+ * `office-agent/worker-picker.css`.
  */
 export function AgentAvatar({
   slug,
@@ -61,11 +65,12 @@ export function AgentAvatar({
 }: {
   slug: string;
   name: string;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "xl";
 }) {
   const src = agentAvatar(slug);
-  const className = size === "lg" ? "avatar avatar--lg" : "avatar";
-  const px = size === "lg" ? 44 : 30;
+  const className =
+    size === "xl" ? "avatar avatar--xl" : size === "lg" ? "avatar avatar--lg" : "avatar";
+  const px = size === "xl" ? 56 : size === "lg" ? 44 : 30;
   if (src) {
     return <img className={className} src={src} alt="" width={px} height={px} decoding="async" />;
   }
