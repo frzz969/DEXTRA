@@ -1,33 +1,60 @@
 /* Halaman masuk bare (/login).
 
    KENAPA BERKAS SENDIRI
-   Sebelumnya .login-* menumpang di globals.css. Gaya di sana ikut terkirim ke
-   seluruh 40+ halaman aplikasi padahal hanya dipakai satu layar. Berkas ini
-   diimpor oleh page.tsx, jadi hanya ikut pada bundel /login.
+   Gaya .lg-* hanya dipakai satu layar, jadi diimpor oleh page.tsx dan tidak
+   ikut terkirim ke halaman aplikasi lain.
 
    KENAPA BUKAN UTILITAS TAILWIND
    Design system tidak dibungkus @layer, sehingga aturan tanpa layer selalu
-   menang atas utilitas. Halaman ini karena itu memakai kelas .lg-* sendiri.
+   menang atas utilitas. Halaman ini karena itu memakai kelas sendiri.
+
+   BAHASA VISUAL
+   Satu kartu mengambang bertepi sangat bulat di atas latar bergradasi lembut.
+   Sengaja tanpa kotak-kotak kecil: kolom isian tidak bergaris (hanya latar
+   wash yang menggelap saat difokus), tombol tanpa border, blok akun demo tanpa
+   garis putus-putus, dan panel brand memakai bentuk lingkaran organik alih-alih
+   kisi. Tujuannya supaya tidak terasa seperti deretan kotak.
 
    TINGGI SATU LAYAR
-   .lg dipaku setinggi viewport (100dvh) dan overflow dipotong. Isi kolom kanan
-   dirancang muat pada 768px tinggi tanpa menggulir; kalau ruangnya benar-benar
-   sempit (ponsel lanskap), .lg kembali boleh menggulir lewat media query.
-   dvh dipakai supaya bilah alamat ponsel tidak memotong bagian bawah. */
+   .lg dipaku setinggi viewport, kartu dibatasi max-height 100%. Isi kolom kanan
+   dirancang muat pada 768px; kalau ruangnya benar-benar sempit, halaman kembali
+   boleh menggulir lewat media query. dvh dipakai supaya bilah alamat ponsel
+   tidak memotong bagian bawah. */
 
 .lg {
   --lg-ink: #14142b;
   --lg-ink-2: #4a4a63;
-  --lg-line: #e7e7f2;
-  --lg-wash: #f7f7fc;
+  --lg-line: #ecebf6;
+  --lg-wash: #f4f3fa;
   --lg-accent: #5b3fd6;
 
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  place-items: center;
   height: 100dvh;
+  padding: clamp(14px, 2.6vw, 40px);
   overflow: hidden;
-  background: var(--surface);
-  color: var(--lg-ink);
+  background:
+    radial-gradient(880px 560px at 8% -6%, #ece6ff, transparent 62%),
+    radial-gradient(760px 520px at 96% 104%, #e8ecff, transparent 60%),
+    linear-gradient(180deg, #fcfbff 0%, #f4f3fc 100%);
+}
+
+/* ---------- Kartu ---------- */
+
+.lg-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr);
+  width: min(1000px, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  border-radius: 30px;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, .9);
+  box-shadow:
+    0 44px 90px -46px rgba(31, 20, 84, .42),
+    0 16px 40px -26px rgba(31, 20, 84, .22),
+    0 0 0 1px rgba(20, 20, 43, .045);
 }
 
 /* ---------- Kolom kiri: panel brand ---------- */
@@ -39,37 +66,42 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 26px;
-  padding: clamp(28px, 4.2vw, 56px);
+  padding: clamp(26px, 3vw, 44px);
+  /* Ruang ekstra di kanan: tepi kiri kolom form melengkung 32px menimpa panel
+     ini, jadi isi tidak boleh mendekat ke batas kolom. */
+  padding-right: calc(clamp(26px, 3vw, 44px) + 22px);
   color: #fff;
   isolation: isolate;
   background:
-    radial-gradient(640px 460px at 88% 4%, rgba(192, 132, 252, .5), transparent 62%),
-    radial-gradient(560px 420px at 4% 96%, rgba(67, 56, 202, .72), transparent 66%),
-    linear-gradient(158deg, #150e33 0%, #221560 40%, #35208f 74%, #4c33c4 100%);
+    radial-gradient(520px 420px at 88% -4%, rgba(196, 132, 252, .55), transparent 62%),
+    radial-gradient(460px 380px at -6% 102%, rgba(79, 70, 229, .6), transparent 64%),
+    linear-gradient(158deg, #16102f 0%, #241566 42%, #37208f 76%, #4a32bf 100%);
 }
 
-/* Kisi halus + kabut tepi: memberi tekstur tanpa mengganggu teks. */
+/* Bentuk organik: dua lingkaran lembut, bukan kisi. */
 .lg-brand::before {
   content: "";
   position: absolute;
-  inset: 0;
   z-index: -1;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, .07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, .07) 1px, transparent 1px);
-  background-size: 46px 46px;
-  mask-image: radial-gradient(120% 90% at 20% 10%, #000 0%, transparent 78%);
-  -webkit-mask-image: radial-gradient(120% 90% at 20% 10%, #000 0%, transparent 78%);
-  opacity: .5;
+  width: 380px;
+  height: 380px;
+  right: -150px;
+  bottom: -170px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .13);
+  box-shadow: inset 0 0 90px rgba(255, 255, 255, .06);
 }
 
-/* Sorot tipis di tepi kanan supaya panel menyatu dengan kolom form. */
 .lg-brand::after {
   content: "";
   position: absolute;
-  inset: 0 0 0 auto;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, .22), transparent);
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  right: -60px;
+  top: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .16), transparent 68%);
 }
 
 .lg-brand__top {
@@ -84,15 +116,14 @@
   flex: 0 0 38px;
   display: grid;
   place-items: center;
-  border-radius: 11px;
+  border-radius: 13px;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 18px;
   letter-spacing: -.02em;
   color: #fff;
-  background: linear-gradient(145deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .1));
-  border: 1px solid rgba(255, 255, 255, .34);
-  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, .8);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .36), rgba(255, 255, 255, .12));
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, .85), inset 0 1px 0 rgba(255, 255, 255, .4);
   backdrop-filter: blur(6px);
 }
 
@@ -115,7 +146,7 @@
 .lg-brand__body {
   display: flex;
   flex-direction: column;
-  gap: clamp(20px, 3.4vh, 30px);
+  gap: clamp(20px, 3.2vh, 28px);
   margin: auto 0;
 }
 
@@ -125,23 +156,23 @@
 
 .lg-brand__pitch h2 {
   font-family: var(--font-display);
-  font-size: clamp(24px, 2.35vw, 33px);
-  line-height: 1.14;
-  letter-spacing: -.025em;
+  font-size: clamp(23px, 2.2vw, 31px);
+  line-height: 1.16;
+  letter-spacing: -.028em;
   color: #fff;
 }
 
 .lg-brand__pitch p {
-  margin-top: 12px;
-  font-size: 13px;
-  line-height: 1.62;
-  color: rgba(255, 255, 255, .74);
+  margin-top: 11px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, .72);
 }
 
 .lg-brand__points {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -153,20 +184,13 @@
   gap: 10px;
   font-size: 12.5px;
   line-height: 1.4;
-  color: rgba(255, 255, 255, .86);
+  color: rgba(255, 255, 255, .85);
 }
 
 .lg-brand__points .material-symbols-outlined {
-  flex: 0 0 26px;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  font-size: 15px;
-  border-radius: 8px;
-  color: #fff;
-  background: rgba(255, 255, 255, .12);
-  border: 1px solid rgba(255, 255, 255, .16);
+  flex: 0 0 auto;
+  font-size: 17px;
+  color: #c9b8ff;
 }
 
 .lg-brand__foot {
@@ -175,7 +199,7 @@
   gap: 8px;
   font-size: 11px;
   letter-spacing: .01em;
-  color: rgba(255, 255, 255, .5);
+  color: rgba(255, 255, 255, .48);
 }
 
 .lg-brand__foot i {
@@ -183,43 +207,52 @@
   height: 6px;
   border-radius: 50%;
   background: #4ade80;
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, .18);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, .16);
 }
 
 /* ---------- Kolom kanan: form ---------- */
 
+/* Tepi kiri kolom form dibulatkan dan digeser menimpa panel brand, sehingga
+   batas antar-kolom jadi lengkung, bukan garis lurus siku. Padding kiri
+   ditambah sebesar geseran supaya isi tetap terpusat di area putih yang
+   benar-benar terlihat. */
 .lg-panel {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(22px, 3.4vw, 44px);
+  margin-left: -32px;
+  padding: clamp(22px, 2.6vw, 38px);
+  padding-left: calc(clamp(22px, 2.6vw, 38px) + 32px);
+  border-radius: 32px 0 0 32px;
   overflow-y: auto;
-  background:
-    radial-gradient(520px 360px at 100% 0%, rgba(91, 63, 214, .07), transparent 68%),
-    var(--surface);
+  background: #fff;
 }
 
 .lg-panel__inner {
   width: 100%;
-  max-width: 372px;
+  max-width: 352px;
 }
 
 .lg-back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: clamp(14px, 2.4vh, 26px);
-  font-size: 12px;
+  margin-bottom: clamp(12px, 2.2vh, 22px);
+  padding: 5px 10px 5px 7px;
+  margin-left: -7px;
+  border-radius: 999px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--muted);
   text-decoration: none;
-  transition: color .14s, gap .14s;
+  transition: color .14s, background .14s, gap .14s;
 }
 
 .lg-back:hover {
-  color: var(--brand-600);
   gap: 9px;
+  color: var(--brand-600);
+  background: var(--lg-wash);
 }
 
 .lg-back .material-symbols-outlined {
@@ -228,9 +261,9 @@
 
 .lg-title {
   font-family: var(--font-display);
-  font-size: clamp(21px, 1.7vw, 25px);
-  line-height: 1.2;
-  letter-spacing: -.02em;
+  font-size: clamp(20px, 1.65vw, 24px);
+  line-height: 1.22;
+  letter-spacing: -.024em;
   color: var(--lg-ink);
 }
 
@@ -241,16 +274,14 @@
   color: var(--muted);
 }
 
-/* Form: rapat tapi tidak sesak. Jarak antar-field dipadatkan supaya seluruh
-   isi muat satu layar pada 768px. */
 .lg-form {
-  margin-top: clamp(14px, 2.2vh, 22px);
+  margin-top: clamp(13px, 2vh, 20px);
 }
 
 .lg-form form {
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 12px;
 }
 
 .lg-form .field {
@@ -269,47 +300,53 @@
   line-height: 1.4;
 }
 
+/* Isian tanpa garis: hanya latar wash yang memutih dan bercincin saat fokus.
+   Ini yang paling banyak menghilangkan kesan kotak. */
 .lg-form .input {
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid var(--lg-line);
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 13px;
+  border: 1px solid transparent;
   background: var(--lg-wash);
+  box-shadow: inset 0 1px 2px rgba(20, 20, 43, .035);
   font-size: 13px;
   color: var(--lg-ink);
-  transition: border-color .14s, box-shadow .14s, background .14s;
+  transition: background .16s, box-shadow .16s, border-color .16s;
+}
+
+.lg-form .input::placeholder {
+  color: #a6a5bb;
 }
 
 .lg-form .input:hover {
-  border-color: #d2d2e6;
-  background: #fff;
+  background: #eeeefa;
 }
 
 .lg-form .input:focus {
   outline: none;
   background: #fff;
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3.5px rgba(91, 63, 214, .14);
+  border-color: #c9baf8;
+  box-shadow: 0 0 0 4px rgba(91, 63, 214, .12), inset 0 1px 2px rgba(20, 20, 43, .02);
 }
 
 .lg-form .btn--primary {
-  height: 44px;
-  margin-top: 3px;
-  border-radius: 11px;
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 13px;
+  border: 0;
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: .01em;
   gap: 8px;
   color: #fff;
-  background: linear-gradient(180deg, #6a4ce4, var(--lg-accent));
-  border: 1px solid rgba(43, 25, 116, .35);
-  box-shadow: 0 10px 20px -12px rgba(91, 63, 214, .9), inset 0 1px 0 rgba(255, 255, 255, .18);
+  background: linear-gradient(180deg, #6d4fe8, var(--lg-accent));
+  box-shadow: 0 14px 26px -14px rgba(91, 63, 214, .95), inset 0 1px 0 rgba(255, 255, 255, .2);
   transition: transform .12s, box-shadow .16s, filter .16s;
 }
 
 .lg-form .btn--primary:hover:not(:disabled) {
   filter: brightness(1.06);
-  box-shadow: 0 14px 26px -12px rgba(91, 63, 214, .95), inset 0 1px 0 rgba(255, 255, 255, .22);
+  box-shadow: 0 18px 30px -14px rgba(91, 63, 214, 1), inset 0 1px 0 rgba(255, 255, 255, .24);
 }
 
 .lg-form .btn--primary:active:not(:disabled) {
@@ -318,23 +355,21 @@
 
 .lg-form .btn--primary:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(91, 63, 214, .28);
+  box-shadow: 0 0 0 4px rgba(91, 63, 214, .3);
 }
 
-/* Galat dan banner dibuat sepadan dengan kotak input: blok lembut, bukan teks
-   kecil yang menggantung di bawah tombol. */
+/* Galat dan banner: blok lembut tanpa garis tegas. */
 .lg-form .field__error {
   display: flex;
   align-items: center;
   gap: 7px;
   margin-top: 1px;
-  padding: 9px 11px;
-  border-radius: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
   font-size: 11.5px;
   line-height: 1.45;
   color: var(--danger-600);
   background: var(--danger-100);
-  border: 1px solid color-mix(in srgb, var(--danger-600) 20%, transparent);
 }
 
 .lg-form .field__error .material-symbols-outlined {
@@ -342,23 +377,22 @@
 }
 
 .lg-form .banner {
-  padding: 9px 11px;
-  border-radius: 10px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 12px;
   font-size: 11.5px;
   line-height: 1.5;
   background: var(--brand-050);
-  border-color: color-mix(in srgb, var(--brand-500) 22%, transparent);
   color: var(--brand-700);
 }
 
 /* ---------- Akun demo ---------- */
 
 .lg-demo {
-  margin-top: clamp(14px, 2.2vh, 20px);
+  margin-top: clamp(13px, 2vh, 18px);
   padding: 11px 13px;
-  border: 1px dashed #d8d4f0;
-  border-radius: 11px;
-  background: linear-gradient(180deg, #faf8ff, #f6f4ff);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8f6ff, #f4f1ff);
 }
 
 .lg-demo__head {
@@ -389,9 +423,9 @@
 }
 
 .lg-demo dt {
-  flex: 0 0 58px;
+  flex: 0 0 56px;
   font-size: 11px;
-  color: #7c7c95;
+  color: #83839b;
 }
 
 .lg-demo dd {
@@ -424,10 +458,15 @@
 
 @media (max-width: 980px) {
   .lg {
-    grid-template-columns: minmax(0, 1fr);
     height: auto;
     min-height: 100dvh;
     overflow: visible;
+    padding: 18px 14px;
+  }
+
+  .lg-card {
+    grid-template-columns: minmax(0, 1fr);
+    border-radius: 24px;
   }
 
   .lg-brand {
@@ -435,17 +474,19 @@
   }
 
   .lg-panel {
-    padding: 32px 20px 40px;
-    background:
-      radial-gradient(520px 320px at 50% -10%, rgba(91, 63, 214, .1), transparent 70%),
-      var(--surface);
+    /* Lengkung tepi kiri hanya masuk akal saat dua kolom; di sini direset
+       supaya isi tidak tergeser keluar kartu. */
+    margin-left: 0;
+    padding: 26px 20px 30px;
+    border-radius: 0;
+    overflow: visible;
   }
 
   .lg-mobile-brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 22px;
+    margin-bottom: 20px;
   }
 
   .lg-mobile-brand__mark {
@@ -454,14 +495,14 @@
     flex: 0 0 36px;
     display: grid;
     place-items: center;
-    border-radius: 10px;
+    border-radius: 12px;
     font-family: var(--font-display);
     font-weight: 800;
     font-size: 17px;
     letter-spacing: -.02em;
     color: #fff;
     background: linear-gradient(145deg, var(--brand-500), var(--brand-700));
-    box-shadow: 0 6px 14px -6px rgba(91, 63, 214, .7);
+    box-shadow: 0 8px 18px -8px rgba(91, 63, 214, .8);
   }
 
   .lg-mobile-brand__name b {
@@ -482,16 +523,13 @@
   }
 }
 
-/* Ponsel lanskap / jendela sangat pendek: izinkan menggulir daripada memotong. */
-@media (max-height: 560px) and (min-width: 981px) {
+/* Jendela sangat pendek: izinkan menggulir daripada memotong isi. */
+@media (max-height: 620px) and (min-width: 981px) {
   .lg {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
-  }
-
-  .lg-brand {
-    gap: 18px;
+    place-items: start center;
   }
 
   .lg-brand__points {
