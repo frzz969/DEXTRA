@@ -60,15 +60,12 @@ for (let i = 1; i < headingLevels.length; i += 1) {
   }
 }
 
-/* Setiap tautan internal harus menunjuk rute yang memang direncanakan ada.
- * /about, /team, /how-it-works, /tutorial belum dibuat, tetapi keempatnya
- * sudah ditetapkan, jadi masuk daftar yang diizinkan. */
+/* Setiap tautan internal harus menunjuk rute yang memang ada. /about, /team,
+ * /how-it-works, dan /tutorial sudah dihapus dan isinya dilebur ke "/", jadi
+ * keempatnya tidak lagi masuk daftar. */
 const ALLOWED = new Set([
   "/",
-  "/about",
-  "/team",
-  "/how-it-works",
-  "/tutorial",
+  "/login",
   "/overview",
   "/assistant",
   "/office-agent",

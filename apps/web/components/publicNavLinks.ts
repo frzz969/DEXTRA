@@ -3,17 +3,14 @@
  * tanpa JavaScript). Berkas ini sengaja tanpa "use client": nilainya harus
  * bisa dibaca dari komponen server maupun client.
  *
- * /about, /team, /how-it-works, dan /tutorial belum punya halaman. Keempatnya
- * sudah ditetapkan akan dibuat, jadi tautannya benar dan bukan tautan mati
- * permanen. Jangan menambah tautan ke rute yang belum ditetapkan. */
+ * Halaman /about, /team, /how-it-works, dan /tutorial sudah dihapus: isinya
+ * dilebur ke landing page "/" di app/(landing), yang memakai header dan footer
+ * sendiri. Jangan menambah tautan ke rute yang belum ada. */
 export type PublicLink = { href: string; label: string };
 
 export const PUBLIC_NAV: PublicLink[] = [
   { href: "/", label: "Beranda" },
-  { href: "/about", label: "Tentang DEXTRA" },
-  { href: "/team", label: "Tim AI Worker" },
-  { href: "/how-it-works", label: "Cara Kerja" },
-  { href: "/tutorial", label: "Tutor" }
+  { href: "/overview", label: "Dashboard" }
 ];
 
 /* Tujuan di dalam workspace, dipakai footer. Semuanya rute yang sudah ada. */
