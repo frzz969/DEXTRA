@@ -13,7 +13,7 @@ export default function LoginForm() {
     const current = mfaState.mfa ? mfaState : state;
     const pending = verifying;
     return (
-      <form action={verifyAction} style={{ display: "flex", flexDirection: "column", gap: "var(--s-3)" }}>
+      <form action={verifyAction}>
         <input type="hidden" name="email" value={current.email ?? ""} />
         <div className="banner" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">phonelink_lock</span>
@@ -49,7 +49,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form action={signInAction} style={{ display: "flex", flexDirection: "column", gap: "var(--s-3)" }}>
+    <form action={signInAction}>
       <div className="field">
         <label className="field__label" htmlFor="login-email">Email</label>
         <input
@@ -73,7 +73,7 @@ export default function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          placeholder="••••••••••••"
+          placeholder="Masukkan kata sandi"
         />
       </div>
       <div className="field">
@@ -99,9 +99,6 @@ export default function LoginForm() {
           {state.error}
         </div>
       )}
-      <p className="field__hint" style={{ textAlign: "center", marginTop: 4 }}>
-        Lupa kata sandi? Hubungi administrator tenant Anda — tidak ada reset mandiri di aplikasi ini.
-      </p>
     </form>
   );
 }
