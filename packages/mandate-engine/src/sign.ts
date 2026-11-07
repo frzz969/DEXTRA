@@ -1,4 +1,4 @@
-﻿import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Mandate } from '../../contracts/src/index.ts';
 
 export const DEFAULT_MANDATE_TTL_SECONDS = 3600;

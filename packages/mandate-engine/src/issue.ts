@@ -1,4 +1,4 @@
-﻿import { randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type { Mandate, Approval } from '../../contracts/src/index.ts';
 import type { Plan } from '../../plan/src/index.ts';
 import { signMandate, DEFAULT_MANDATE_TTL_SECONDS } from './sign.ts';

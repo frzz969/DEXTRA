@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /* Salin sumber kanonik dari packages/ ke apps/web/app/.
  *
  * apps/web punya node_modules sendiri (bukan workspace root) karena symlink

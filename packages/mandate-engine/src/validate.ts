@@ -1,4 +1,4 @@
-﻿import type { Mandate } from '../../contracts/src/index.ts';
+import type { Mandate } from '../../contracts/src/index.ts';
 import type { Plan } from '../../plan/src/index.ts';
 import type { ErrorCode, ActionId, ActionType } from '../../contracts/src/index.ts';
 import { verifySignature } from './sign.ts';

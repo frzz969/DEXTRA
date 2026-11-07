@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /* Verifikasi bahwa salinan di apps/web/app/ benar-benar sama dengan sumbernya
  * di packages/. Gagal (exit 1) jika ada yang menyimpang.
  *

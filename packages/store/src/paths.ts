@@ -1,4 +1,4 @@
-﻿import { dirname, isAbsolute, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { StorePaths } from './types.ts';

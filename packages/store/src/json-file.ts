@@ -1,4 +1,4 @@
-﻿import { appendFile, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { getDocumentsDir, getStorePaths } from './paths.ts';

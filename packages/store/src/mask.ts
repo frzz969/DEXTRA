@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Deterministic masking helpers. Pure functions, no I/O.
  *
  * These run inside the repository boundary: the values returned by repository

@@ -1,4 +1,4 @@
-﻿import type { Mandate } from '../../contracts/src/index.ts';
+import type { Mandate } from '../../contracts/src/index.ts';
 import { signMandate } from './sign.ts';
 
 export function revokeMandate(mandate: Mandate, now?: string): Mandate {

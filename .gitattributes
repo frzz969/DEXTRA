@@ -1,1 +1,1 @@
-﻿# Skrip shell disimpan dengan LF. Dengan core.autocrlf=true di Windows, checkout# akan memberi CRLF dan shebang `#!/usr/bin/env sh` gagal dijalankan di Unix.*.sh text eol=lf
+# Skrip shell disimpan dengan LF. Dengan core.autocrlf=true di Windows, checkout# akan memberi CRLF dan shebang `#!/usr/bin/env sh` gagal dijalankan di Unix.*.sh text eol=lf

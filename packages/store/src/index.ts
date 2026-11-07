@@ -1,4 +1,4 @@
-﻿// Public surface of @dextra/store.
+// Public surface of @dextra/store.
 //
 // Sensitive record types (ContactRecord and the raw contact fields) are
 // deliberately NOT exported here: masking happens inside the repository, and

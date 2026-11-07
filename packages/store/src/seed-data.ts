@@ -1,4 +1,4 @@
-﻿import type { ContactId } from '../../contracts/src/index.ts';
+import type { ContactId } from '../../contracts/src/index.ts';
 
 import type {
   CalendarEvent,
