@@ -1,14 +1,47 @@
-/* Kartu worker: seluruh kartu adalah tautan. Chip kapabilitas tidak boleh ikut
-   merebut ruang kosong, supaya tombol tetap di bawah dan keempat kartu sejajar.
-   Selector digandakan agar menang atas `.spec-card .tag-row` tanpa bergantung
-   pada urutan pemuatan CSS. */
+/* Kartu worker: kartu bukan lagi satu tautan besar, karena tiap kartu punya dua
+   aksi berbeda (pilih worker / spawn di AI Assistant). Menautkan seluruh kartu
+   akan membuat dua tombol bersarang di dalam <a>, yang tidak sah dan tidak bisa
+   dicapai keyboard dengan benar. */
 .worker-card.spec-card .tag-row { margin-top: 0; }
-.worker-card .btn { margin-top: auto; }
 
-/* Keempat kartu menuju langkah yang sama; hover dan active hanya menandai
-   kartu mana yang sedang ditunjuk sebelum diklik. */
+/* Dua aksi didorong ke dasar kartu supaya keempat kartu tetap sejajar walau
+   panjang ringkasannya berbeda. */
+.worker-card__actions {
+  margin-top: auto;
+  display: grid;
+  gap: 6px;
+}
+.worker-card__actions .btn { width: 100%; }
+
+/* Keempat kartu memakai bahasa hover yang sama dengan kartu lain. */
 .worker-card:hover { border-color: var(--border-strong); background: var(--surface-2); }
-.worker-card:active { background: var(--surface-3); }
+
+/* Daftar contoh pekerjaan. Sengaja lebih kecil dari `.spec-card__desc` supaya
+   yang pertama dibaca tetap ringkasan perannya. */
+.worker-examples {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.worker-examples li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.worker-examples li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--brand-300);
+}
 
 /* Avatar panel worker terpilih: satu tingkat di atas `.avatar--lg` (44px) yang
    dipakai kartu. `xl` tidak ada di design-system karena berkas itu hasil
@@ -21,3 +54,59 @@
    markup), tombol turun baris dan tetap menempel kanan. */
 .worker-panel__head { flex-wrap: wrap; }
 .worker-panel__head .btn { margin-left: auto; }
+
+/* Alur kerja keempat worker. Garis penghubung digambar sebagai pseudo-element
+   per langkah, bukan border pada <li>, supaya tidak ada garis menggantung di
+   bawah langkah terakhir. */
+.flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 70ch;
+}
+.flow__step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding-bottom: var(--s-3);
+}
+.flow__step::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.flow__step:last-child { padding-bottom: 0; }
+.flow__step:last-child::before { display: none; }
+
+.flow__index {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.flow__step--human .flow__index {
+  background: var(--brand-100);
+  border-color: var(--brand-300);
+  color: var(--brand-700);
+}
+.flow__step--gate .flow__index {
+  background: var(--success-100);
+  border-color: var(--success-600);
+  color: var(--success-600);
+}
+
+.flow__actor { font-size: 13px; font-weight: 600; line-height: 1.5; }
+.flow__action { font-size: 12px; color: var(--muted); line-height: 1.55; }

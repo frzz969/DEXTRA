@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createOfficePlanAction, type CreatePlanResult } from "./actions";
-import type { Worker } from "./workers";
+import type { Worker } from "@/lib/workers";
+import { takeIntakeDraft } from "@/lib/intake-draft";
 
 const ACTION_TYPES = [
   { value: "send_email", label: "Kirim email" },
@@ -33,6 +34,21 @@ export default function PlanIntakeForm({ worker }: { worker?: Worker }) {
   const [subject, setSubject] = useState("");
   const [start, setStart] = useState("");
   const [touched, setTouched] = useState(false);
+  const [fromAssistant, setFromAssistant] = useState(false);
+
+  /*
+   * Draf dari AI Assistant dibaca sekali saat mount, lalu dihapus oleh
+   * takeIntakeDraft(). Nilai yang sudah diketik pengguna tidak ditimpa.
+   * Efek berjalan di klien saja; server tetap merender formulir kosong, jadi
+   * tidak ada ketidakcocokan hidrasi.
+   */
+  useEffect(() => {
+    const draft = takeIntakeDraft();
+    if (!draft) return;
+    setSourceTitle((prev) => prev || draft.title);
+    setIntakeText((prev) => prev || draft.text);
+    setFromAssistant(true);
+  }, []);
 
   const clientError =
     touched && intakeText.trim().length > 0 && intakeText.trim().length < 20
@@ -73,6 +89,15 @@ export default function PlanIntakeForm({ worker }: { worker?: Worker }) {
       </div>
       <form onSubmit={submit} noValidate>
         <div className="card__body" style={{ display: "grid", gap: "var(--s-4)" }}>
+          {fromAssistant && (
+            <div className="banner" role="status">
+              <span className="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
+              <span>
+                <strong>Diisi dari percakapan AI Assistant.</strong> Periksa dan sunting dulu — draf AI belum tentu
+                benar, dan hanya yang Anda kirim yang dinilai validator.
+              </span>
+            </div>
+          )}
           <div style={{ display: "grid", gap: "var(--s-4)", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <div className="field">
               <label className="field__label" htmlFor="oa-request-id">Request ID <span className="req" aria-hidden="true">*</span></label>

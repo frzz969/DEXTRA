@@ -2,17 +2,44 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { sendAssistantMessage } from "./actions";
 import type { AiChatMessage } from "@/lib/ai";
+import type { Worker } from "@/lib/workers";
+import { writeIntakeDraft } from "@/lib/intake-draft";
 
 type ChatMessage = AiChatMessage & { id: number; model?: string };
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   "Siapkan draf pemberitahuan rapat dewan",
   "Ringkas langkah pengiriman surat ke vendor Q4",
   "Buat checklist audit internal",
   "Susun alur persetujuan pengadaan"
 ];
+
+/** Saran awal mengikuti peran worker, supaya spawn langsung terasa bedanya. */
+const SUGGESTIONS_BY_WORKER: Record<string, string[]> = {
+  "workforce-dispatcher": [
+    "Pecah permintaan rapat besok menjadi langkah kerja",
+    "Worker mana yang cocok untuk pengadaan Q4?",
+    "Susun urutan kerja untuk menyiapkan laporan bulanan"
+  ],
+  "executive-assistant": [
+    "Susun agenda rapat koordinasi besok pukul 10.00",
+    "Buat draf undangan rapat dengan vendor Q4",
+    "Bantu cari waktu kosong untuk rapat pimpinan"
+  ],
+  "administrative-officer": [
+    "Rapikan format laporan bulanan Oktober",
+    "Buat catatan permintaan pengadaan dari tim operasi",
+    "Susun kerangka laporan mingguan"
+  ],
+  "adversarial-reviewer": [
+    "Periksa rencana pengiriman email ke vendor Q4",
+    "Apa risiko menjadwalkan rapat tanpa konfirmasi peserta?",
+    "Tandai kelemahan draf undangan ini"
+  ]
+};
 
 const LIMITATIONS = [
   "Tidak mengirim pesan",
@@ -22,7 +49,16 @@ const LIMITATIONS = [
   "Tidak mengubah data pelanggan"
 ];
 
-export default function AssistantChat({ aiConfigured, model }: { aiConfigured: boolean; model: string }) {
+export default function AssistantChat({
+  aiConfigured,
+  model,
+  worker
+}: {
+  aiConfigured: boolean;
+  model: string;
+  worker?: Worker;
+}) {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +71,8 @@ export default function AssistantChat({ aiConfigured, model }: { aiConfigured: b
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
 
+  const suggestions = (worker && SUGGESTIONS_BY_WORKER[worker.slug]) || DEFAULT_SUGGESTIONS;
+
   const send = (text: string) => {
     const message = text.trim();
     if (!message || sending) return;
@@ -44,7 +82,7 @@ export default function AssistantChat({ aiConfigured, model }: { aiConfigured: b
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     startTransition(async () => {
-      const result = await sendAssistantMessage({ history, message });
+      const result = await sendAssistantMessage({ history, message, worker: worker?.slug });
       if (result.ok) {
         setNotConfigured(false);
         setMessages((prev) => [
@@ -58,12 +96,39 @@ export default function AssistantChat({ aiConfigured, model }: { aiConfigured: b
     });
   };
 
+  /**
+   * Membawa percakapan ke formulir intake /office-agent.
+   *
+   * Draf ditulis ke sessionStorage, bukan ke query string: teks percakapan bisa
+   * ribuan karakter dan akan memotong URL. Formulir intake membaca kunci yang
+   * sama lalu menghapusnya, jadi draf hanya terpakai sekali.
+   */
+  const sendToOfficeAgent = () => {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+    if (!lastUser) return;
+    const parts = [lastUser.content.trim()];
+    if (lastAssistant) parts.push("", "Draf usulan asisten:", lastAssistant.content.trim());
+    const written = writeIntakeDraft({
+      title: lastUser.content.trim().slice(0, 80),
+      text: parts.join("\n").slice(0, 8000)
+    });
+    // Bila storage diblokir, jangan berpindah halaman dengan formulir kosong
+    // tanpa penjelasan; pengguna tetap bisa mengisi manual dari sini.
+    if (!written) return;
+    router.push(worker ? `/office-agent?worker=${encodeURIComponent(worker.slug)}` : "/office-agent");
+  };
+
   return (
     <div className="card chat-card">
       <div className="card__head">
         <div>
           <h2>Percakapan</h2>
-          <p>Riwayat hanya hidup di tab ini · tidak disimpan ke server</p>
+          <p>
+            {worker
+              ? `${worker.name} · ${worker.role} · model yang sama, instruksi berbeda`
+              : "Riwayat hanya hidup di tab ini · tidak disimpan ke server"}
+          </p>
         </div>
         <div className="spacer" />
         <span className="badge badge--outline" title="Menunjuk model dikonfigurasi di server, bukan di browser">
@@ -92,8 +157,12 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
         ) : messages.length === 0 ? (
           <div className="empty" style={{ margin: "var(--s-6) auto" }}>
             <div className="empty__icon"><span className="material-symbols-outlined" aria-hidden="true">auto_awesome</span></div>
-            <h3>Mulai percakapan</h3>
-            <p>Tanya apa pun — draf, alur, kebijakan. Semua tindakan nyata berhenti di persetujuan manusia.</p>
+            <h3>{worker ? `${worker.name} siap` : "Mulai percakapan"}</h3>
+            <p>
+              {worker
+                ? `${worker.role} — ${worker.summary} Semua tindakan nyata tetap berhenti di persetujuan manusia.`
+                : "Tanya apa pun — draf, alur, kebijakan. Semua tindakan nyata berhenti di persetujuan manusia."}
+            </p>
           </div>
         ) : (
           messages.map((msg) =>
@@ -108,7 +177,11 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
                 </span>
                 <div style={{ minWidth: 0 }}>
                   <div className="msg__bubble">{msg.content}</div>
-                  {msg.model && <div className="tiny faint mono" style={{ marginTop: 4 }}>{msg.model}</div>}
+                  {msg.model && (
+                    <div className="tiny faint mono" style={{ marginTop: 4 }}>
+                      {msg.model}{worker ? ` · ${worker.role}` : ""}
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -126,7 +199,7 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
 
       <div style={{ borderTop: "1px solid var(--border)", padding: "14px 16px" }}>
         <div className="row" style={{ gap: 6, flexWrap: "wrap", marginBottom: 9 }} aria-label="Saran pertanyaan">
-          {SUGGESTIONS.map((suggestion) => (
+          {suggestions.map((suggestion) => (
             <button key={suggestion} type="button" className="chip" style={{ minHeight: 44 }} onClick={() => send(suggestion)} disabled={sending || notConfigured}>
               {suggestion}
             </button>
@@ -167,8 +240,16 @@ DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
             {error}
           </div>
         )}
-        <div className="tiny faint" id="assistant-composer-hint" style={{ marginTop: 7 }}>
-          Enter mengirim · Shift+Enter baris baru · Maks 8000 karakter · Rencana lewat <Link href="/office-agent">Office Agent</Link> tetap berhenti di persetujuan manusia.
+        <div className="row" style={{ gap: 8, marginTop: 7, flexWrap: "wrap" }}>
+          <span className="tiny faint" id="assistant-composer-hint" style={{ flex: "1 1 220px", minWidth: 0 }}>
+            Enter mengirim · Shift+Enter baris baru · Maks 8000 karakter · Rencana tetap berhenti di persetujuan manusia.
+          </span>
+          {messages.length > 0 && (
+            <button type="button" className="btn btn--secondary" style={{ minHeight: 44 }} onClick={sendToOfficeAgent}>
+              <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+              Susun rencana dari percakapan
+            </button>
+          )}
         </div>
         {messages.length > 0 && (
           <button type="button" className="btn btn--ghost" style={{ minHeight: 44, marginTop: 6 }} onClick={() => { setMessages([]); setError(null); }} disabled={sending}>

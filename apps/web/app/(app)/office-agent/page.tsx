@@ -2,7 +2,7 @@ import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { AgentAvatar, CapabilityChips } from "@/components/agents";
 import PlanIntakeForm from "./PlanIntakeForm";
-import { WORKERS, findWorker, type Worker } from "./workers";
+import { WORKERS, WORKER_FLOW, WORKER_PRINCIPLES, findWorker, type Worker } from "@/lib/workers";
 import "./worker-picker.css";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +30,52 @@ function fmtAt(iso: string): string {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" });
 }
 
+/** Bagian yang menjelaskan tim dan aturannya; sama di kedua langkah. */
+function TeamBrief() {
+  return (
+    <>
+      <section aria-labelledby="flow-heading" style={{ marginTop: "var(--s-6)" }}>
+        <h2 id="flow-heading" style={{ fontSize: 15, margin: "0 0 var(--s-2)" }}>Bagaimana keempatnya bekerja sama</h2>
+        <p className="small muted" style={{ margin: "0 0 var(--s-4)", maxWidth: "70ch" }}>
+          Contoh: <em>&ldquo;Tolong jadwalkan rapat dengan tim besok pukul 10.00 dan siapkan undangannya.&rdquo;</em>{" "}
+          Urutannya tidak berubah: pekerjaan mengalir ke bawah, dan tidak ada yang berjalan sebelum Anda menyetujui.
+        </p>
+
+        <ol className="flow">
+          {WORKER_FLOW.map((step, index) => (
+            <li key={step.actor} className={`flow__step flow__step--${step.kind}`}>
+              <span className="flow__index" aria-hidden="true">{index + 1}</span>
+              <div style={{ minWidth: 0 }}>
+                <div className="flow__actor">{step.actor}</div>
+                <div className="flow__action">{step.action}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="principles-heading" style={{ marginTop: "var(--s-6)" }}>
+        <h2 id="principles-heading" style={{ fontSize: 15, margin: "0 0 var(--s-3)" }}>Yang membuat berbeda</h2>
+        <div className="grid grid--2">
+          {WORKER_PRINCIPLES.map((item) => (
+            <div className="card" key={item.title} style={{ padding: "var(--s-4)" }}>
+              <h3 style={{ fontSize: 13, margin: 0 }}>{item.title}</h3>
+              <p className="small muted" style={{ margin: "4px 0 0" }}>{item.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="banner" role="note" style={{ marginTop: "var(--s-4)" }}>
+          <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
+          <span>
+            <strong>Policy Validator bukan agent kelima.</strong> Ia mesin governance deterministik yang memeriksa
+            izin, kebijakan, dan kelayakan tindakan — bukan AI yang menilai sendiri.
+          </span>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default async function OfficeAgentPage({
   searchParams,
 }: {
@@ -45,7 +91,10 @@ export default async function OfficeAgentPage({
     <header className="page-head">
       <div className="page-head__text">
         <h1>Office Agent</h1>
-        <p>Ubah permintaan menjadi rencana. Periksa tindakan dan temuan, lalu putuskan satu per satu. Mandat terbit saat disetujui; tidak ada yang berjalan tanpa persetujuan.</p>
+        <p>
+          Tim pekerja AI di dalam DEXTRA: ada yang mengatur pekerjaan, menjadi sekretaris, mengurus administrasi, dan
+          mengaudit hasilnya. Manusia tetap pemegang keputusan dan wewenang.
+        </p>
       </div>
     </header>
   );
@@ -77,27 +126,44 @@ export default async function OfficeAgentPage({
 
           <div className="grid grid--4">
             {WORKERS.map((option: Worker) => (
-              <Link
-                key={option.slug}
-                href={`/office-agent?worker=${encodeURIComponent(option.slug)}`}
-                className="card spec-card worker-card"
-              >
+              <div className="card spec-card worker-card" key={option.slug}>
                 <div className="spec-card__top">
                   <AgentAvatar slug={option.slug} name={option.name} size="lg" />
                   <div style={{ flex: "1 1 auto", minWidth: 0 }}>
                     <h3 style={{ margin: 0 }}>{option.name}</h3>
-                    <div className="role">{option.type}</div>
+                    <div className="role">{option.role}</div>
                   </div>
                 </div>
-                <p className="spec-card__desc" style={{ margin: 0 }}>{option.purpose}</p>
+                <p className="spec-card__desc" style={{ margin: 0 }}>{option.summary}</p>
+                <ul className="worker-examples">
+                  {option.examples.slice(0, 2).map((example) => (
+                    <li key={example}>{example}</li>
+                  ))}
+                </ul>
                 <CapabilityChips capabilities={[...option.capabilities]} />
-                <span className="btn btn--secondary btn--block" style={{ minHeight: 44 }}>
-                  Pilih worker
-                </span>
-              </Link>
+                <div className="worker-card__actions">
+                  <Link
+                    href={`/office-agent?worker=${encodeURIComponent(option.slug)}`}
+                    className="btn btn--primary btn--block"
+                    style={{ minHeight: 44 }}
+                  >
+                    Pilih worker
+                  </Link>
+                  <Link
+                    href={`/assistant?worker=${encodeURIComponent(option.slug)}`}
+                    className="btn btn--ghost btn--block"
+                    style={{ minHeight: 44 }}
+                  >
+                    <span className="material-symbols-outlined" aria-hidden="true">smart_toy</span>
+                    Spawn di AI Assistant
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
         </section>
+
+        <TeamBrief />
       </>
     );
   }
@@ -122,18 +188,26 @@ export default async function OfficeAgentPage({
           <AgentAvatar slug={worker.slug} name={worker.name} size="xl" />
           <div style={{ minWidth: 0 }}>
             <h2 id="worker-panel-heading" style={{ fontSize: 15, margin: 0 }}>{worker.name}</h2>
+            <div className="tiny muted">{worker.role} · {worker.type}</div>
           </div>
-          <span className="badge badge--outline">{worker.type}</span>
           <span className="spacer" />
           <Link className="btn btn--secondary" href="/office-agent" style={{ minHeight: 44 }}>
             Ganti worker
           </Link>
         </div>
         <div className="card__body" style={{ display: "grid", gap: "var(--s-3)" }}>
-          <p className="small" style={{ margin: 0 }}>
-            Pilihan ini menentukan tipe tindakan awal dan dicatat pada rencana. Eksekusi tetap lewat mandat dan persetujuan manusia.
-          </p>
+          <p className="small" style={{ margin: 0 }}>{worker.summary}</p>
+          <ul className="worker-examples">
+            {worker.examples.map((example) => (
+              <li key={example}>{example}</li>
+            ))}
+          </ul>
           <CapabilityChips capabilities={[...worker.capabilities]} />
+          <p className="field__hint" style={{ margin: 0 }}>
+            Pilihan ini menentukan tipe tindakan awal dan dicatat pada rencana. Eksekusi tetap lewat mandat dan
+            persetujuan manusia. Ingin mengobrol dulu dengan worker ini?{" "}
+            <Link href={`/assistant?worker=${encodeURIComponent(worker.slug)}`}>Spawn di AI Assistant</Link>.
+          </p>
         </div>
       </section>
 
@@ -211,6 +285,8 @@ export default async function OfficeAgentPage({
       <p className="field__hint" style={{ marginTop: "var(--s-4)" }}>
         Rencana masuk lewat <code className="mono">POST /api/v1/office-agent/plans</code>. Setiap persetujuan menerbitkan mandat; eksekusi lewat <Link href="/executions">Monitor Eksekusi</Link>.
       </p>
+
+      <TeamBrief />
     </>
   );
 }
