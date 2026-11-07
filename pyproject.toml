@@ -23,7 +23,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-# Paket Python ada di backend/, bukan di root: root adalah monorepo npm.
+# Paket Python ada di backend/, bukan di root: root adalah monorepo pnpm.
 package-dir = { "" = "backend" }
 
 [tool.setuptools.packages.find]

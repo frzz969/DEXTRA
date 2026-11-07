@@ -1,6 +1,6 @@
 # DEXTRA — Test Results
 
-Dijalankan 2026-11-04 dengan `npm run test:inproc`.
+Dijalankan 2026-11-04 dengan `pnpm run test:inproc`.
 
 ## Ringkasan
 
@@ -94,8 +94,8 @@ melaporkan `SOURCE_NOT_FOUND` alih-alih ekspor kosong yang tampak sah.
 
 ## Catatan
 
-- `npm test` (per-workspace, proses terpisah) bisa gagal di sandbox Windows
-  dengan `spawn EPERM`. `npm run test:inproc` menjalankan 349 tes yang sama
+- `pnpm test` (per-workspace, proses terpisah) bisa gagal di sandbox Windows
+  dengan `spawn EPERM`. `pnpm run test:inproc` menjalankan 349 tes yang sama
   dalam satu proses dan itulah yang dilaporkan di atas.
 - Angka 138 pada versi sebelumnya tidak lagi benar; tidak ada dokumen yang
   boleh menyebut angka tes tanpa menyebut perintah yang menghasilkannya.

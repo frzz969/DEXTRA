@@ -8,7 +8,7 @@
 | A2 | Security D-04 (approval token enforcement) | CLOSED |
 | A3 | Security D-05 (recipient scope) | CLOSED |
 | A4 | Security D-03 (ops token in browser) | PARTIAL (full proxy = roadmap) |
-| A5 | Demo dataset + seed/reset | DONE (npm run demo:reset) |
+| A5 | Demo dataset + seed/reset | DONE (pnpm run demo:reset) |
 | A6 | TC-001 manual | PASS |
 | A7 | TC-009 manual | PASS |
 | A8 | Backend E2E + idempotency | VERIFIED (tests) |

@@ -64,7 +64,7 @@ export async function mcpCall<T>(tool: string, args: Record<string, unknown> = {
     return {
       ok: false,
       failure: "unreachable",
-      error: "MCP gateway tidak berjalan (127.0.0.1:8765). Jalankan `npm run dev:mcp` lalu muat ulang halaman."
+      error: "MCP gateway tidak berjalan (127.0.0.1:8765). Jalankan `pnpm run dev:mcp` lalu muat ulang halaman."
     };
   }
 }

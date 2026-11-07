@@ -3,7 +3,7 @@
  * Memeriksa sintaks setiap berkas JavaScript runtime.
  *
  * Kenapa ini ada: commit beba8ec menulis `;` diikuti literal `\n` pada
- * berkas JavaScript lama, sehingga berkas itu gagal di-parse. `npm run
+ * berkas JavaScript lama, sehingga berkas itu gagal di-parse. `pnpm run
  * test:all` tetap hijau, karena tidak ada satu pun pemeriksaan yang membaca
  * berkas itu, dan `tsc` tidak menyentuh berkas .js yang tidak di-import.
  *
@@ -14,7 +14,7 @@
  *   node scripts/check-syntax.mjs
  */
 import { spawnSync } from 'node:child_process';
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 
@@ -52,9 +52,24 @@ if (files.length === 0) {
 
 const broken = [];
 for (const file of files) {
+  const rel = relative(ROOT, file).replace(/\\/g, '/');
+
+  // BOM UTF-8 di awal berkas membuat kernel/shell tidak mengenali shebang dan
+  // membuat `node --check` melaporkan galat pada karakter pertama. Deteksi
+  // eksplisit di sini supaya pesannya jelas, bukan "Unexpected token".
+  const head = readFileSync(file).subarray(0, 3);
+  const hasBom = head.length >= 3 && head[0] === 0xef && head[1] === 0xbb && head[2] === 0xbf;
+  if (hasBom) {
+    broken.push({
+      file: rel,
+      message: 'BOM UTF-8 di awal berkas membuat shebang tidak dikenali. Hapus BOM dari berkas ini.',
+    });
+    continue;
+  }
+
   const result = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
   if (result.status !== 0) {
-    broken.push({ file: relative(ROOT, file).replace(/\\/g, '/'), message: (result.stderr || '').trim() });
+    broken.push({ file: rel, message: (result.stderr || '').trim() });
   }
 }
 

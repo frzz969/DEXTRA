@@ -167,9 +167,9 @@ Agent tidak boleh menyatakan tugas selesai karena kode berhasil dibuat.
 
 | Jenis | Bukti |
 | --- | --- |
-| Schema | `npm run typecheck` lolos |
-| Perilaku | `npm test` lolos, dengan nama test yang disebut |
-| Test kritis | `npm run test:critical` lolos (TC-001–TC-008) |
+| Schema | `pnpm run typecheck` lolos |
+| Perilaku | `pnpm test` lolos, dengan nama test yang disebut |
+| Test kritis | `pnpm run test:critical` lolos (TC-001–TC-008) |
 | UI | Screenshot atau rekaman singkat |
 | Keamanan | Output percobaan bypass yang gagal |
 

@@ -211,7 +211,7 @@ atau server. Enam jenis alert di §2 semuanya punya aturan nyata di sana.
   dipakai dan setiap record ditandai `provider: 'fake'`. Tidak ada satu pesan
   pun yang keluar dari proses ini. Itu keadaan yang benar untuk saat ini, dan
   dashboard harus menampilkannya apa adanya.
-- **Belum ada loop di adapter.** `npm run alerts:scan` menjalankan satu
+- **Belum ada loop di adapter.** `pnpm run alerts:scan` menjalankan satu
   pemindaian. `--loop <detik>` sudah ada, tetapi belum dijalankan sebagai
   layanan, dan adapter Telegram belum memanggilnya.
 - **Pesan masuk Telegram tidak berubah.** Tidak ada jalur baru dari chat ke

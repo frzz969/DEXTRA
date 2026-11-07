@@ -244,13 +244,6 @@
         { id: 'p11.gap', label: 'Kenapa Service Identity masih DEMO?', kind: 'answer', compute: 'serviceIdentityGap' }
       ] },
 
-    { route: '/security-center', label: 'Security Center (P12)', domain: 'Tata kelola', state: 'demo',
-      tools: [], modules: [],
-      note: 'Backend v2 (router security_center, 16 router di main.py:67) punya GET /api/v1/security/overview, /events, /login-history, /sessions, /tokens, /service-identities, /mfa-status; jembatan security-center/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',
-      intents: [
-        { id: 'p12.gap', label: 'Kenapa Security Center masih DEMO?', kind: 'answer', compute: 'securityCenterGap' }
-      ] },
-
     { route: '/skills', label: 'Skill Registry', domain: 'Intelligence', state: 'demo',
       tools: [], modules: [],
       note: 'Backend v2 (router skills, 16 router di main.py:67) punya GET/POST /api/v1/skills, /{slug}, /{slug}/versions, /{slug}/status; jembatan skills/api.js probe-aware. Halaman ini berlabel DEMO jelas bila demo.',

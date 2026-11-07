@@ -2,7 +2,7 @@
 /**
  * Lint dashboard (minimal, tanpa eslint — repo ini tidak punya config eslint).
  *
- * A25: `tsc --noEmit` (via `npm run typecheck`, per-workspace) memeriksa
+ * A25: `tsc --noEmit` (via `pnpm run typecheck`, per-workspace) memeriksa
  * packages/apps TS. Berkas `apps/dashboard/assets/js/*.js` adalah runtime
  * browser (bukan modul yang di-import TS), jadi `tsc` tidak menyentuhnya —
  * lint harus mem-parse langsung tiap berkas dashboard dengan `node --check`,
@@ -13,7 +13,7 @@
  * `node --check` hanya parse; tidak mengeksekusi DOM.
  *
  *   node scripts/lint-dashboard.mjs
- *   npm run lint:dashboard
+ *   pnpm run lint:dashboard
  */
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';

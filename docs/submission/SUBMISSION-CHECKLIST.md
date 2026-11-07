@@ -13,9 +13,9 @@
 - [ ] Push branch + tag
 
 ## Pre-tag verification (semua harus lulus)
-- [ ] `npm run typecheck` (clean)
-- [ ] `npm run test:inproc` (all pass)
-- [ ] `npm run test:http` (pass)
+- [ ] `pnpm run typecheck` (clean)
+- [ ] `pnpm run test:inproc` (all pass)
+- [ ] `pnpm run test:http` (pass)
 - [ ] Security tests (D-02–D-05)
 - [ ] TC-001 manual (live build)
 - [ ] TC-009 manual (live build)

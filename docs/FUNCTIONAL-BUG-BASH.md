@@ -6,7 +6,7 @@ Playwright browser automation via OpenCode Playwright MCP became available durin
 ## Environment
 - MCP server: http://127.0.0.1:8765 (health OK)
 - Dashboard: http://127.0.0.1:3000
-- Data: seeded (npm run demo:reset)
+- Data: seeded (pnpm run demo:reset)
 
 ## Audit per halaman
 
@@ -89,6 +89,6 @@ Playwright browser automation via OpenCode Playwright MCP became available durin
 
 ## Next steps
 1. Run full click-through on remaining pages (notifications dropdown, logout, modal Escape/focus).
-2. Reset demo data (`npm run demo:reset`) before final demo.
+2. Reset demo data (`pnpm run demo:reset`) before final demo.
 3. Final regression: typecheck + tests + smoke (login → overview → approve/reject path).
 4. Tag `hackathon-submission` and record final results.

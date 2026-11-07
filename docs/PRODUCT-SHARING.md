@@ -51,6 +51,6 @@ Dashboard lokal (HTML/CSS/JS, tanpa build step) + MCP server lokal (Node.js, 127
 
 ## Status
 
-MVP selesai. **349 tes otomatis lulus** (`npm run test:inproc`, 2026-11-04). Demo 7 menit dengan satu test case 90 detik yang belum pernah dilihat. Mode offline tersedia, dan saat offline dashboard menyatakan datanya demo.
+MVP selesai. **349 tes otomatis lulus** (`pnpm run test:inproc`, 2026-11-04). Demo 7 menit dengan satu test case 90 detik yang belum pernah dilihat. Mode offline tersedia, dan saat offline dashboard menyatakan datanya demo.
 
 Batas yang dinyatakan, bukan disembunyikan: pengiriman email/kalender masih mock, notifikasi Telegram masih transport palsu, hanya satu zona waktu yang dikonfigurasi, dan belum ada identitas per pengguna dengan expiry.

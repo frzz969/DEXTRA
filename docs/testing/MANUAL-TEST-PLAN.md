@@ -1,9 +1,9 @@
 # DEXTRA — Manual Test Plan
 
 ## Prasyarat
-- MCP server: `npm start` di apps/mcp-server (port 8765).
-- Frontend: `npm run dev:web` di root (apps/web, port 3000).
-- Data: `npm run demo:reset`.
+- MCP server: `pnpm start` di apps/mcp-server (port 8765).
+- Frontend: `pnpm run dev:web` di root (apps/web, port 3000).
+- Data: `pnpm run demo:reset`.
 
 ## TC-001 — Instruksi Suara dan Penerima Ambigu
 - Prasyarat: data seeded (2 Budi, kalender Jumat 12.00).

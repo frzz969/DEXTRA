@@ -13,7 +13,7 @@ Variabel:
 - `DEXTRA_AI_MODEL` (opsional, default `gpt-4o-mini`)
 
 ## 3. Restart Next.js
-`npm run dev` / `npm run start`.
+`pnpm run dev` / `pnpm run start`.
 
 ## 4. Verifikasi
 Banner "AI belum dikonfigurasi" hilang; ajukan pertanyaan sederhana, pastikan mendapat jawaban. Tanpa key, banner sengaja muncul — tidak ada jawaban pura-pura.

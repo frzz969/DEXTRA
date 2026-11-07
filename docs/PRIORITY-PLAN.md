@@ -1,4 +1,4 @@
-﻿# DEXTRA â€” Priority Plan
+# DEXTRA â€” Priority Plan
 
 **Versi:** 1.0.0
 **Fungsi:** satu tabel yang menentukan apa dikerjakan lebih dulu. Jika ragu, buka tabel ini, bukan PRD dari awal.
@@ -74,7 +74,7 @@ Gate **G3 â€” review desain** setelah P1-4.
 
 **P0 lulus jika:**
 
-- [ ] `npm test` hijau, termasuk TC-001â€“TC-013.
+- [ ] `pnpm test` hijau, termasuk TC-001â€“TC-013.
 - [ ] Tidak ada jalur dari LLM ke executor.
 - [ ] Tool ops menolak token agent dan tercatat di audit.
 - [ ] Data sensitif tidak pernah keluar dari store dalam bentuk penuh.

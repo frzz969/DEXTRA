@@ -13,10 +13,10 @@ No build step, no CDN, no dependencies.
 
 ```bash
 # terminal 1 — MCP server on 127.0.0.1:8765
-npm run dev:mcp
+pnpm run dev:mcp
 
 # terminal 2 — static dashboard on 127.0.0.1:8899
-npm run dev:dashboard
+pnpm run dev:dashboard
 # http://127.0.0.1:8899
 ```
 
@@ -25,8 +25,8 @@ paste the ops token on `/login`. The store starts empty — plans are only creat
 assistant, never written by hand — so populate it with records the real engine produced:
 
 ```bash
-npm run demo:flow    # create -> approve -> execute, plus one waiting and one policy finding
-npm run demo:reset   # empty the store again
+pnpm run demo:flow    # create -> approve -> execute, plus one waiting and one policy finding
+pnpm run demo:reset   # empty the store again
 ```
 
 `demo:flow` drives the actual MCP server, so what appears on screen is the output of the real
@@ -132,7 +132,7 @@ by `/workforce`.
 
 Each route also declares its `intents` — what the Copilot may offer while the operator is
 standing on that screen. The same rule applies: an intent may only name a tool that exists, a
-compute that is implemented, and a route that is registered. `npm run test:dashboard` fails the
+compute that is implemented, and a route that is registered. `pnpm run test:dashboard` fails the
 build if any of those stops being true, so a chip can never be dead.
 
 `/integrations` renders this table in the UI, so the claim can be checked rather than trusted.
@@ -240,9 +240,9 @@ Honest list of what is **not** finished, so it is not read as working:
 ## Tests
 
 ```bash
-npm run test:dashboard   # contract: no intent points at a missing tool/compute/route
-npm run test:e2e         # opens the real dashboard in Chrome, checks every route
-npm run test:all         # the full gate, including both of the above
+pnpm run test:dashboard   # contract: no intent points at a missing tool/compute/route
+pnpm run test:e2e         # opens the real dashboard in Chrome, checks every route
+pnpm run test:all         # the full gate, including both of the above
 ```
 
 `test:e2e` needs a Chrome or Chromium install (`DEXTRA_CHROME` overrides the path). It starts the

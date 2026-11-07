@@ -11,7 +11,7 @@
  * Result: one executed plan, one waiting for a human, and one blocked by policy
  * — three genuinely different states, all traceable to audit events.
  *
- * Requires the MCP server to be running (npm run dev:mcp).
+ * Requires the MCP server to be running (pnpm run dev:mcp).
  */
 const API = process.env.DEXTRA_API ?? 'http://127.0.0.1:8765';
 const TOKEN = process.env.DEXTRA_OPS_TOKEN ?? 'ops-dev-token';
@@ -64,7 +64,7 @@ async function approve(plan) {
 async function main() {
   const health = await fetch(API + '/health').then((r) => r.json()).catch(() => null);
   if (!health?.ok) {
-    console.error(`Server MCP tidak berjalan di ${API}. Jalankan: npm run dev:mcp`);
+    console.error(`Server MCP tidak berjalan di ${API}. Jalankan: pnpm run dev:mcp`);
     process.exit(1);
   }
 
@@ -122,7 +122,7 @@ async function main() {
 
   const audit = await call('get_audit_log', { limit: 50 });
   console.log(`\nSelesai. ${audit.events.length} event audit tercatat.`);
-  console.log('Buka web: npm run dev:web -> http://127.0.0.1:3000');
+  console.log('Buka web: pnpm run dev:web -> http://127.0.0.1:3000');
 }
 
 main().catch((err) => {

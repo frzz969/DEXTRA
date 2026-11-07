@@ -1,5 +1,8 @@
 # DEXTRA - Verification Report
 
+> **Catatan package manager (7 November 2026):** perintah `npm ...` di dokumen historis ini dipertahankan sebagai catatan fase tersebut. Repo sekarang memakai **pnpm** (`pnpm install`, `pnpm test`, `pnpm run ...`).
+
+
 **Versi:** 1.0.0-rekonstruksi
 **Tanggal:** 2 November 2026
 **Cakupan:** Fase D - Security Remediation & Runtime Verification

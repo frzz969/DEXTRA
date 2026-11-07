@@ -1,17 +1,28 @@
 FROM node:22-slim
 
+# Repo ini memakai pnpm. Corepack memastikan versi pnpm sama dengan packageManager
+# di package.json, dan tidak ada package-lock.json yang ikut terbentuk.
+RUN corepack enable && corepack prepare pnpm@12.10.1 --activate
+
 WORKDIR /app
 
-# apps/web sengaja punya node_modules sendiri: symlink workspace npm gagal di
-# Windows, dan memisahkannya membuat kedua sisi konsisten di semua OS.
+# Salin manifest seluruh workspace agar `pnpm install --frozen-lockfile` bisa
+# memvalidasi importer di pnpm-lock.yaml. Sumber yang tidak dibutuhkan image web
+# (mcp-server, telegram, whatsapp) cukup package.json-nya.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages ./packages
 COPY scripts ./scripts
 COPY apps/web ./apps/web
+COPY apps/mcp-server/package.json ./apps/mcp-server/package.json
+COPY apps/telegram-adapter/package.json ./apps/telegram-adapter/package.json
+COPY apps/whatsapp-adapter/package.json ./apps/whatsapp-adapter/package.json
 
+RUN pnpm install --frozen-lockfile
+
+# Sumber kanonik design-system disalin ke apps/web sebelum build.
 RUN node scripts/sync-packages.mjs
 
-WORKDIR /app/apps/web
-RUN npm install --no-audit --no-fund && npm run build
+RUN pnpm --filter @dextra/web run build
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["pnpm", "--filter", "@dextra/web", "run", "start"]

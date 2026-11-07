@@ -66,7 +66,7 @@
       title: 'Server MCP tidak aktif',
       body: ['Saya hanya membaca dari server. Tanpa server, saya tidak punya data untuk dijawab — dan saya tidak akan mengarang angkanya.'],
       bullets: [
-        'Jalankan `npm run demo:seed` lalu `npm run dev:mcp` (port 8765), kemudian masuk lewat halaman Login.',
+        'Jalankan `pnpm run demo:seed` lalu `pnpm run dev:mcp` (port 8765), kemudian masuk lewat halaman Login.',
         'Selama server mati, halaman-halaman bertanda "Data contoh" tetap bisa dijelajahi — isinya contoh, bukan keadaan nyata.'
       ],
       note: 'Tidak ada panggilan tool yang dicoba.'

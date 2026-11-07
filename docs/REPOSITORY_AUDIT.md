@@ -1,5 +1,8 @@
 # REPOSITORY AUDIT — kondisi aktual setelah fondasi v2
 
+> **Catatan package manager (7 November 2026):** perintah `npm ...` di dokumen historis ini dipertahankan sebagai catatan fase tersebut. Repo sekarang memakai **pnpm** (`pnpm install`, `pnpm test`, `pnpm run ...`).
+
+
 Diperiksa: 3 November 2026, branch `main`, dari berkas yang benar-benar ada —
 bukan dari laporan sebelumnya.
 

@@ -9,6 +9,11 @@
  *   d) Setiap skills/<id>/ punya agents/<id>.md (kecuali SKILL_TANPA_AGENT).
  *   e) Setiap skills/<id>/SKILL.md punya frontmatter `name:` dan `description:`.
  *
+ * Catatan: folder workbuddy/agents dan workbuddy/skills sudah dihapus dari repo
+ * secara sengaja (hanya mcp.json/icon.svg/connector-meta.json yang tersisa).
+ * Jika folder tidak ada, pemeriksaan yang bergantung padanya DILEWATI (bukan
+ * kegagalan). Jika folder ada, semua pemeriksaan ketat di atas tetap dijalankan.
+ *
  * Jalankan: node scripts/verify-workbuddy.mjs
  */
 import { readFile, readdir } from 'node:fs/promises';
@@ -84,7 +89,11 @@ if (allowedTools) {
   try {
     agentFiles = (await readdir(agentsDir)).filter((f) => f.endsWith('.md')).sort();
   } catch (err) {
-    fail(`tidak bisa membaca workbuddy/agents: ${err.message}`);
+    if (err.code === 'ENOENT') {
+      console.log('dilewati: workbuddy/agents tidak ada di repo');
+    } else {
+      fail(`tidak bisa membaca workbuddy/agents: ${err.message}`);
+    }
   }
 
   for (const file of agentFiles) {
@@ -109,7 +118,11 @@ if (allowedTools) {
     const entries = await readdir(skillsDir, { withFileTypes: true });
     skillIds = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
   } catch (err) {
-    fail(`tidak bisa membaca workbuddy/skills: ${err.message}`);
+    if (err.code === 'ENOENT') {
+      console.log('dilewati: workbuddy/skills tidak ada di repo');
+    } else {
+      fail(`tidak bisa membaca workbuddy/skills: ${err.message}`);
+    }
   }
 
   for (const id of skillIds) {

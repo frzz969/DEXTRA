@@ -60,5 +60,5 @@ const server = createServer(async (req, res) => {
 server.listen(port, '127.0.0.1', () => {
   console.log(`DEXTRA dashboard  ->  http://127.0.0.1:${port}/index.html`);
   console.log('Tanpa server MCP, dashboard berjalan dalam mode demo dan menyatakan itu di layar.');
-  console.log('Untuk data nyata: npm run demo:seed  lalu  npm run dev:mcp  (terminal lain)');
+  console.log('Untuk data nyata: pnpm run demo:seed  lalu  pnpm run dev:mcp  (terminal lain)');
 });

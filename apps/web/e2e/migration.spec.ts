@@ -2,6 +2,24 @@ import { test, expect } from "@playwright/test";
 
 const NO_CONSOLE_ERRORS = [/hydration/i, /Minified React error/i, /Text content does not match/i];
 
+async function loginAsBudi(page: import("@playwright/test").Page) {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("budi.santoso@dextra.local");
+  await page.getByLabel("Password").fill("E2E-DevOnly-Password-2026");
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page.waitForURL(/\/overview$/);
+}
+
+// Sebagian besar halaman di sini butuh sesi terautentikasi agar API mengembalikan data.
+// Test Login sendiri tidak boleh di-pre-login (ia menguji alur login/logout).
+test.beforeEach(async ({ page }, testInfo) => {
+  const isLoginTest = testInfo.titlePath.some((t) => /Login/.test(t));
+  const isLogoutTest = testInfo.title.includes("login lalu keluar");
+  if (isLoginTest && !isLogoutTest) return;
+  if (isLogoutTest) return;
+  await loginAsBudi(page);
+});
+
 async function expectNoPageErrors(page: import("@playwright/test").Page, errors: string[]) {
   expect(errors).toEqual([]);
 }
@@ -62,8 +80,8 @@ test.describe("Papan (/board)", () => {
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("/board");
-    await expect(page.getByRole("heading", { level: 1, name: "Papan Work Packages" })).toBeVisible();
-    await expect(page.getByLabel("Papan work packages")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Papan Tugas" })).toBeVisible();
+    await expect(page.getByLabel("Papan tugas")).toBeVisible();
     for (const tahap of ["Draft", "Disetujui", "Berjalan", "Selesai", "Dibatalkan"]) {
       await expect(page.locator(`section[aria-label="Tahap ${tahap}"]`)).toBeVisible();
     }
@@ -119,7 +137,7 @@ test.describe("Akun & Izin (/account)", () => {
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("/account");
-    await expect(page.getByRole("heading", { level: 1, name: "Akun & Izin Saya" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Akun & Keamanan" })).toBeVisible();
     await expect(page.getByText("Capability untuk scope ini")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Capability yang BELUM punya penegak" })).toBeVisible();
     await expectNoPageErrors(page, errors);
@@ -224,7 +242,7 @@ test.describe("Login (/login)", () => {
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("/login");
-    await expect(page.getByRole("heading", { level: 1, name: "Masuk" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Selamat datang kembali" })).toBeVisible();
     await page.getByLabel("Email").fill("budi.santoso@dextra.local");
     await page.getByLabel("Password").fill("password-salah-jelas");
     await page.getByRole("button", { name: "Masuk", exact: true }).click();
@@ -248,7 +266,7 @@ test.describe("Login (/login)", () => {
     await page.waitForURL(/\/login$/);
 
     await page.goto("/account");
-    await expect(page.getByText(/token gateway legacy/)).toBeVisible();
+    await expect(page.getByText(/legacy_token|token gateway tanpa tenant/)).toBeVisible();
   });
 });
 
@@ -279,13 +297,13 @@ test.describe("Office Agent (/office-agent)", () => {
   });
 });
 
-test.describe("Approval Challenge (/approvals)", () => {
+test.describe("Approval Inbox (/approvals)", () => {
   test("panel keputusan tampil dan dapat diisi", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("/approvals");
-    await expect(page.getByRole("heading", { level: 1, name: "Approval Challenge" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Approval Inbox" })).toBeVisible();
     await expect(page.getByRole("radiogroup", { name: "Keputusan" })).toBeVisible();
     await expect(page.getByRole("radio", { name: /Setujui/ })).toBeChecked();
     await page.getByLabel("Plan ID *").fill("plan_e2e");

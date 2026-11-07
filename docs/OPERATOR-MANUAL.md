@@ -16,7 +16,7 @@ Panduan operasional harian untuk operator/admin DEXTRA.
 
 ## Verifikasi Audit
 
-- Jalankan `audit:verify` (npm script) untuk memverifikasi hash chain audit utuh.
+- Jalankan `audit:verify` (skrip pnpm) untuk memverifikasi hash chain audit utuh.
 - Jika gagal: hentikan operasi, investigasi tampering, eskalasi.
 
 ## Monitoring

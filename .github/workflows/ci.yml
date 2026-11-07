@@ -25,13 +25,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.10.1
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
+          cache: pnpm
 
-      - name: Pasang dependency (npm workspaces)
-        run: npm ci
+      - name: Pasang dependency (pnpm workspace)
+        run: pnpm install --frozen-lockfile
 
       - uses: actions/setup-python@v5
         with:
@@ -51,21 +55,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # apps/web sengaja di luar npm workspaces (symlink gagal di Windows),
-    # jadi ia punya lockfile sendiri. Ia di-build terpisah supaya tidak diam-diam rusak.
-    defaults:
-      run:
-        working-directory: apps/web
-
+    # apps/web adalah workspace pnpm penuh (lihat pnpm-workspace.yaml). Dulu ia
+    # di-build terpisah dengan lockfile sendiri; sekarang dependency dipasang
+    # dari root dan job ini hanya memfilter paket @dextra/web.
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.10.1
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache: pnpm
 
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dextra/web run typecheck
+      - run: pnpm --filter @dextra/web run build

@@ -1,7 +1,10 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 pnpm-store/
 .npm/
+# package manager repo ini pnpm; lockfile npm tidak boleh masuk
+package-lock.json
+npm-shrinkwrap.json
 
 # Build outputs
 .next/

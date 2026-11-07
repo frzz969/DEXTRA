@@ -31,7 +31,7 @@
 export const DASHBOARD_PORT = 3000;
 
 /**
- * Port of the static dashboard (`npm run dev:dashboard`).
+ * Port of the static dashboard (`pnpm run dev:dashboard`).
  *
  * It has to be in the defaults, not in `DEXTRA_ALLOWED_ORIGINS`: that variable
  * can only narrow the built-in set, so a port missing here could never be

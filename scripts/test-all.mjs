@@ -21,10 +21,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 function run(label, command, args) {
   console.log(`\n== ${label} ==`);
-  // Di Windows, npm hanya ada sebagai `npm.cmd`, dan Node menolak menjalankan
-  // `.cmd` tanpa shell (EINVAL sejak Node 18). Dengan shell, argumen harus
-  // dirangkai sendiri, karena array argumen tidak di-escape oleh cmd.exe.
-  const useShell = process.platform === 'win32' && command === 'npm';
+  // Di Windows, npm dan pnpm hanya ada sebagai `.cmd`, dan Node menolak
+  // menjalankan `.cmd` tanpa shell (EINVAL sejak Node 18). Dengan shell, argumen
+  // harus dirangkai sendiri, karena array argumen tidak di-escape oleh cmd.exe.
+  const useShell = process.platform === 'win32' && (command === 'npm' || command === 'pnpm');
   /*
    * `shell: true` resolves the shell from ComSpec. When that variable is absent
    * (sandboxes, some CI images, and this very shell) Node throws
@@ -71,9 +71,9 @@ const python = resolvePython();
 
 run('sintaks JavaScript dapat di-parse', 'node', ['scripts/check-syntax.mjs']);
 run('salinan paket tidak menyimpang', 'node', ['scripts/verify-packages.mjs']);
-run('typecheck semua workspace', 'npm', ['run', 'typecheck']);
-run('tes paket + gateway', 'npm', ['test']);
-run('tes HTTP gateway', 'npm', ['run', 'test:http']);
+run('typecheck semua workspace', 'pnpm', ['run', 'typecheck']);
+run('tes paket + gateway', 'pnpm', ['test']);
+run('tes HTTP gateway', 'pnpm', ['run', 'test:http']);
 run('tes Python', python, ['-m', 'pytest', 'tests', '-q']);
 
 console.log('\nSemua pemeriksaan lulus.');

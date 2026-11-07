@@ -86,7 +86,7 @@ export default function AssistantChat({ aiConfigured, model }: { aiConfigured: b
 DEXTRA_AI_API_KEY=sk-…        # wajib
 DEXTRA_AI_BASE_URL=https://api.openai.com/v1   # opsional
 DEXTRA_AI_MODEL=gpt-4o-mini                     # opsional</pre>
-              <p style={{ marginTop: 6 }}>lalu restart server (<code className="mono">npm run dev</code> / <code className="mono">npm run start</code>). Sampai itu, tidak ada jawaban pura-pura.</p>
+              <p style={{ marginTop: 6 }}>lalu restart server (<code className="mono">pnpm run dev</code> / <code className="mono">pnpm run start</code>). Sampai itu, tidak ada jawaban pura-pura.</p>
             </div>
           </div>
         ) : messages.length === 0 ? (

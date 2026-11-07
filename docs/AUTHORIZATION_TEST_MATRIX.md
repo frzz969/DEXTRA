@@ -1,7 +1,7 @@
 # DEXTRA — Authorization Test Matrix
 
 Date: 2026-11-02
-Runner: `npm test --workspace @dextra/mcp-server` (and `npm test` for the whole repo)
+Runner: `pnpm --filter @dextra/mcp-server test` (and `pnpm test` for the whole repo)
 
 This document maps each authorization requirement to the test that verifies it, and states
 honestly where no test exists because the mechanism does not exist.
@@ -155,7 +155,7 @@ These were already covered and were re-run unchanged:
 | Suite | Tests | Result |
 | --- | --- | --- |
 | `@dextra/mcp-server` | 75 | 75 pass, 0 fail |
-| Whole repo (`npm test`) | 171 | 171 pass, 0 fail |
+| Whole repo (`pnpm test`) | 171 | 171 pass, 0 fail |
 
 Baseline before this work was 150 across the repo. The increase is the new authorization
 suite (15) plus the expanded contract tests in `auth.test.ts` (5 → 12). No existing test was

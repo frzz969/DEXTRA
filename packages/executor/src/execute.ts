@@ -1,4 +1,4 @@
-﻿import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { ActionId, ActionType, MandateId, ExecutionId, ErrorCode } from '../../contracts/src/index.ts';
 import type { ActionResult, Mandate, Plan, AuditEvent, ExecutionUsage } from '../../contracts/src/index.ts';
 import { validateMandate } from '../../mandate-engine/src/index.ts';
@@ -177,7 +177,7 @@ export async function executeAction(input: ExecuteInput): Promise<ActionResult> 
     if (failed) failureReason = 'EXECUTOR_FAILURE';
   }
   const latencyMs = Date.now() - startedAt;
-  usage = { ...usage, latency_ms: (usage.latency_ms as number) || latencyMs, provider: adapterName || 'outbox' } as ExecutionUsage;
+  usage = { ...usage, latency_ms: (usage.latency_ms as number) || latencyMs, provider: usage.provider || adapterName || 'outbox' } as ExecutionUsage;
 
   if (failed) {
     const failedRes: ActionResult = {

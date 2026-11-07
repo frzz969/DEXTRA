@@ -294,7 +294,7 @@ python database/seeds/seed.py
 # 2. API
 ./scripts/dev-api.sh            # http://127.0.0.1:8000/docs
 
-# 3. Web (butuh pnpm install di apps/web, lihat catatan di bawah)
+# 3. Web (dependensi sudah dipasang di root lewat pnpm install, lihat catatan di bawah)
 ./scripts/dev-web.sh            # http://127.0.0.1:3000
 
 # 4. Pemeriksaan

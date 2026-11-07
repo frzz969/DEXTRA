@@ -55,7 +55,7 @@
             '<span class="material-symbols-outlined" style="color:var(--warning-600)">cloud_off</span>' +
             '<div><div class="small strong">Butuh server MCP</div>' +
             '<p class="small muted" style="margin-top:4px;line-height:1.6">Halaman ini tidak punya data contoh. Roster hanya bisa dibaca lewat tool <span class="mono">list_specialists</span>, yang membaca <span class="mono">workbuddy/agents/*.md</span> di server.</p>' +
-            '<p class="small muted" style="margin-top:8px">Jalankan <span class="mono">npm run demo:seed</span> lalu <span class="mono">npm run dev:mcp</span>, kemudian masuk lewat halaman Login.</p>' +
+            '<p class="small muted" style="margin-top:8px">Jalankan <span class="mono">pnpm run demo:seed</span> lalu <span class="mono">pnpm run dev:mcp</span>, kemudian masuk lewat halaman Login.</p>' +
             '</div></div></div>';
       return;
     }

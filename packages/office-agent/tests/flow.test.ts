@@ -107,8 +107,9 @@ test('alur penuh: dokumen → klarifikasi → plan → persetujuan → mandate �
   assert.equal(executed.ok, true, JSON.stringify(executed));
   const result = executed.data.result;
   assert.equal(result.result, 'sent');
-  assert.ok(String(result.evidence.mock_message_id ?? '').length > 0, 'bukti mock harus menyebut id pesan');
-  assert.equal(result.usage.provider, 'mock');
+  assert.ok(String(result.evidence.message_id ?? '').length > 0, 'bukti eksekusi harus menyebut id pesan');
+  assert.equal(result.evidence.provider, 'outbox');
+  assert.equal(result.usage.provider, 'outbox');
   assert.equal(result.usage.tokens_in, null, 'mock tidak mengukur token; null bukan 0');
   assert.equal(result.usage.cost_usd, null);
 

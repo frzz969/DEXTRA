@@ -3,7 +3,7 @@
  * Uji ujung-ke-ujung dashboard, tanpa dependensi.
  *
  * Cara menjalankan (A25):
- *   npm run test:e2e
+ *   pnpm run test:e2e
  *   node apps/dashboard/tests/e2e/run.mjs
  *
  * Prasyarat: Node >= 20 dengan WebSocket bawaan; Chrome/Chromium terpasang
@@ -13,7 +13,7 @@
  * Di CI tanpa Chrome, uji ini SKIP dengan keluar 0 (bukan gagal).
  *
  * Kenapa ada: commit beba8ec menulis literal `\n` di `core.js`, sehingga seluruh
- * dashboard gagal dimuat — layar kosong. `npm run test:all` tetap hijau karena
+ * dashboard gagal dimuat — layar kosong. `pnpm run test:all` tetap hijau karena
  * tidak ada pemeriksaan yang benar-benar MENJALANKAN halaman. `check-syntax.mjs`
  * menutup kasus itu, tetapi ia hanya mem-parse: berkas yang sintaksnya benar
  * masih bisa gagal saat dijalankan (ReferensiError, DOM yang tidak ada, API yang
@@ -22,13 +22,12 @@
  * Karena itu skrip ini membuka dashboard sungguhan di Chrome, memeriksa setiap
  * rute, dan gagal bila ada galat runtime atau layar kosong.
  *
- * Tanpa dependensi: `npm i` di repo ini gagal di Windows karena symlink
- * workspace `@dextra/*` (EISDIR), jadi Playwright tidak bisa dipasang. Chrome
- * dikendalikan lewat Chrome DevTools Protocol memakai `WebSocket` bawaan Node —
- * tidak ada paket yang perlu diunduh, dan Chrome yang dipakai adalah Chrome yang
- * sudah terpasang di mesin.
+ * Tanpa dependensi tambahan: Chrome dikendalikan lewat Chrome DevTools Protocol
+ * memakai `WebSocket` bawaan Node — tidak ada paket yang perlu diunduh, dan
+ * Chrome yang dipakai adalah Chrome yang sudah terpasang di mesin. Dependency
+ * repo dipasang dengan pnpm di root (`pnpm install`).
  *
- *   npm run test:e2e
+ *   pnpm run test:e2e
  *
  * Variabel lingkungan:
  *   DEXTRA_CHROME   path Chrome/Chromium (kalau tidak ada di lokasi umum)

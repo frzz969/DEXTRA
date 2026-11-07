@@ -1,11 +1,12 @@
 /**
- * Mock adapters — NON-PROD ONLY. Label jujur: provider:'mock'.
+ * Mock adapters — NON-PROD ONLY, TIDAK terhubung ke getAdapter().
  *
- * PROVIDER LABEL: provider:'mock' (see executor execution-usage; execute.ts
- * sets usage.provider = 'mock' for every execution). These functions NEVER
- * contact an external system. IDs returned are local hashes (`mock_*`),
- * not provider IDs. Any UI showing these results MUST label them as
- * mock/demo. Production adapters must replace this module.
+ * Modul ini TIDAK dipakai oleh jalur eksekusi normal: getAdapter() pada
+ * execute.ts tidak merujuk mocks.ts sama sekali. Eksekusi nyata memakai adapter
+ * outbox/smtp, dengan provider dilaporkan apa adanya oleh adapter
+ * ('outbox' saat SMTP_HOST tidak diset, 'smtp' saat terkirim lewat SMTP).
+ * Functions di sini hanya helper non-prod yang tidak pernah dipanggil runtime.
+ * IDs yang dikembalikan adalah hash lokal (`mock_*`), bukan ID provider.
  * See docs/MONOREPO-MAP.md section 0 for non-prod module list.
  */
 export const MOCK_PROVIDER = 'mock' as const;
