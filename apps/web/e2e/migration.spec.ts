@@ -6,17 +6,22 @@ async function expectNoPageErrors(page: import("@playwright/test").Page, errors:
   expect(errors).toEqual([]);
 }
 
-test.describe("Overview (/)", () => {
+test.describe("Overview (/overview)", () => {
   test("menampilkan ringkasan operasional dari API", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
-    await page.goto("/");
+    await page.goto("/overview");
     await expect(page.getByRole("heading", { level: 1, name: "Overview" })).toBeVisible();
-    await expect(page.getByText("Ringkasan operasional")).toBeVisible();
-    await expect(page.getByText("Agen aktif")).toBeVisible();
-    await expect(page.getByText("Work package terbuka")).toBeVisible();
-    await expect(page.getByText("Approval menunggu")).toBeVisible();
+    await expect(page.getByText("Workspace · Overview")).toBeVisible();
+    // Sapaan dirender sebagai paragraf di bawah h1, bukan heading level 1.
+    await expect(page.locator(".page-head p").first()).toContainText(/Selamat (pagi|siang|sore|malam)/);
+    // Kartu KPI dan stempel waktu hanya dirender bila /overview API menjawab.
+    await expect(page.getByRole("region", { name: "Indikator operasional" })).toBeVisible();
+    await expect(page.getByText("Work package aktif")).toBeVisible();
+    await expect(page.getByText("Menunggu persetujuan")).toBeVisible();
+    await expect(page.getByText("Diblokir kebijakan")).toBeVisible();
+    await expect(page.getByText("Dieksekusi 7 hari")).toBeVisible();
     await expect(page.getByText("Data diambil pada")).toBeVisible();
     await expectNoPageErrors(page, errors);
   });
@@ -233,7 +238,7 @@ test.describe("Login (/login)", () => {
     await page.getByLabel("Email").fill("budi.santoso@dextra.local");
     await page.getByLabel("Password").fill("E2E-DevOnly-Password-2026");
     await page.getByRole("button", { name: "Masuk", exact: true }).click();
-    await page.waitForURL(/\/$/);
+    await page.waitForURL(/\/overview$/);
 
     await page.goto("/account");
     await expect(page.getByText(/usr_budi_santoso/).first()).toBeVisible();
@@ -354,7 +359,7 @@ test.describe("DEXTRA Copilot (panel global)", () => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
-    await page.goto("/");
+    await page.goto("/overview");
     const fab = page.getByRole("button", { name: "Buka DEXTRA Copilot" });
     await expect(fab).toBeVisible();
     await fab.click();
@@ -368,46 +373,50 @@ test.describe("DEXTRA Copilot (panel global)", () => {
 
 test.describe("Navigasi sidebar", () => {
   test("berpindah antar route lewat nav", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: /Workforce/ }).click();
+    // Dashboard pindah ke /overview; "/" kini halaman publik tanpa shell.
+    await page.goto("/overview");
+    // Label nav sidebar juga dipakai tab di Tabsbar, jadi klik dibatasi ke .sidebar
+    // supaya test ini benar-benar menguji nav sidebar dan tidak kena strict mode.
+    const nav = page.locator(".sidebar");
+    await nav.getByRole("link", { name: /Workforce/ }).click();
     await expect(page).toHaveURL(/.*\/agents$/);
-    await page.getByRole("link", { name: /Assistant/ }).click();
+    await nav.getByRole("link", { name: /Assistant/ }).click();
     await expect(page).toHaveURL(/.*\/assistant$/);
-    await page.getByRole("link", { name: /Paket Kerja/ }).click();
+    await nav.getByRole("link", { name: /Paket Kerja/ }).click();
     await expect(page).toHaveURL(/.*\/work-packages$/);
-    await page.getByRole("link", { name: /^Papan/ }).click();
+    await nav.getByRole("link", { name: /^Papan/ }).click();
     await expect(page).toHaveURL(/.*\/board$/);
-    await page.getByRole("link", { name: /^Approval/ }).click();
+    await nav.getByRole("link", { name: /^Approval/ }).click();
     await expect(page).toHaveURL(/.*\/approvals$/);
-    await page.getByRole("link", { name: /^Kebijakan/ }).click();
+    await nav.getByRole("link", { name: /^Kebijakan/ }).click();
     await expect(page).toHaveURL(/.*\/policies$/);
-    await page.getByRole("link", { name: /^Audit/ }).click();
+    await nav.getByRole("link", { name: /^Audit/ }).click();
     await expect(page).toHaveURL(/.*\/audit$/);
-    await page.getByRole("link", { name: /^Mandates/ }).click();
+    await nav.getByRole("link", { name: /^Mandates/ }).click();
     await expect(page).toHaveURL(/.*\/mandates$/);
-    await page.getByRole("link", { name: /Security Center/ }).click();
+    await nav.getByRole("link", { name: /Security Center/ }).click();
     await expect(page).toHaveURL(/.*\/security$/);
-    await page.getByRole("link", { name: /^Skills/ }).click();
+    await nav.getByRole("link", { name: /^Skills/ }).click();
     await expect(page).toHaveURL(/.*\/skills$/);
-    await page.getByRole("link", { name: /^Workflow/ }).click();
+    await nav.getByRole("link", { name: /^Workflow/ }).click();
     await expect(page).toHaveURL(/.*\/workflows$/);
-    await page.getByRole("link", { name: /^Akun/ }).click();
+    await nav.getByRole("link", { name: /^Akun/ }).click();
     await expect(page).toHaveURL(/.*\/account$/);
-    await page.getByRole("link", { name: /^Akses/ }).click();
+    await nav.getByRole("link", { name: /^Akses/ }).click();
     await expect(page).toHaveURL(/.*\/access$/);
-    await page.getByRole("link", { name: /^Token/ }).click();
+    await nav.getByRole("link", { name: /^Token/ }).click();
     await expect(page).toHaveURL(/.*\/tokens$/);
-    await page.getByRole("link", { name: /^Admin/ }).click();
+    await nav.getByRole("link", { name: /^Admin/ }).click();
     await expect(page).toHaveURL(/.*\/admin$/);
-    await page.getByRole("link", { name: /Data Management/ }).click();
+    await nav.getByRole("link", { name: /Data Management/ }).click();
     await expect(page).toHaveURL(/.*\/data-management$/);
-    await page.getByRole("link", { name: /Executions/ }).click();
+    await nav.getByRole("link", { name: /Executions/ }).click();
     await expect(page).toHaveURL(/.*\/executions$/);
-    await page.getByRole("link", { name: /Explorer/ }).click();
+    await nav.getByRole("link", { name: /Explorer/ }).click();
     await expect(page).toHaveURL(/.*\/explorer$/);
-    await page.getByRole("link", { name: /Analytics/ }).click();
+    await nav.getByRole("link", { name: /Analytics/ }).click();
     await expect(page).toHaveURL(/.*\/analytics$/);
-    await page.getByRole("link", { name: /Overview/ }).click();
-    await expect(page).toHaveURL(/.*\/$/);
+    await nav.getByRole("link", { name: /Overview/ }).click();
+    await expect(page).toHaveURL(/.*\/overview$/);
   });
 });

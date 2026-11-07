@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { sendAssistantMessage } from "../app/assistant/actions";
+import { sendAssistantMessage } from "@/app/(app)/assistant/actions";
 import type { AiChatMessage } from "@/lib/ai";
 
 type ChatMessage = AiChatMessage & { id: number; model?: string };

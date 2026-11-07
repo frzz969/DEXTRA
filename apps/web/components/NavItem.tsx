@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /* Nav item dengan status aktif mengikuti rute saat ini (statis menandai
- * item lewat paintActive). Overview ("/") aktif hanya di path persis "/". */
+ * item lewat paintActive). Overview ("/overview") aktif juga di sub-rutenya. */
 export default function NavItem({
   href,
   icon,
@@ -16,7 +16,7 @@ export default function NavItem({
   count?: string;
 }) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname === href || (pathname ?? "").startsWith(`${href}/`);
+  const active = pathname === href || (href !== "/" && (pathname ?? "").startsWith(`${href}/`));
   return (
     <Link
       className={`nav-item${active ? " is-active" : ""}`}

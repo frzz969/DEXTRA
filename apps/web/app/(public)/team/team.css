@@ -1,0 +1,214 @@
+/* Tim AI Worker (/team).
+ *
+ * Hanya kelas berawalan .team- yang dideklarasikan di sini. Kelas pemasaran
+ * (.mkt-*) dan komponen bersama (.tag, .card, .btn) dipakai apa adanya dari
+ * marketing.css dan design system, tidak dideklarasikan ulang.
+ *
+ * Tidak ada nilai warna literal: setiap warna membaca token design system,
+ * jadi tema gelap ikut terbawa tanpa aturan tambahan. */
+
+/* ---------- 1. Daftar peran ----------
+ * Bentuknya baris registri, bukan grid kartu: keempat peran sederajat dan yang
+ * dibaca adalah isi barisnya (slug, tipe, kapabilitas), bukan gambar. */
+.team-registry {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.team-role {
+  display: grid;
+  grid-template-columns: minmax(0, 232px) minmax(0, 1fr);
+  gap: var(--s-2) var(--mkt-col-gap);
+  padding: var(--s-5) 0;
+  border-top: 1px solid var(--border);
+}
+
+.team-role:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.team-role__id {
+  display: grid;
+  gap: var(--s-1);
+  align-content: start;
+  min-width: 0;
+}
+
+.team-role__slug {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.team-role__name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.team-role__type {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.team-role__body {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.team-role__desc {
+  font-size: 13.5px;
+  line-height: 1.66;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+/* Kapabilitas adalah nama di registri, jadi dicetak mono supaya terbaca
+ * sebagai identifier, bukan sebagai kalimat. */
+.team-role__caps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+}
+
+.team-role__caps .tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 7px;
+}
+
+/* Tautan di dalam paragraf catatan: garis bawah, bukan warna saja. */
+.team-link {
+  color: var(--brand-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- 2. Status ---------- */
+.team-statuses-block {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
+  border-top: 1px dashed var(--border-strong);
+}
+
+.team-statuses {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  padding: 0;
+}
+
+.team-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.team-statuses__note {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+/* ---------- 3. Batas wewenang ---------- */
+.team-boundary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.team-boundary__col {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+  min-width: 0;
+  padding: var(--s-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+/* Kolom kedua berisi hal yang tidak dimiliki worker: latarnya diturunkan satu
+ * tingkat supaya perbedaan keduanya terbaca tanpa perlu warna status. */
+.team-boundary__col--quiet {
+  background: var(--surface-2);
+}
+
+.team-boundary__label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--faint);
+}
+
+.team-boundary__list {
+  list-style: disc;
+  margin: 0;
+  padding-left: var(--s-4);
+  display: grid;
+  gap: var(--s-2);
+}
+
+.team-boundary__list li {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.team-boundary__list .mono {
+  color: var(--text);
+}
+
+/* ---------- 4. Jalur wewenang ---------- */
+.team-lane {
+  margin-top: var(--s-5);
+}
+
+/* Rantai langkah: tiap langkah dibungkus bersama panahnya supaya pembungkusan
+ * baris di layar sempit tidak memisahkan panah dari langkah yang diikutinya. */
+.team-chain__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* ---------- 5. Responsif ---------- */
+@media (max-width: 860px) {
+  .team-role {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team-boundary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .team-boundary__col {
+    padding: var(--s-4);
+  }
+}

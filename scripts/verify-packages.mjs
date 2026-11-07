@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /* Verifikasi bahwa salinan di apps/web/app/ benar-benar sama dengan sumbernya
  * di packages/. Gagal (exit 1) jika ada yang menyimpang.
  *
@@ -45,7 +45,7 @@ for (const { from, to } of COPIES) {
    token dideklarasikan di tokens.json tapi tidak ada di CSS (atau sebaliknya
    untuk token wajib), dokumen token itu bohong. */
 const tokensPath = resolve(root, 'packages/design-system/tokens.json');
-const cssPath = resolve(root, 'packages/design-system/src/dashboard.css');
+const cssPath = resolve(root, 'packages/design-system/src/design-system.css');
 try {
   const tokens = JSON.parse(await readFile(tokensPath, 'utf8'));
   const css = await readFile(cssPath, 'utf8');
@@ -62,7 +62,7 @@ try {
   for (const { name, value } of names) {
     const declared = new RegExp(`--${name}\\s*:\\s*${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*;`);
     if (!declared.test(css)) {
-      console.error(`GAGAL  token --${name}: ${value} tidak ditemukan di dashboard.css`);
+      console.error(`GAGAL  token --${name}: ${value} tidak ditemukan di design-system.css`);
       failures += 1;
     }
   }

@@ -8,7 +8,7 @@ const PAGES: Array<[string, string]> = [
   ["approvals", "/approvals"],
   ["executions", "/executions"],
   ["audit", "/audit"],
-  ["overview", "/"],
+  ["overview", "/overview"],
 ];
 
 test("demo screenshots (pln_demo_20261106121723)", async ({ page }) => {

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import UserMenu from "@/components/UserMenu";
+import NotificationBellClient from "@/components/NotificationBellClient";
+import type { NotificationFeed } from "@/lib/notifications";
 
 const STORAGE_KEY = "dextra-theme";
 
@@ -18,7 +20,8 @@ function applyTheme(dark: boolean) {
 /** Label breadcrumb untuk rute utama; rute lain memakai segmen pertama path. */
 function crumbFor(pathname: string): string {
   const map: Record<string, string> = {
-    "/": "Overview",
+    "/": "Beranda",
+    "/overview": "Overview",
     "/board": "Task Board",
     "/approvals": "Approval Inbox",
     "/audit": "Audit Trail",
@@ -54,10 +57,14 @@ export default function Topbar({
   userName,
   userSubtitle,
   mcpUp,
+  notifFeed,
 }: {
   userName: string;
   userSubtitle: string;
   mcpUp: boolean;
+  /* Disusun di RootLayout (server) lalu dioper ke sini. Topbar adalah client
+     component, jadi ia tidak boleh memanggil API yang membaca cookie sesi. */
+  notifFeed: NotificationFeed;
 }) {
   const [dark, setDark] = useState(false);
   const pathname = usePathname();
@@ -126,10 +133,20 @@ export default function Topbar({
           <span className="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
           <span className="label">Copilot</span><kbd>⌘J</kbd>
         </button>
-        <Link className="search-trigger" href="/explorer" aria-label="Cari di Explorer">
+        {/* Pemicu palette. Sebelumnya ini <Link ke /explorer> yang mencetak
+            <kbd>⌘K</kbd> tanpa handler — janji tanpa pelaksana. Sekarang ia
+            mengirim event yang sama polanya dengan tombol Copilot, sehingga
+            Topbar tidak perlu tahu isi palette. */}
+        <button
+          type="button"
+          className="search-trigger"
+          onClick={() => window.dispatchEvent(new CustomEvent("dextra:palette-open"))}
+          aria-label="Buka pencarian cepat (Ctrl+K)"
+          title="Pencarian cepat (Ctrl+K)"
+        >
           <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          <span className="label">Cari work package, mandat, kebijakan…</span><kbd>⌘K</kbd>
-        </Link>
+          <span className="label">Cari halaman…</span><kbd>⌘K</kbd>
+        </button>
         <button
           type="button"
           className="icon-btn"
@@ -143,11 +160,9 @@ export default function Topbar({
         <span className="sr-only" role="status" aria-live="polite">
           {dark ? "Tema gelap aktif" : "Tema terang aktif"}
         </span>
-        <Link className="icon-btn" href="/approvals" aria-label="Persetujuan menunggu">
-          <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
-        </Link>
+        <NotificationBellClient feed={notifFeed} />
         <div className="vdivider" style={{ height: 24, margin: "0 4px" }} aria-hidden="true" />
-        <UserMenu userName={userName} userSubtitle={userSubtitle} placement="down" />
+        <UserMenu userName={userName} userSubtitle={userSubtitle} placement="down" id="topbar-user" />
       </div>
     </header>
   );

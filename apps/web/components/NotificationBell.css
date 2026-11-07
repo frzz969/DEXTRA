@@ -1,0 +1,199 @@
+/* Notification Center — perpanjangan tipis di atas design system.
+ *
+ * Aturan main berkas ini:
+ * 1. Hanya token dari packages/design-system/src/design-system.css. Tidak ada
+ *    warna literal, jadi tema gelap bekerja tanpa pengecualian di sini.
+ * 2. Kelas `.menu`, `.menu__head`, `.menu__item`, `.menu__sep` TIDAK
+ *    didefinisikan ulang — hanya dipakai lalu diperluas lewat kelas `nb-*`.
+ * 3. Tombol memakai `.icon-btn` apa adanya. globals.css:144 sudah memberi
+ *    `min-width/min-height: 44px`, jadi target sentuh WCAG tetap utuh dan
+ *    tidak boleh diubah di sini.
+ */
+
+.nb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Badge hitungan. Warna teks memakai --surface supaya berkebalikan dengan
+ * latar --danger-600 pada kedua tema (terang: putih di merah; gelap: gelap di
+ * merah muda) tanpa perlu token "on-danger" yang belum ada. */
+.nb-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  border: 2px solid var(--surface);
+  background: var(--danger-600);
+  color: var(--surface);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Panel. `.menu` sudah memberi posisi absolut, z-index, border, radius, dan
+ * bayangan; di sini hanya ukuran dan aliran isinya yang diatur. */
+.nb-menu {
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  min-width: 320px;
+  width: min(380px, calc(100vw - var(--s-4) * 2));
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-2);
+}
+
+.nb-head {
+  flex: 0 0 auto;
+  padding: var(--s-2) var(--s-2) var(--s-3);
+}
+
+.nb-head__count {
+  margin-left: var(--s-2);
+  padding: 0 6px;
+  border-radius: var(--r-md);
+  background: var(--brand-050);
+  color: var(--brand-600);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Daftar bisa digulir; header dan footer tetap terlihat. */
+.nb-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nb-item {
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-2);
+}
+
+.nb-item:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: -2px;
+}
+
+.nb-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.nb-item__title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.nb-item__detail {
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.nb-item__time {
+  font-size: 10.5px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Warna ikon mengikuti arti baris, bukan urutan. Selector sengaja dibuat
+ * lebih spesifik daripada `.menu__item .material-symbols-outlined` di design
+ * system supaya urutan impor CSS tidak menentukan hasilnya. */
+.nb-item .nb-item__icon.nb-item__icon--plan {
+  color: var(--warning-600);
+}
+
+.nb-item .nb-item__icon.nb-item__icon--execution {
+  color: var(--danger-600);
+}
+
+.nb-item .nb-item__icon.nb-item__icon--mandate {
+  color: var(--brand-600);
+}
+
+.nb-empty,
+.nb-note {
+  flex: 0 0 auto;
+  padding: var(--s-2);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.nb-note {
+  border-top: 1px solid var(--border);
+}
+
+/* Sumber yang gagal dibaca. Warnanya menyala, bukan netral: ini keadaan
+ * "tidak bisa dibaca", bukan "tidak ada isinya". */
+.nb-unavailable {
+  flex: 0 0 auto;
+  margin: var(--s-2) 0 0;
+  padding: var(--s-2);
+  border: 1px solid color-mix(in srgb, var(--danger-600) 24%, transparent);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--danger-600) 10%, transparent);
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+
+.nb-unavailable__title {
+  font-weight: 700;
+  color: var(--danger-600);
+  margin-bottom: 2px;
+}
+
+.nb-unavailable__list {
+  margin: 0;
+  padding-left: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+
+.nb-unavailable__hint {
+  margin-top: var(--s-2);
+  color: var(--muted);
+}
+
+.nb-foot {
+  flex: 0 0 auto;
+  padding: var(--s-2);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--faint);
+  border-top: 1px solid var(--border);
+}
+
+.nb-foot__meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-menu {
+    animation: none;
+  }
+}

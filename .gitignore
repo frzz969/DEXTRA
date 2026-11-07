@@ -72,3 +72,6 @@ data/exports/
 # Sisa kompilasi TypeScript
 # Artefak sesi browser (Playwright MCP)
 .playwright-mcp/
+# Konfigurasi agen lokal (sama seperti .workbuddy-ai), bukan bagian dari produk
+.codebuddy/
+

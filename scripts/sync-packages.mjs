@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /* Salin sumber kanonik dari packages/ ke apps/web/app/.
  *
  * apps/web punya node_modules sendiri (bukan workspace root) karena symlink
@@ -16,7 +16,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const COPIES = [
   // aset packages/ sekarang dikonsumsi langsung oleh sumber React di apps/web.
   {
-    from: 'packages/design-system/src/dashboard.css',
+    from: 'packages/design-system/src/design-system.css',
     to: 'apps/web/app/dextra-design-system.css'
   }
 ];

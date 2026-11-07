@@ -1,88 +1,188 @@
-/* Token dan komponen berasal dari packages/design-system.
-   Salinan di bawah ini dibuat oleh scripts/sync-packages.mjs dan diverifikasi
-   oleh scripts/verify-packages.mjs — jangan disunting langsung. */
+/* =========================================================================
+   apps/web - lapisan aplikasi di atas design system DEXTRA.
+   =========================================================================
+
+   URUTAN IMPOR (jangan diubah tanpa membaca akibatnya)
+     1. Tailwind: theme + utilities saja. Preflight SENGAJA tidak diimpor.
+     2. fonts.css: @font-face yang di-host sendiri (Inter, Plus Jakarta Sans,
+        Material Symbols).
+     3. dextra-design-system.css: salinan packages/design-system/src/dashboard.css
+        yang dibuat scripts/sync-packages.mjs dan diverifikasi
+        scripts/verify-packages.mjs. JANGAN disunting - ubah sumbernya di
+        packages/design-system, lalu jalankan `node scripts/sync-packages.mjs`.
+
+   KENAPA PREFLIGHT TAILWIND DIMATIKAN
+     Preflight membawa reset kedua: `h1..h6 { font-size: inherit; font-weight:
+     inherit }`, `ol,ul,menu { list-style: none }`, `img { display: block }`,
+     dan seterusnya. Design system sudah punya reset untuk elemen yang sama
+     (dashboard.css bagian 2). Dua reset yang tumpang tindih berarti hasil akhir
+     bergantung pada urutan - dan urutan yang salah membuat ukuran semua
+     heading runtuh ke ukuran body. 37 halaman sudah dibangun di atas reset
+     design system, jadi reset kedua itu bukan perbaikan melainkan risiko
+     regresi. Yang dipakai dari Tailwind hanya lapisan utilitasnya.
+
+   ATURAN CASCADE (baca sebelum menulis utility)
+     - Design system TIDAK dibungkus @layer. Aturan tanpa layer selalu menang
+       atas aturan ber-layer, berapa pun spesifisitasnya. Artinya utilitas
+       Tailwind (semuanya di @layer utilities) tidak akan pernah menimpa kelas
+       design system. Itu disengaja: utilitas tidak bisa diam-diam merusak
+       shell, kartu, atau tabel. Kalau memang perlu menimpa, pakai penanda
+       important Tailwind (mis. `bg-brand-600!`) atau - lebih baik - perbaiki
+       aturannya di packages/design-system supaya semua halaman ikut benar.
+     - Di dalam design system sendiri ada selector turunan (0,2,0) yang menang
+       atas utilitas satu kelas (0,1,0). Utilitas yang tampak "tidak berefek"
+       di titik-titik ini bukan bug Tailwind, itu spesifisitas:
+         .nav-item .material-symbols-outlined    .msg .msg__bubble
+         .msg--user .msg__bubble                 .sidebar__foot .user-chip
+         .card__head h2                          .def-list dd
+         .kpi__foot > *                          body.is-collapsed .nav-item
+     - Token yang berubah di breakpoint harus dibaca lewat var(), bukan
+       disalin angkanya. Contoh: --topbar-h menjadi 56px di bawah 640px, jadi
+       tulis `h-[var(--topbar-h)]`, jangan `h-[64px]`.
+   ========================================================================= */
+
+@layer theme, base, components, utilities;
+
+/* ---------- 1. Tailwind: theme + utilities, tanpa preflight ---------- */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* ---------- 2. Font self-hosted ---------- */
+@import "./fonts.css";
+
+/* ---------- 3. Design system (dihasilkan - jangan disunting) ---------- */
 @import "./dextra-design-system.css";
 
-/* App-specific additions only.
- *
- * The design system above owns the shell (.sidebar / .main / .content),
- * KPI cards, page headers, banners, and responsive behaviour
- * (sidebar hides <=1080px, grid collapses at its own breakpoints).
- * Do NOT re-declare those classes here — previous overrides caused a
- * double sidebar offset (grid .shell + fixed .sidebar + .main margin).
- *
- * This single rule only guards against horizontal page overflow from
- * long unbreakable tokens. `clip` (unlike `hidden`) does not create a
- * scroll container, so sticky topbars/rails keep working. */
-html, body { overflow-x: clip; }
+/* ---------- 4. Token DEXTRA dipetakan ke utilitas Tailwind ----------
+   Satu sumber kebenaran: setiap nilai menunjuk ke token design system, tidak
+   ada hex atau ukuran baru di sini. Karena blok tema gelap menimpa variabel
+   yang sama, utilitas ikut berganti otomatis saat tema berubah.
 
-/* P4 polish transversal — hanya state lintas-halaman, bukan shell
- * (.sidebar/.main tetap milik design system). */
+   - Jarak: --spacing adalah basis p-*, gap-*, h-*, w-*. DEXTRA punya
+     --s-1..--s-12 yang semuanya kelipatan 4px, jadi satu pemetaan ini
+     menyamakan seluruh skala numerik (p-4 = --s-4 = 16px).
+   - Warna: bg-brand-600, text-muted, border-border, bg-surface-2, dan
+     seterusnya. Palet bawaan Tailwind tetap ada untuk kebutuhan netral
+     (white, transparent), tetapi tidak boleh dipakai sebagai warna produk.
+   - Radius: rounded-md = --r-md, rounded-full = --r-full.
+   - Bayangan: namespace --shadow-* bertabrakan nama dengan token DEXTRA
+     (--shadow-xs/sm/lg), sehingga memetakannya akan menjadi referensi
+     melingkar. Skala bawaan Tailwind dihapus dan token diekspos dengan
+     prefiks ds-: shadow-ds-xs, shadow-ds-sm, shadow-ds-lg. (--shadow-md
+     tidak ada - token itu dihapus dari design system karena tidak dipakai.)
+   - Font: font-sans dan font-mono sudah namespace Tailwind dan resolve ke
+     stack design system (aturan :root design system tanpa layer menang atas
+     nilai bawaan Tailwind yang ber-layer). --font-display tidak bisa
+     dipetakan lewat @theme karena akan melingkar, jadi ia tersedia sebagai
+     @utility di bawah.
+   - z-index: tidak ada namespace Tailwind untuk ini. Pakai nilai arbitrer
+     yang membaca token: z-[var(--z-menu)], z-[var(--z-overlay)],
+     z-[var(--z-toast)].
+*/
+@theme {
+  --spacing: var(--s-1);
 
-/* Kontras: --faint bawaan design system terlalu terang untuk teks
- * kecil di kedua tema (gagal 4.5:1). Naikkan tanpa mengubah palet. */
-:root { --faint: #6b6b82; --muted: #5f5f78; }
-[data-theme="dark"] { --faint: #9c9cb4; --muted: #a5a5bb; }
+  --color-brand-700: var(--brand-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-300: var(--brand-300);
+  --color-brand-100: var(--brand-100);
+  --color-brand-050: var(--brand-050);
 
-/* Target sentuh >= 44px untuk kontrol ikon & tab di layar kecil. */
-.icon-btn, .tab__x { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
-.tab__x { min-width: 36px; min-height: 36px; }
-.btn, .input, .select, .textarea { min-height: 44px; }
+  --color-success-600: var(--success-600);
+  --color-success-100: var(--success-100);
+  --color-warning-600: var(--warning-600);
+  --color-warning-100: var(--warning-100);
+  --color-danger-600: var(--danger-600);
+  --color-danger-100: var(--danger-100);
+  --color-info-600: var(--info-600);
+  --color-info-100: var(--info-100);
 
-/* Tabsbar: scroll horizontal dalam wadah, bukan halaman. */
-.tabsbar { overflow-x: auto; scrollbar-width: none; }
-.tabsbar::-webkit-scrollbar { display: none; }
-.tab { flex: 0 0 auto; }
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
 
-/* Topbar ringkas di 360px: sembunyikan label pencarian & meta user. */
-@media (max-width: 640px) {
-  .search-trigger .label, .search-trigger kbd, .env-pill, .user-chip__meta { display: none; }
-  .search-trigger { padding: 0 10px; }
-  .topbar { gap: 8px; }
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-full: var(--r-full);
+
+  --shadow-*: initial;
+  --shadow-ds-xs: var(--shadow-xs);
+  --shadow-ds-sm: var(--shadow-sm);
+  --shadow-ds-lg: var(--shadow-lg);
 }
 
-/* Tabel: .table-wrap (design system) sudah scroll horizontal;
- * body overflow-x: clip di atas mencegah scroll halaman. */
+@utility font-display {
+  font-family: var(--font-display);
+}
 
-/* Skeleton: hormati reduced-motion, tanpa layout shift (tinggi tetap). */
-.skeleton-line { min-height: 10px; }
+/* =========================================================================
+   5. Aturan milik aplikasi.
+   Shell (.sidebar / .main / .content), kartu, KPI, page header, banner, dan
+   perilaku responsif tetap milik design system. Jangan dideklarasikan ulang di
+   sini: override sebelumnya menyebabkan offset sidebar ganda (grid .shell +
+   .sidebar fixed + margin .main).
+   ========================================================================= */
+
+/* `clip` (bukan `hidden`) tidak membuat scroll container, jadi topbar/rail
+   yang sticky tetap bekerja sementara token panjang tidak mendorong halaman
+   ke samping. */
+html, body { overflow-x: clip; }
+
+/* Target sentuh >= 44px untuk kontrol ikon di layar kecil; tombol tutup tab
+   sengaja lebih kecil supaya tetap muat di dalam .tab (tinggi 26px). */
+.icon-btn { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
+.tab__x { min-width: 36px; min-height: 36px; display: inline-grid; place-items: center; }
+.btn, .input, .select, .textarea { min-height: 44px; }
+
+/* Tabsbar: design system sudah mengatur overflow-x dan flex: 0 0 auto pada
+   .tab; yang kurang hanya menyembunyikan scrollbar-nya. */
+
+/* Catatan layar kecil: ringkasan topbar (sembunyikan label pencarian, meta
+   user, dan tombol notifikasi di bawah 640px) sepenuhnya milik design system.
+   Blok @media (max-width: 640px) yang dulu ada di sini dihapus karena hanya
+   menambal dua id yang belum dipasang: #topbar-user dan #notif-btn. Keduanya
+   sekarang dipasang di components/Topbar.tsx, jadi aturan design system
+   (dashboard.css bagian 21) yang berlaku - bukan salinan lokalnya. */
+.tabsbar { scrollbar-width: none; }
+
+/* Skeleton: hormati reduced-motion tanpa layout shift. */
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
-/* Focus terlihat di kedua tema. */
-:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; border-radius: var(--r-xs); }
-
-/* Teks sr-only untuk pengumuman aria-live tanpa memengaruhi layout. */
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-
-/* Overview parity (P2): pill MCP di topbar + sparkline KPI.
- * .env-pill[data-state="live"] memakai --success-600; offline --warning-600
- * (token yang sama dengan design system, kontras terjaga di kedua tema). */
+/* Overview parity (P2): pill MCP di topbar memakai token status yang sama
+   dengan design system, jadi kontrasnya terjaga di kedua tema. */
 .env-pill[data-state="live"] .dot { background: var(--success-600); }
 .env-pill[data-state="offline"] .dot { background: var(--warning-600); }
 .env-pill[data-state="live"] { color: var(--success-600); border-color: var(--success-100); }
 .env-pill[data-state="offline"] { color: var(--warning-600); border-color: var(--warning-100); }
-/* Sparkline KPI menempel bawah-kartu seperti di dashboard statis. */
+
+/* Sparkline KPI: design system memposisikannya absolut di 30px bawah kartu,
+   jadi kartu butuh ruang ekstra agar grafik tidak menimpa isi. */
 .kpi { padding-bottom: 34px; }
-.kpi__spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 30px; opacity: .38; pointer-events: none; }
-/* Pill Copilot di topbar: target sentuh sama dengan icon-btn. */
-.copilot-trigger { min-height: 44px; }
-@media (prefers-reduced-motion: reduce) {
-  .kpi__spark { opacity: .38; }
-}
 
-/* Copilot — panel AI global. Satu AI dengan halaman /assistant. */
-
-/* Menu akun: .menu absolute butuh wadah relative (UserMenu sudah set inline).
- * Di kaki sidebar menu terbuka ke atas penuh lebar; di topbar rata kanan. */
+/* Menu akun: .menu absolut butuh wadah relative (UserMenu sudah set inline).
+   Di kaki sidebar menu terbuka ke atas selebar sidebar; di topbar rata kanan. */
 .user-menu { min-width: 0; }
 .sidebar__foot .user-menu { width: 100%; }
 .user-menu__list { max-height: min(70vh, 420px); overflow-y: auto; }
 
-/* Login bare (statis: panel brand ungu + form putih, shell disembunyikan
- * lewat body.is-bare dari BareRoute). */
+/* Login bare (statis: panel brand ungu + form putih, shell disembunyikan lewat
+   body.is-bare dari BareRoute). Catatan: .login-* adalah implementasi paralel
+   dari .auth__* di design system (dashboard.css) - kandidat konsolidasi,
+   belum dikerjakan. */
 .login-wrap {
   min-height: 100vh;
   display: grid;
@@ -131,11 +231,17 @@ html, body { overflow-x: clip; }
 @media (max-width: 760px) {
   .login-card { grid-template-columns: 1fr; }
   .login-brand { display: none; }
-}.copilot-fab {
+}
+
+/* Copilot - panel AI global. Satu AI dengan halaman /assistant.
+   Catatan: .copilot-fab/.copilot-panel adalah implementasi paralel dari
+   .copilot/.cp__* di design system (dashboard.css) - kandidat konsolidasi,
+   belum dikerjakan. */
+.copilot-fab {
   position: fixed;
   right: 18px;
   bottom: 18px;
-  z-index: 70;
+  z-index: var(--z-fab);
   height: 46px;
   width: 46px;
   border-radius: 999px;
@@ -154,7 +260,7 @@ html, body { overflow-x: clip; }
   position: fixed;
   right: 18px;
   bottom: 76px;
-  z-index: 70;
+  z-index: var(--z-fab);
   width: min(380px, calc(100vw - 36px));
   height: min(640px, calc(100vh - 110px));
   display: flex;
@@ -198,4 +304,50 @@ html, body { overflow-x: clip; }
     height: min(70vh, calc(100vh - 24px));
   }
   .copilot-fab { right: 12px; bottom: 12px; }
+}
+
+/* --- FAB Copilot: jangan pernah menutupi konten ----------------------------
+ * FAB bersifat fixed, jadi ia menimpa elemen apa pun di sudut kanan bawah.
+ * Dua penjaga: (1) hilang sama sekali di layar bare (login/403/503/404) yang
+ * memang tidak punya shell; (2) konten diberi ruang bawah supaya tombol
+ * terakhir dan catatan kaki tidak pernah tertutup. */
+body.is-bare .copilot-fab,
+body.is-bare .copilot-panel {
+  display: none;
+}
+
+.content {
+  padding-bottom: calc(var(--s-10) + 48px);
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding-bottom: calc(var(--s-10) + 64px);
+  }
+}
+
+/* --- Target sentuh (WCAG 2.5.5) -------------------------------------------
+ * Design system memakai height 34-36px, wajar untuk tetikus tetapi terlalu
+ * kecil untuk jari. Dibatasi ke pointer kasar supaya kerapatan desktop tidak
+ * berubah — sebelumnya aturan ini diterapkan global lalu dihapus, dan tombol
+ * mobile kembali menyusut di bawah 44px. */
+@media (pointer: coarse) {
+  .btn,
+  .icon-btn,
+  .input,
+  .select,
+  .textarea,
+  .tab__x,
+  .chip,
+  .copilot-trigger {
+    min-height: 44px;
+  }
+  .icon-btn,
+  .tab__x {
+    min-width: 44px;
+  }
+  .menu-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

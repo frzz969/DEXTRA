@@ -141,7 +141,9 @@ export type Agent = {
   slug: string;
   display_name: string;
   agent_type: string;
-  description: string | null;
+  /* Non-null di backend (`models/workforce.py`: `description` = Text, nullable=False,
+   * default ""). Kosong berarti string kosong, bukan null. */
+  description: string;
   model_provider: string | null;
   status: string;
   is_enabled: boolean;
@@ -334,6 +336,21 @@ export type PlanActionItem = {
   source_ref?: Record<string, unknown>;
 };
 
+/**
+ * Temuan validator. `backend/.../office_agent/router.py` menyimpan `findings`
+ * sebagai `list[dict]` apa adanya, jadi bentuknya ditentukan pengirim rencana:
+ * policy engine menulis `decision` (allow|deny|review), worker lain menulis
+ * `severity` (blocking|warning). Keduanya opsional dan dibaca tanpa menebak.
+ */
+export type PlanFinding = {
+  code?: string;
+  message?: string;
+  severity?: string;
+  decision?: string;
+  policy_slug?: string;
+  [k: string]: unknown;
+};
+
 export type OfficePlan = {
   id: string;
   request_id: string;
@@ -341,7 +358,7 @@ export type OfficePlan = {
   plan_hash: string;
   status: string;
   actions: PlanActionItem[];
-  findings: Array<{ code?: string; message?: string; [k: string]: unknown }>;
+  findings: PlanFinding[];
   validation: Record<string, unknown>;
   created_at: string;
 };
@@ -380,6 +397,14 @@ export type AuditEventItem = {
   action: string | null;
   resource: string | null;
   decision: string | null;
+  /* Dikembalikan `GET /audit-events` (lihat modules/audit/router.py) tetapi
+   * sebelumnya tidak ditipekan — tanpa ini halaman tidak bisa menautkan event
+   * ke rencana tanpa menebak. */
+  scope?: string | null;
+  plan_id?: string | null;
+  mandate_id?: string | null;
+  execution_id?: string | null;
+  correlation_id?: string | null;
   detail: unknown;
   entry_hash: string;
 };
@@ -392,6 +417,82 @@ export const getOfficePlans = () =>
 
 export const getOfficePlan = (planId: string) =>
   apiGet<OfficePlan>(`/office-agent/plans/${encodeURIComponent(planId)}`);
+
+/* ---------- Tautan plan -> eksekusi / mandat / audit ----------
+ *
+ * Tidak satu pun endpoint di bawah menerima filter `plan_id`: `GET /executions`
+ * hanya punya `limit` (dipangkas 200 di server), `GET /mandates` tidak punya
+ * parameter, `GET /audit-events` hanya `limit`/`offset`. Jadi penyaringan
+ * dilakukan di sini setelah satu halaman terbaru diambil.
+ *
+ * `complete: false` berarti batas halaman tercapai — mungkin ada baris lebih
+ * lama yang tidak ikut diperiksa. UI wajib menyebut itu, bukan mengklaim daftar
+ * lengkap. */
+
+export type PlanScoped<T> = {
+  items: T[];
+  /** Jumlah baris yang benar-benar diperiksa dari API. */
+  scanned: number;
+  /** False bila batas halaman tercapai: hasil bisa terpotong. */
+  complete: boolean;
+};
+
+export async function getExecutionsForPlan(
+  planId: string,
+  limit = 200
+): Promise<ApiResult<PlanScoped<ExecutionItem>>> {
+  const result = await apiGet<{ items: ExecutionItem[] }>(`/executions?limit=${limit}`);
+  if (!result.ok) return result;
+  const rows = result.data.items;
+  return {
+    ok: true,
+    data: {
+      items: rows.filter((row) => row.plan_id === planId),
+      scanned: rows.length,
+      complete: rows.length < limit
+    }
+  };
+}
+
+export async function getMandatesForPlan(
+  planId: string,
+  limit = 200
+): Promise<ApiResult<PlanScoped<MandateItem>>> {
+  const result = await apiGet<{ items: MandateItem[] }>("/mandates");
+  if (!result.ok) return result;
+  const rows = result.data.items;
+  return {
+    ok: true,
+    data: {
+      items: rows.filter((row) => row.plan_id === planId),
+      scanned: rows.length,
+      complete: rows.length < limit
+    }
+  };
+}
+
+/**
+ * Audit untuk satu rencana. Dua jalur pencocokan, keduanya field nyata:
+ * `plan_id` (event yang menyebut rencananya) dan `resource` (event
+ * `office_plan_received` ditulis dengan `plan_id` kosong dan nama rencana di
+ * `resource` — lihat `audit_repo.append_event` di router office-agent).
+ */
+export async function getAuditEventsForPlan(
+  planId: string,
+  limit = 200
+): Promise<ApiResult<PlanScoped<AuditEventItem>>> {
+  const result = await apiGet<{ items: AuditEventItem[] }>(`/audit-events?limit=${limit}&offset=0`);
+  if (!result.ok) return result;
+  const rows = result.data.items;
+  return {
+    ok: true,
+    data: {
+      items: rows.filter((row) => row.plan_id === planId || row.resource === planId),
+      scanned: rows.length,
+      complete: rows.length < limit
+    }
+  };
+}
 
 export type OfficePlanCreatePayload = {
   request_id: string;

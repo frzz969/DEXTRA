@@ -8,7 +8,9 @@ import { test, expect } from "@playwright/test";
  */
 
 const ROUTES = [
-  { path: "/", heading: /Selamat (pagi|siang|sore|malam)/ },
+  // Dashboard kini di /overview (h1 "Overview"); sapaan "Selamat ..." adalah
+  // paragraf di bawah h1, bukan heading level 1, jadi tidak dipakai di sini.
+  { path: "/overview", heading: "Overview" },
   { path: "/board", heading: "Papan Tugas" },
   { path: "/approvals", heading: "Approval Inbox" },
   { path: "/audit", heading: "Audit Center" },
@@ -29,7 +31,7 @@ for (const route of ROUTES) {
   test(`P4 smoke ${route.path}: screenshot desktop + mobile`, async ({ page }) => {
     await page.goto(route.path);
     await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
-    const slug = route.path === "/" ? "overview" : route.path.slice(1);
+    const slug = route.path.slice(1);
     await page.screenshot({ path: `test-results/p4/${slug}-desktop.png`, fullPage: false });
 
     await page.setViewportSize({ width: 360, height: 800 });
@@ -42,7 +44,7 @@ test("P4 dark toggle: persist localStorage + stabil setelah reload", async ({ pa
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
-  await page.goto("/");
+  await page.goto("/overview");
   // Tunggu hidrasi React (efek Topbar menandai <html data-theme>)
   // sebelum berinteraksi — klik sebelum hidrasi tidak berpengaruh.
   await page.waitForFunction(() => document.documentElement.dataset.theme !== undefined, { timeout: 15_000 });
@@ -88,7 +90,7 @@ test("P4 responsif 360px: tanpa scroll horizontal halaman", async ({ page }) => 
 });
 
 test("P4 keyboard: fokus terlihat & tab bisa dinavigasi panah", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/overview");
   await page.waitForFunction(() => document.documentElement.dataset.theme !== undefined, { timeout: 15_000 });
   const toggle = page.getByRole("button", { name: /mode (terang|gelap)/i });
   await toggle.focus();

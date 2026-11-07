@@ -1,0 +1,231 @@
+/* =========================================================================
+   /how-it-works: alur satu tindakan.
+   =========================================================================
+
+   ATURAN BERKAS INI
+     - Hanya kelas berawalan .how-, supaya tidak mungkin menimpa
+       marketing.css (.mkt-*) atau shell aplikasi (.sidebar/.main/.content).
+     - Tidak ada nilai warna literal. Semua warna membaca token design system.
+     - Kelas .mkt-* dipakai apa adanya dari marketing.css: ritme bagian, hero,
+       kepala bagian, .mkt-chain, .mkt-defs, dan .mkt-note. Berkas ini tidak
+       mendeklarasikan ulang satu pun dari mereka.
+     - Tidak ada animasi. MOTION halaman ini 1: hover dan focus saja.
+   ========================================================================= */
+
+/* ---------- 1. Tautan sebaris ---------- */
+/* Tautan rute di dalam teks. Bergaris bawah karena di antara paragraf, warna
+   saja tidak cukup untuk menyatakan bahwa sesuatu bisa diklik. */
+.how-link {
+  color: var(--brand-700);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.how-link:hover {
+  color: var(--brand-600);
+}
+
+/* ---------- 2. Rantai keadaan ---------- */
+/* .mkt-chain dipakai apa adanya; yang ditambahkan hanya jarak, karena di sini
+   rantai berdiri sendiri sebagai pembuka bagian, bukan penutup panel.
+   Selektor ditulis dua kelas supaya tetap menang atas .mkt-chain tanpa
+   bergantung pada urutan berkas CSS. */
+.mkt-chain.how-chain {
+  margin-top: 0;
+}
+.how-chain__note {
+  margin-top: var(--s-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 56ch;
+}
+
+/* ---------- 3. Tiga keadaan ---------- */
+/* Tiga panel sejajar: ketiganya sederajat dan dibandingkan satu sama lain,
+   jadi bobot visual yang sama adalah pilihan, bukan kelalaian. */
+.how-terms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin-top: var(--s-6);
+}
+.how-term {
+  display: grid;
+  gap: var(--s-2);
+  align-content: start;
+  min-width: 0;
+  padding: var(--s-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.how-term__label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.how-term__title {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.how-term__text {
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--muted);
+}
+
+/* ---------- 4. Tujuh langkah ---------- */
+/* Daftar vertikal bergaris, bukan tujuh kartu berjajar: tujuh langkah berurutan
+   dengan tiga kondisi berhenti terlalu banyak untuk dibaca mendatar. */
+.how-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.how-step {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--s-4);
+  align-items: start;
+  padding: var(--s-5) 0;
+  border-top: 1px solid var(--border);
+}
+.how-step:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.how-step__index {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+/* Langkah yang butuh wewenang ditandai warna DAN label "Gerbang wewenang",
+   jadi tidak bergantung pada warna saja. */
+.how-step--gate .how-step__index {
+  background: var(--brand-100);
+  color: var(--brand-700);
+}
+.how-step__body {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.how-step__gate {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--brand-700);
+}
+.how-step__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.how-step__text {
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: var(--muted);
+  max-width: 68ch;
+}
+/* Kondisi berhenti memakai panel netral, bukan merah atau kuning. Warna status
+   tidak diperlukan untuk menyatakan arti kalimat ini, dan pasangan teks kuning
+   di atas latar kuning muda tidak lolos 4.5:1 untuk teks sekecil ini. */
+.how-step__stop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+  max-width: 68ch;
+}
+.how-step__stop .material-symbols-outlined {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: 16px;
+  color: var(--muted);
+}
+/* Tautan di dalam baris ini setinggi 44px, jadi barisnya ditarik naik dan
+   diberi ruang bawah negatif supaya jarak antarlangkah tidak ikut membengkak. */
+.how-step__routes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: calc(var(--s-1) - var(--s-2));
+  margin-bottom: calc(var(--s-2) * -1);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.how-step__routes-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--faint);
+}
+.how-step__routes-sep {
+  color: var(--faint);
+}
+/* Target 44px untuk tautan rute, tanpa menggeser garis dasar teks. */
+.how-step__routes .how-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ---------- 5. Responsif ---------- */
+@media (max-width: 900px) {
+  .how-terms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* Panel ketiga melebar penuh: dua kolom dengan satu sel menggantung di
+     kanan terbaca seperti grid yang gagal, bukan seperti pilihan. */
+  .how-term:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .how-terms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .how-term:last-child {
+    grid-column: auto;
+  }
+  .how-term {
+    padding: var(--s-4);
+  }
+  .how-step {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+  .how-step__index {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  .how-step__title {
+    font-size: 15px;
+  }
+  .how-step__stop {
+    padding: var(--s-2) var(--s-3);
+  }
+}

@@ -3,8 +3,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+/* `pinned` menandai tab yang tidak bisa ditutup. Sebelumnya penandanya adalah
+ * href "/" — penanda itu hilang begitu Overview pindah ke /overview, dan tab
+ * Overview jadi bisa ditutup tanpa ada yang meminta. */
 const TABS = [
-  { href: "/", label: "Overview", icon: "dashboard" },
+  { href: "/overview", label: "Overview", icon: "dashboard", pinned: true },
   { href: "/board", label: "Task Board", icon: "view_kanban" },
   { href: "/approvals", label: "Approval Inbox", icon: "fact_check" },
   { href: "/executions", label: "Execution History", icon: "play_circle" },
@@ -43,12 +46,13 @@ export default function Tabsbar() {
       ref={barRef}
     >
       {TABS.filter((t) => !closed.has(t.href)).map((t) => {
-        const active = pathname === t.href || (t.href !== "/" && pathname.startsWith(t.href));
+        const pinned = "pinned" in t && t.pinned === true;
+        const active = pathname === t.href || (pathname ?? "").startsWith(`${t.href}/`);
         return (
           <span key={t.href} role="tab" aria-selected={active} className={`tab${active ? " is-active" : ""}`}>
             <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 15 }}>{t.icon}</span>
             <Link href={t.href} onKeyDown={onKeyDown}>{t.label}</Link>
-            {t.href !== "/" && (
+            {!pinned && (
               <button type="button" className="tab__x" aria-label={`Tutup tab ${t.label}`}
                 onClick={() => setClosed((s) => new Set(s).add(t.href))}>
                 <span className="material-symbols-outlined" aria-hidden="true">close</span>

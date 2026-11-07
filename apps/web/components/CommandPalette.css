@@ -1,0 +1,83 @@
+/* Command palette (⌘K) — lapisan tipis di atas kelas `.cmdk` milik design
+ * system (packages/design-system/src/design-system.css bagian 19).
+ *
+ * Sengaja TIDAK mendeklarasikan ulang panel, input, list, atau item: design
+ * system sudah menetapkan ukuran (560px), --surface, --r-xl, --shadow-lg,
+ * margin-top 10vh, dan state `.cmdk__item.is-active`. Menyalinnya di sini akan
+ * membuat dua sumber kebenaran yang perlahan berbeda. Yang ditambahkan hanya
+ * bagian yang belum ada di sana.
+ *
+ * Lapisan: `.overlay` memakai z-index var(--z-overlay) (300) — di atas
+ * var(--z-topbar) (50), var(--z-fab) (70), dan var(--z-copilot) (250). Karena
+ * itu tidak ada satu pun angka z-index di berkas ini.
+ *
+ * Warna: hanya token. Tidak ada hex, jadi tema gelap ([data-theme="dark"])
+ * ikut berganti tanpa aturan tambahan.
+ */
+
+/* Panel bisa lebih tinggi dari viewport pendek (52px input + list 340px +
+ * footer). Flex + max-height membuat list yang menyusut dan menggulir sendiri,
+ * bukan panel yang terpotong di luar layar. */
+.cmdk.cmdk--palette {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 24px);
+  /* Panel dipindah ke document.body lewat portal, jadi mewarisi dari <body>.
+     Ditulis eksplisit supaya niatnya terbaca, bukan bergantung pada warisan. */
+  font-family: var(--font-sans);
+}
+
+.cmdk--palette .cmdk__list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Tanpa hasil, listbox kosong tidak perlu memakan padding 6px. */
+.cmdk--palette .cmdk__list:empty {
+  display: none;
+}
+
+/* Design system mematikan outline pada input. Focus indicator tetap wajib
+ * terlihat (WCAG 2.4.7) — dipakai garis bawah di dalam field, bukan ring besar
+ * yang menutupi sudut panel. Hanya berlaku untuk palette ini. */
+.cmdk--palette .cmdk__input:focus-visible {
+  box-shadow: inset 0 -2px 0 var(--brand-600);
+}
+
+/* Ikon ikut berubah warna saat item aktif, seperti .nav-item.is-active di
+ * design system — tanpa ini ikon tetap --muted dan baris terlihat setengah
+ * aktif. */
+.cmdk__item.is-active .material-symbols-outlined {
+  color: var(--brand-600);
+}
+
+.cmdk__empty {
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Petunjuk tombol di footer: mono, karena isinya karakter tombol (↑ ↓ ↵ esc)
+ * dan bukan prosa. Ukuran dan border mengikuti .search-trigger kbd. */
+.cmdk__kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  padding: 1px 5px;
+}
+
+.cmdk__kbd + .cmdk__kbd {
+  margin-left: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk.cmdk--palette,
+  .overlay.cmdk-scrim {
+    animation: none;
+  }
+}

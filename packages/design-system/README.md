@@ -4,7 +4,7 @@ Token dan stylesheet tunggal DEXTRA. Light dan dark memakai kontrak token yang s
 
 | Berkas | Isi |
 |---|---|
-| `tokens.json` | Token inti yang bisa dibaca mesin (brand, status, neutral, radius, space, layout) |
+| `tokens.json` | Token inti yang bisa dibaca mesin (brand, status, neutral, semantic, elevation, font, z, radius, space, layout) |
 | `src/dashboard.css` | Stylesheet kanonik; satu-satunya tempat token dideklarasikan |
 
 ## Verifikasi

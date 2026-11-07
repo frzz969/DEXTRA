@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "@/app/login/actions";
+import { signOut } from "@/lib/auth-actions";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -18,10 +18,15 @@ export default function UserMenu({
   userName,
   userSubtitle,
   placement = "down",
+  id,
 }: {
   userName: string;
   userSubtitle: string;
   placement?: "up" | "down";
+  /** Design system menargetkan #topbar-user untuk meringkas chip di layar kecil
+   *  (dashboard.css, @media max-width 640px). Tanpa id ini aturan itu tidak
+   *  pernah berlaku dan topbar kehabisan ruang sampai tombol menu terpotong. */
+  id?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -106,6 +111,7 @@ export default function UserMenu({
       )}
       <button
         type="button"
+        id={id}
         className="user-chip"
         data-user-menu
         aria-haspopup="menu"
